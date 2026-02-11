@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="qwcl"
 	ProjectGUID="{C89F379C-A885-428D-806A-13498CC1DC52}"
+	RootNamespace="qwcl"
 	>
 	<Platforms>
 		<Platform
@@ -820,6 +821,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\cmd_auto.c"
+				>
 			</File>
 			<File
 				RelativePath="common.c"

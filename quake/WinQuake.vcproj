@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="winquake"
 	ProjectGUID="{432562CA-3A05-4925-9EC1-7A62B5EA82D2}"
+	RootNamespace="winquake"
 	>
 	<Platforms>
 		<Platform
@@ -686,6 +687,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\cmd_auto.c"
+				>
 			</File>
 			<File
 				RelativePath="common.c"

@@ -1959,6 +1959,10 @@ SOURCE=.\cmd.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\cmd_auto.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\common.c
 # End Source File
 # Begin Source File

@@ -23,6 +23,24 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __CMD_H
 #define __CMD_H
 
+#define MAX_ALIAS_NAME  64 /* FS: Was 32 */
+
+typedef void (*xcommand_t) (void);
+
+typedef struct cmd_function_s
+{
+	struct cmd_function_s	*next;
+	char					*name;
+	xcommand_t				function;
+} cmd_function_t;
+
+typedef struct cmdalias_s
+{
+	struct cmdalias_s	*next;
+	char	name[MAX_ALIAS_NAME];
+	char	*value;
+} cmdalias_t;
+
 //===========================================================================
 
 /*
@@ -64,7 +82,6 @@ then searches for a command or variable that matches the first token.
 
 */
 
-typedef void (*xcommand_t) (void);
 
 void	Cmd_Init (void);
 

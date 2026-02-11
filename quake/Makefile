@@ -110,6 +110,7 @@ OBJS=	$(SYSOBJ_DXE)        \
 	cl_parse.o \
 	cl_tent.o  \
 	cmd.o      \
+	cmd_auto.o \
 	common.o   \
 	console.o  \
 	crc.o      \

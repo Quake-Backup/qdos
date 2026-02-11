@@ -51,7 +51,9 @@ qboolean	keydown[256];
 
 cvar_t	*cl_unbindall_protection; /* FS: Added */
 
-extern char *Sort_Possible_Cmds (char *partial); /* FS: Added */
+/* FS: New autocomplete. */
+extern	cvar_t	*console_old_complete;
+extern char *Sort_Possible_Cmds (char *partial, qboolean backwards);
 
 typedef struct
 {
@@ -206,11 +208,16 @@ void CompleteCommand (void)
 	s = key_lines[edit_line]+1;
 	if (*s == '\\' || *s == '/')
 		s++;
-
-	cmd = Cmd_CompleteCommand (s);
-
-	if (!cmd)
-		cmd = Cvar_CompleteVariable (s);
+	if (console_old_complete->intValue)
+	{
+		cmd = Cmd_CompleteCommand (s);
+		if (!cmd)
+			cmd = Cvar_CompleteVariable (s);
+	}
+	else
+	{
+		cmd = Sort_Possible_Cmds(s, keydown[K_SHIFT]); /* FS: Show us all possible commands if it's a partial */
+	}
 
 	if (cmd)
 	{
@@ -346,14 +353,7 @@ void Key_Console (int key)
 	if (key == K_TAB)
 	{
 		// command completion
-		if(!console_old_complete->value) /* FS: Added */
-		{
-			Sort_Possible_Cmds(key_lines[edit_line]+1);
-		}
-		else
-		{
-			CompleteCommand ();
-		}
+		CompleteCommand ();
 		return;
 	}
 
