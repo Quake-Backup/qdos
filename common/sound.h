@@ -205,6 +205,7 @@ extern cvar_t	*volume;
 extern cvar_t	*_snd_mixahead;
 extern cvar_t	*s_khz; /* FS: Added */
 extern cvar_t	*s_musicvolume; /* FS: Added */
+extern cvar_t	*s_mastervolume; /* FS: added */
 
 extern qboolean	snd_initialized;
 

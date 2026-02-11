@@ -191,7 +191,7 @@ void S_StreamBackgroundTrack (void)
 	float	scale;
 	byte	data[MAX_RAW_SAMPLES];
 
-	if (!s_bgTrack.file || !s_musicvolume->value || !cl_ogg_music->intValue)
+	if (!s_bgTrack.file || !s_musicvolume->value || !s_mastervolume->value || !cl_ogg_music->intValue)
 		return;
 
 	if (s_rawend < paintedtime)

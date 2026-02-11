@@ -235,7 +235,7 @@ void S_StreamWAVBackgroundTrack(void)
 	float	scale;
 	byte	musicWavData[MAX_RAW_SAMPLES];
 
-	if (!s_bgTrack.file || !s_musicvolume->value || !cl_wav_music->intValue)
+	if (!s_bgTrack.file || !s_musicvolume->value || !s_mastervolume->value || !cl_wav_music->intValue)
 		return;
 
 	if (s_rawend < paintedtime)

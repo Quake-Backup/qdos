@@ -94,6 +94,7 @@ cvar_t	*_snd_mixahead;
 /* FS: New stuff */
 cvar_t	*s_khz;
 cvar_t	*s_musicvolume;
+cvar_t	*s_mastervolume;
 
 // ====================================================================
 // User-setable variables
@@ -197,6 +198,7 @@ void S_Init (void)
 	s_khz->description = "Sound sampling rate.";
 	s_musicvolume = Cvar_Get("s_musicvolume", "1.0", CVAR_ARCHIVE);
 	s_musicvolume->description = "Music volume for wav and ogg streaming.";
+	s_mastervolume = Cvar_Get("s_mastervolume", "1.0", CVAR_ARCHIVE);
 
 	if (COM_CheckParm("-nosound"))
 		return;
@@ -221,14 +223,25 @@ void S_Init (void)
 		Con_Printf ("loading all sounds as 8bit\n");
 	}
 
-	if (volume->value < 0)
+	if (volume->value < 0.0f)
 		Cvar_Set("volume", "0");
-	else if (volume->value > 1.0)
-		Cvar_Set("volume", "1");
-	if (bgmvolume->value < 0)
+	else if (volume->value > 1.0f)
+		Cvar_Set("volume", "1.0");
+
+	if (bgmvolume->value < 0.0f)
 		Cvar_Set("bgmvolume", "0");
-	else if (bgmvolume->value > 1.0)
-		Cvar_Set("bgmvolume", "1");
+	else if (bgmvolume->value > 1.0f)
+		Cvar_Set("bgmvolume", "1.0");
+
+	if (s_musicvolume->value < 0.0f)
+		Cvar_Set("s_musicvolume", "0");
+	else if (s_musicvolume->value > 1.0f)
+		Cvar_Set("s_musicvolume", "1.0");
+
+	if (s_mastervolume->value < 0.0f)
+		Cvar_Set("s_mastervolume", "0");
+	else if (s_mastervolume->value > 1.0f)
+		Cvar_Set("s_mastervolume", "1.0");
 
 	snd_initialized = true;
 
@@ -784,8 +797,54 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	if (!sound_started || (snd_blocked > 0))
 		return;
 
-	if (volume->modified)
-		SND_InitScaletable();
+	/* FS: Don't allow dumb values. */
+	if (s_mastervolume->value < 0.0f)
+	{
+		Cvar_ForceSet("s_mastervolume", "0.0");
+	}
+	else if (s_mastervolume->value > 1.0f)
+	{
+		Cvar_ForceSet("s_mastervolume", "1.0");
+	}
+
+	if (volume->value < 0.0f)
+	{
+		Cvar_ForceSet("volume", "0.0");
+	}
+	else if (volume->value > 1.0f)
+	{
+		Cvar_ForceSet("volume", "1.0");
+	}
+
+	if (bgmvolume->value < 0.0f)
+	{
+		Cvar_ForceSet("bgmvolume", "0.0");
+	}
+	else if (bgmvolume->value > 1.0f)
+	{
+		Cvar_ForceSet("bgmvolume", "1.0");
+	}
+
+	if (s_musicvolume->value < 0.0f)
+	{
+		Cvar_ForceSet("s_musicvolume", "0.0");
+	}
+	else if (s_musicvolume->value > 1.0f)
+	{
+		Cvar_ForceSet("s_musicvolume", "1.0");
+	}
+
+	if (s_musicvolume->modified || s_mastervolume->modified)
+	{
+		s_musicvolume->modified = false;
+	}
+
+	// rebuild scale tables if volume is modified
+	if (s_mastervolume->modified || volume->modified)
+	{
+		SND_InitScaletable ();
+	}
+
 
 	VectorCopy(origin, listener_origin);
 	VectorCopy(forward, listener_forward);
@@ -1144,8 +1203,9 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 
 	scale = (float) rate / shm->speed;
 	if (music)
-		intVolume = (int) (s_musicvolume->value * 256);
-	else	intVolume = (int) (volume->value * 256);
+		intVolume = (int) ((s_musicvolume->value * s_mastervolume->value) * 256);
+	else
+		intVolume = (int) ((volume->value * s_mastervolume->value) * 256);
 
 	if (channels == 2 && width == 2)
 	{

@@ -261,7 +261,7 @@ void S_PaintChannels(int endtime)
 	sfxcache_t	*sc;
 	int		ltime, count;
 
-	snd_vol = volume->value * 256;
+	snd_vol = (volume->value * s_mastervolume->value) * 256;
 
 	while (paintedtime < endtime)
 	{
@@ -358,9 +358,10 @@ void SND_InitScaletable (void)
 	int		scale;
 
 	volume->modified = false;
+	s_mastervolume->modified = false;
 	for (i = 0; i < 32; i++)
 	{
-		scale = i * 8 * 256 * volume->value;
+		scale = i * 8 * 256 * (volume->value * s_mastervolume->value);
 		for (j = 0; j < 256; j++)
 		{
 		/* When compiling with gcc-4.1.0 at optimisations O1 and

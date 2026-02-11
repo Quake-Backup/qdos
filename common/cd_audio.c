@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -529,7 +529,7 @@ void CDAudio_Play (byte track, qboolean looping)
 		return;
 	}
 
-	volume = (int)(bgmvolume->value * 255.0);
+	volume = (int)((bgmvolume->value * s_mastervolume->value) * 255.0);
 	if (volume < 0)
 	{
 		Cvar_SetValue ("bgmvolume", 0.0);
@@ -770,7 +770,7 @@ void CDAudio_Update (void)
 		}
 	}
 
-	newVolume = (int)(bgmvolume->value * 255.0);
+	newVolume = (int)((bgmvolume->value * s_mastervolume->value) * 255.0);
 	if (newVolume != cdvolume)
 	{
 		if (newVolume < 0)

@@ -419,18 +419,18 @@ void CDAudio_Update(void)
 	if (!enabled)
 		return;
 
-	if (bgmvolume->value != cdvolume)
+	if ((bgmvolume->value * s_mastervolume->value) != cdvolume)
 	{
 		if (cdvolume)
 		{
 			Cvar_SetValue ("bgmvolume", 0.0);
-			cdvolume = bgmvolume->value;
+			cdvolume = bgmvolume->value * s_mastervolume->value;
 			CDAudio_Pause ();
 		}
 		else
 		{
 			Cvar_SetValue ("bgmvolume", 1.0);
-			cdvolume = bgmvolume->value;
+			cdvolume = bgmvolume->value * s_mastervolume->value;
 			CDAudio_Resume ();
 		}
 	}
