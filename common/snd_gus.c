@@ -716,6 +716,9 @@ static qboolean GUS_GetMAXData(void)
 	int  CodecBase,CodecDma,CodecIrq,CodecType;
 	BYTE MaxVal;
 
+	if (COM_CheckParm("-nocodec"))
+		return false;
+
 	Ultrasnd=getenv("ULTRASND");
 	Ultra16=getenv("ULTRA16");
 	if (Ultrasnd==NULL || Ultra16==NULL)
@@ -1384,4 +1387,3 @@ void GUS_ClearDMA (void) /* FS: This stops the constant clicking sound during ma
 
 	Com_DPrintf(DEVELOPER_MSG_SOUND, "Cleared GUS DMA Buffer!\n");
 }
-

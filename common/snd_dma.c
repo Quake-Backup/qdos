@@ -137,33 +137,6 @@ void S_SoundInfo_f(void)
 
 /*
 ================
-S_Startup
-================
-*/
-
-void S_Startup (void)
-{
-	int		rc;
-
-	if (!snd_initialized)
-		return;
-
-	rc = SNDDMA_Init();
-	if (!rc)
-	{
-#ifndef	_WIN32
-		Com_Printf("S_Startup: SNDDMA_Init failed.\n");
-#endif
-		sound_started = 0;
-		return;
-	}
-
-	sound_started = 1;
-}
-
-
-/*
-================
 S_Init
 ================
 */

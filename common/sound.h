@@ -130,7 +130,6 @@ extern	portable_samplepair_t	*s_rawsamples;
 extern	size_t	s_rawsamples_size;
 
 void S_Init (void);
-void S_Startup (void);
 void S_Shutdown (void);
 void S_StartSound (int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float fvol,  float attenuation);
 void S_StaticSound (sfx_t *sfx, vec3_t origin, float vol, float attenuation);
