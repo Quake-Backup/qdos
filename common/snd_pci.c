@@ -97,19 +97,16 @@ qboolean PCI_Init(void)
 
 	aui = AU_getinfo_fp(ctx);
 
-	shm = &sn;
-	shm->speed = aui->freq_card;
-	shm->samplebits = aui->bits_set;
-	shm->channels = aui->chan_set;
-	if (shm->speed != s_khz->intValue) /* FS: our rate was not liked, so force the change. */
-		Cvar_SetValue("s_khz", shm->speed);
+	dma.speed = aui->freq_card;
+	dma.samplebits = aui->bits_set;
+	dma.channels = aui->chan_set;
+	if (dma.speed != s_khz->intValue) /* FS: our rate was not liked, so force the change. */
+		Cvar_SetValue("s_khz", dma.speed);
 
-	shm->soundalive = true;
-	shm->splitbuffer = false;
-	shm->samples = aui->card_dmasize / aui->bytespersample_card;
-	shm->samplepos = 0;
-	shm->submission_chunk = 1;
-	shm->buffer = (unsigned char *) aui->card_DMABUFF;
+	dma.samples = aui->card_dmasize / aui->bytespersample_card;
+	dma.samplepos = 0;
+	dma.submission_chunk = 1;
+	dma.buffer = (unsigned char *) aui->card_DMABUFF;
 
 	Con_Printf("%s\n", aui->infostr);
 
@@ -130,8 +127,8 @@ how many sample are required to fill it up.
 */
 int PCI_GetDMAPos(void)
 {
-	shm->samplepos = AU_cardbuf_space_fp(ctx);
-	return shm->samplepos;
+	dma.samplepos = AU_cardbuf_space_fp(ctx);
+	return dma.samplepos;
 }
 
 /*

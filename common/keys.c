@@ -322,6 +322,9 @@ void Key_Console (int key)
 		if (cls.state == ca_disconnected)
 			SCR_UpdateScreen ();	// force an update, because the command
 									// may take some time
+
+		Cmd_RemoveAutoComplete(); /* FS: Free tab auto-complete */
+
 		return;
 	}
 

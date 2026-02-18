@@ -35,8 +35,7 @@ void S_Play2(void); /* FS: For Nehahra */
 void S_PlayVol(void);
 void S_SoundList(void);
 void S_Update_();
-void S_StopAllSounds(qboolean clear);
-void S_StopAllSoundsC(void);
+void S_StopAllSounds(void);
 
 
 // =======================================================================
@@ -50,9 +49,7 @@ int			snd_blocked = 0;
 static qboolean		snd_ambient = 1;
 qboolean		snd_initialized = false;
 
-// pointer should go away
-volatile dma_t	*shm = NULL;
-volatile dma_t	sn;
+dma_t	dma;
 
 vec3_t		listener_origin;
 vec3_t		listener_forward;
@@ -65,7 +62,8 @@ int		paintedtime;	// sample PAIRS
 
 /* FS: Quake 2 raw samples for music streaming */
 int		s_rawend;
-portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
+portable_samplepair_t	*s_rawsamples;
+size_t	s_rawsamples_size;
 
 #define MAX_SFX		512
 sfx_t		*known_sfx;	// hunk allocated [MAX_SFX]
@@ -89,27 +87,22 @@ cvar_t	*ambient_level;
 cvar_t	*ambient_fade;
 cvar_t	*snd_noextraupdate;
 cvar_t	*snd_show;
-cvar_t	*_snd_mixahead;
+cvar_t	*s_mixahead;
+cvar_t	*s_primary;
+
 
 /* FS: New stuff */
 cvar_t	*s_khz;
 cvar_t	*s_musicvolume;
 cvar_t	*s_mastervolume;
+cvar_t	*s_paintbuffer_size_cvar;
+cvar_t	*s_rawsamples_size_cvar;
+
+byte *s_streamDataPtr;
 
 // ====================================================================
 // User-setable variables
 // ====================================================================
-
-
-//
-// Fake dma is a synchronous faking of the DMA progress used for
-// isolating performance in the renderer.  The fakedma_updates is
-// number of times S_Update() is called per second.
-//
-
-qboolean fakedma = false;
-int fakedma_updates = 15;
-
 
 void S_AmbientOff (void)
 {
@@ -125,19 +118,19 @@ void S_AmbientOn (void)
 
 void S_SoundInfo_f(void)
 {
-	if (!sound_started || !shm)
+	if (!sound_started)
 	{
 		Con_Printf ("sound system not started\n");
 		return;
 	}
 
-	Con_Printf("%5d stereo\n", shm->channels - 1);
-	Con_Printf("%5d samples\n", shm->samples);
-	Con_Printf("%5d samplepos\n", shm->samplepos);
-	Con_Printf("%5d samplebits\n", shm->samplebits);
-	Con_Printf("%5d submission_chunk\n", shm->submission_chunk);
-	Con_Printf("%5d speed\n", shm->speed);
-	Con_Printf("%p dma buffer\n", shm->buffer);
+	Con_Printf("%5d stereo\n", dma.channels - 1);
+	Con_Printf("%5d samples\n", dma.samples);
+	Con_Printf("%5d samplepos\n", dma.samplepos);
+	Con_Printf("%5d samplebits\n", dma.samplebits);
+	Con_Printf("%5d submission_chunk\n", dma.submission_chunk);
+	Con_Printf("%5d speed\n", dma.speed);
+	Con_Printf("%p dma buffer\n", dma.buffer);
 	Con_Printf("%5d total_channels\n", total_channels);
 }
 
@@ -155,18 +148,14 @@ void S_Startup (void)
 	if (!snd_initialized)
 		return;
 
-	if (!fakedma)
+	rc = SNDDMA_Init();
+	if (!rc)
 	{
-		rc = SNDDMA_Init();
-
-		if (!rc)
-		{
 #ifndef	_WIN32
-			Con_Printf("S_Startup: SNDDMA_Init failed.\n");
+		Con_Printf("S_Startup: SNDDMA_Init failed.\n");
 #endif
-			sound_started = 0;
-			return;
-		}
+		sound_started = 0;
+		return;
 	}
 
 	sound_started = 1;
@@ -180,8 +169,22 @@ S_Init
 */
 void S_Init (void)
 {
-	Con_Printf("\nSound Initialization\n");
+	cvar_t	*cv;
 
+	Con_Printf("\n------- sound initialization -------\n");
+
+	cv = Cvar_Get ("s_initsound", "1", 0);
+	if (!cv->intValue)
+	{
+		dma.buffer = NULL;/* just in case */
+		//paintbuffer = NULL;
+		s_rawsamples = NULL;
+		s_streamDataPtr = NULL;
+
+		Con_Printf ("not initializing.\n");
+		return;
+	}
+	
 	nosound = Cvar_Get("nosound", "0", 0);
 	volume = Cvar_Get("volume", "0.7", CVAR_ARCHIVE);
 	precache = Cvar_Get("precache", "1", 0);
@@ -191,7 +194,8 @@ void S_Init (void)
 	ambient_fade = Cvar_Get("ambient_fade", "100", 0);
 	snd_noextraupdate = Cvar_Get("snd_noextraupdate", "0", 0);
 	snd_show = Cvar_Get("snd_show", "0", 0);
-	_snd_mixahead = Cvar_Get("_snd_mixahead", "0.2", CVAR_ARCHIVE);
+	s_mixahead = Cvar_Get("s_mixahead", "0.2", CVAR_ARCHIVE);
+	s_primary = Cvar_Get ("s_primary", "0", CVAR_ARCHIVE);	// win32 specific
 
 	/* FS: New stuff */
 	s_khz = Cvar_Get("s_khz","", CVAR_ARCHIVE);
@@ -199,23 +203,25 @@ void S_Init (void)
 	s_musicvolume = Cvar_Get("s_musicvolume", "1.0", CVAR_ARCHIVE);
 	s_musicvolume->description = "Music volume for wav and ogg streaming.";
 	s_mastervolume = Cvar_Get("s_mastervolume", "1.0", CVAR_ARCHIVE);
+	s_paintbuffer_size_cvar = Cvar_Get("s_paintbuffer_size", va("%d", PAINTBUFFER_SIZE), 0);
+	s_rawsamples_size_cvar = Cvar_Get("s_rawsamples_size", va("%d", MAX_RAW_SAMPLES), 0);
 
 	if (COM_CheckParm("-nosound"))
 		return;
 
-	if (COM_CheckParm("-simsound"))
-		fakedma = true;
-
-	Cmd_AddCommand("play", S_Play);
-	Cmd_AddCommand("play2", S_Play2); /* FS: For Nehara */
-	Cmd_AddCommand("playvol", S_PlayVol);
-	Cmd_AddCommand("stopsound", S_StopAllSoundsC);
-	Cmd_AddCommand("soundlist", S_SoundList);
-	Cmd_AddCommand("soundinfo", S_SoundInfo_f);
+	if (!host_initialized)
+	{
+		Cmd_AddCommand("play", S_Play);
+		Cmd_AddCommand("play2", S_Play2); /* FS: For Nehara */
+		Cmd_AddCommand("playvol", S_PlayVol);
+		Cmd_AddCommand("stopsound", S_StopAllSounds);
+		Cmd_AddCommand("soundlist", S_SoundList);
+		Cmd_AddCommand("soundinfo", S_SoundInfo_f);
 #ifdef OGG_SUPPORT
-	Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
+		Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
 #endif
-	Cmd_AddCommand("wav_restart", S_WAV_Restart); /* FS: Added */
+		Cmd_AddCommand("wav_restart", S_WAV_Restart); /* FS: Added */
+	}
 
 	if (host_parms.memsize < 0x800000)
 	{
@@ -245,35 +251,52 @@ void S_Init (void)
 
 	snd_initialized = true;
 
-	S_Startup ();
+	if (!SNDDMA_Init()) {
+		dma.buffer = NULL;/* just in case */
+		return;
+	}
 
-	SND_InitScaletable ();
+	S_InitScaletable ();
 
+	sound_started = 1;
 	known_sfx = Hunk_AllocName (MAX_SFX*sizeof(sfx_t), "sfx_t");
 	num_sfx = 0;
 
-// create a piece of DMA memory
+	soundtime = 0;
+	paintedtime = 0;
 
-	if (fakedma)
+	s_paintbuffer_size = bound(128, s_paintbuffer_size_cvar->intValue, SND_BUFFER_SIZE);
+	//paintbuffer = (portable_samplepair_t *)calloc(1, s_paintbuffer_size * sizeof(portable_samplepair_t));
+	//if (!paintbuffer)
+	//{
+	//	dma.buffer = NULL;
+	//	return;
+	//}
+
+	s_rawsamples_size = bound(128, s_rawsamples_size_cvar->intValue, SND_BUFFER_SIZE);
+	s_rawsamples = (portable_samplepair_t *)calloc(1, s_rawsamples_size * sizeof(portable_samplepair_t));
+	if (!s_rawsamples)
 	{
-		shm = (void *) Hunk_AllocName(sizeof(*shm), "shm");
-		shm->splitbuffer = 0;
-		shm->samplebits = 16;
-		shm->speed = 22050;
-		shm->channels = 2;
-		shm->samples = 32768;
-		shm->samplepos = 0;
-		shm->soundalive = true;
-		shm->gamealive = true;
-		shm->submission_chunk = 1;
-		shm->buffer = Hunk_AllocName(1<<16, "shmbuf");
+		//free(paintbuffer);
+		dma.buffer = NULL;
+		return;
 	}
 
-	if (shm) /* FS: GPF no BLASTER set Fix (QIP) */
-		Con_Printf ("Sound sampling rate: %i\n", shm->speed);
+	s_streamDataPtr = (byte *)calloc(1, s_rawsamples_size * sizeof(byte));
+	if (!s_streamDataPtr)
+	{
+		free(s_rawsamples);
+		s_rawsamples = NULL;
+		//free(paintbuffer);
+		dma.buffer = NULL;
+		return;
+	}
 
-//	if (shm->buffer)
-//		shm->buffer[4] = shm->buffer[5] = 0x7f; // force a pop for debugging
+	Con_Printf ("Sound sampling rate: %d\n", dma.speed);
+	Con_Printf("Channels: %d, Bits: %d, Rate: %d\nPaint Buffer Size: %d\nRaw Samples Buffer Size: %d\n", dma.channels, dma.samplebits, dma.speed, (int)s_paintbuffer_size, (int)s_rawsamples_size);
+
+//	if (dma.buffer)
+//		dma.buffer[4] = dma.buffer[5] = 0x7f; // force a pop for debugging
 
 	ambient_sfx[AMBIENT_WATER] = S_PrecacheSound ("ambience/water1.wav");
 	ambient_sfx[AMBIENT_SKY] = S_PrecacheSound ("ambience/wind2.wav");
@@ -285,7 +308,7 @@ void S_Init (void)
 	if(!COM_CheckParm("-nowavstream"))
 		S_WAV_Init(); /* FS: Added */
 
-	S_StopAllSounds (true);
+	S_StopAllSounds ();
 }
 
 
@@ -296,24 +319,18 @@ void S_Init (void)
 void S_Shutdown(void)
 {
 	if (!sound_started)
-	{
-		Con_Printf("Sound not started!\n");
 		return;
-	}
 
 #ifdef OGG_SUPPORT
 	S_OGG_Shutdown(); /* Knightmare added */
 #endif
 	S_WAV_Shutdown(); /* FS: Added */
 
-	if (shm)
-		shm->gamealive = 0;
+	SNDDMA_Shutdown();
+
+	dma.buffer = NULL;
 
 	sound_started = 0;
-
-	if (!fakedma)
-		SNDDMA_Shutdown();
-	shm = NULL;
 }
 
 
@@ -334,6 +351,8 @@ sfx_t *S_FindName (char *name)
 
 	if (!name)
 		Sys_Error ("S_FindName: NULL\n");
+	if (!name[0])
+		Sys_Error ("S_FindName: empty name\n");
 
 	if (Q_strlen(name) >= MAX_QPATH)
 		Sys_Error ("Sound name too long: %s", name);
@@ -351,6 +370,7 @@ sfx_t *S_FindName (char *name)
 		Sys_Error ("S_FindName: out of sfx_t");
 
 	sfx = &known_sfx[i];
+	memset (sfx, 0, sizeof(*sfx));
 	strcpy (sfx->name, name);
 
 	num_sfx++;
@@ -406,11 +426,12 @@ sfx_t *S_PrecacheSound (char *name)
 SND_PickChannel
 =================
 */
-channel_t *SND_PickChannel(int entnum, int entchannel)
+channel_t *S_PickChannel(int entnum, int entchannel)
 {
 	int ch_idx;
 	int first_to_die;
 	int life_left;
+	channel_t	*ch;
 
 // Check for replacement sound, or find the best one to replace
 	first_to_die = -1;
@@ -441,10 +462,10 @@ channel_t *SND_PickChannel(int entnum, int entchannel)
 	if (first_to_die == -1)
 		return NULL;
 
-	if (channels[first_to_die].sfx)
-		channels[first_to_die].sfx = NULL;
+	ch = &channels[first_to_die];
+	memset (ch, 0, sizeof(*ch));
 
-	return &channels[first_to_die];
+	return ch;
 }
 
 /*
@@ -452,7 +473,7 @@ channel_t *SND_PickChannel(int entnum, int entchannel)
 SND_Spatialize
 =================
 */
-void SND_Spatialize(channel_t *ch)
+void S_Spatialize(channel_t *ch)
 {
 	vec_t dot, dist;
 	vec_t lscale, rscale, scale;
@@ -476,7 +497,7 @@ void SND_Spatialize(channel_t *ch)
 	
 	dot = DotProduct(listener_right, source_vec);
 
-	if (shm->channels == 1)
+	if (dma.channels == 1)
 	{
 		rscale = 1.0;
 		lscale = 1.0;
@@ -524,7 +545,7 @@ void S_StartSound(int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float f
 	vol = fvol*255;
 
 // pick a channel to play on
-	target_chan = SND_PickChannel(entnum, entchannel);
+	target_chan = S_PickChannel(entnum, entchannel);
 	if (!target_chan)
 		return;
 
@@ -535,7 +556,7 @@ void S_StartSound(int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float f
 	target_chan->master_vol = vol;
 	target_chan->entnum = entnum;
 	target_chan->entchannel = entchannel;
-	SND_Spatialize(target_chan);
+	S_Spatialize(target_chan);
 
 	if (!target_chan->leftvol && !target_chan->rightvol)
 		return;         // not audible at all
@@ -561,7 +582,7 @@ void S_StartSound(int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float f
 			continue;
 		if (check->sfx == sfx && !check->pos)
 		{
-			skip = rand () % (int)(0.1*shm->speed);
+			skip = rand () % (int)(0.1*dma.speed);
 			if (skip >= target_chan->end)
 				skip = target_chan->end - 1;
 			target_chan->pos += skip;
@@ -588,10 +609,8 @@ void S_StopSound(int entnum, int entchannel)
 	}
 }
 
-void S_StopAllSounds(qboolean clear)
+void S_StopAllSounds(void)
 {
-	int		i;
-
 	if (!sound_started)
 		return;
 
@@ -599,87 +618,42 @@ void S_StopAllSounds(qboolean clear)
 
 	total_channels = MAX_DYNAMIC_CHANNELS + NUM_AMBIENTS;   // no statics
 
-	for (i=0 ; i<MAX_CHANNELS ; i++)
-		if (channels[i].sfx)
-			channels[i].sfx = NULL;
-
-	Q_memset(channels, 0, MAX_CHANNELS * sizeof(channel_t));
+	memset(channels, 0, MAX_CHANNELS * sizeof(channel_t));
 
 	S_StopBackgroundTrack (); /* Knightmare added */
 
-	if (clear)
-		S_ClearBuffer ();
-}
-
-void S_StopAllSoundsC (void)
-{
-	S_StopAllSounds (true);
+	S_ClearBuffer ();
 }
 
 void S_ClearBuffer (void)
 {
 	int		clear;
+	int		i;
 
-#ifdef _WIN32
-	if (!sound_started || !shm || (!shm->buffer && !pDSBuf))
-#else
-	if (!sound_started || !shm || !shm->buffer)
-#endif
+	if (!sound_started)
 		return;
 
-	if (shm->samplebits == 8)
+	s_rawend = 0;
+	for (i = 0; i < s_rawsamples_size; i++) /* FS: Clear out the s_rawsamples too.  Should not matter, but just in case we read ahead of some garbage data on load. */
+	{
+		memset(&s_rawsamples[i], 0, sizeof(portable_samplepair_t));
+		memset(&s_streamDataPtr[i], 0, sizeof(byte));
+	}
+
+	if (dma.samplebits == 8)
 		clear = 0x80;
 	else
 		clear = 0;
 
-#ifdef _WIN32
-	if (pDSBuf)
-	{
-		DWORD	dwSize;
-		DWORD	*pData;
-		int		reps;
-		HRESULT	hresult;
-
-		reps = 0;
-
-		while ((hresult = pDSBuf->lpVtbl->Lock(pDSBuf, 0, gSndBufSize, &pData, &dwSize, NULL, NULL, 0)) != DS_OK)
-		{
-			if (hresult != DSERR_BUFFERLOST)
-			{
-				Con_Printf ("S_ClearBuffer: DS::Lock Sound Buffer Failed\n");
-				S_Shutdown ();
-				return;
-			}
-
-			if (++reps > 10000)
-			{
-				Con_Printf ("S_ClearBuffer: DS: couldn't restore buffer\n");
-				S_Shutdown ();
-				return;
-			}
-		}
-
-		Q_memset(pData, clear, shm->samples * shm->samplebits/8);
-
-		pDSBuf->lpVtbl->Unlock(pDSBuf, pData, dwSize, NULL, 0);
-	
-	}
-	else
-#endif
-	{
-		Q_memset(shm->buffer, clear, shm->samples * shm->samplebits/8);
-	}
-#ifndef _WINDOWS
+	SNDDMA_BeginPainting ();
+	if (dma.buffer)
+		memset(dma.buffer, clear, dma.samples * dma.samplebits/8);
+	SNDDMA_Submit ();
+#ifdef __DJGPP__
 	if(havegus)
-	{
-		Con_DPrintf(DEVELOPER_MSG_SOUND, "Clearing GUS DMA Buffer!\n");
-		GUS_ClearDMA();
-	}
-
-	Con_DPrintf(DEVELOPER_MSG_SOUND, "Cleared GUS DMA buffer!\n"); /* FS: Hjalp me GUS */
+		GUS_ClearDMA(); /* FS: Added */
 #endif
 }
-
 
 /*
 =================
@@ -719,7 +693,7 @@ void S_StaticSound (sfx_t *sfx, vec3_t origin, float vol, float attenuation)
 	ss->dist_mult = (attenuation/64) / sound_nominal_clip_dist;
 	ss->end = paintedtime + sc->length; 
 
-	SND_Spatialize (ss);
+	S_Spatialize (ss);
 }
 
 
@@ -842,9 +816,8 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	// rebuild scale tables if volume is modified
 	if (s_mastervolume->modified || volume->modified)
 	{
-		SND_InitScaletable ();
+		S_InitScaletable ();
 	}
-
 
 	VectorCopy(origin, listener_origin);
 	VectorCopy(forward, listener_forward);
@@ -873,7 +846,7 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 		}
 #endif
 
-		SND_Spatialize(ch);         // respatialize channel
+		S_Spatialize(ch);         // respatialize channel
 		if (!ch->leftvol && !ch->rightvol)
 			continue;
 
@@ -948,7 +921,7 @@ void GetSoundtime(void)
 	static	int		oldsamplepos;
 	int		fullsamples;
 
-	fullsamples = shm->samples / shm->channels;
+	fullsamples = dma.samples / dma.channels;
 
 // it is possible to miscount buffers if it has wrapped twice between
 // calls to S_Update.  Oh well.
@@ -963,31 +936,26 @@ void GetSoundtime(void)
 		{       // time to chop things off to avoid 32 bit limits
 			buffers = 0;
 			paintedtime = fullsamples;
-			S_StopAllSounds (true);
+			S_StopAllSounds ();
 		}
 	}
 	oldsamplepos = samplepos;
 
-	soundtime = buffers*fullsamples + samplepos/shm->channels;
+	soundtime = buffers*fullsamples + samplepos/dma.channels;
 }
 
-void S_ExtraUpdate (void)
-{
-#ifdef _WIN32
-	IN_Accumulate ();
-#endif
-
-	if (snd_noextraupdate->value)
-		return;         // don't pollute timings
-	S_Update_();
-}
 
 void S_Update_(void)
 {
-	unsigned	endtime;
+	unsigned        endtime;
 	int				samps;
-	
-	if (!sound_started || (snd_blocked > 0))
+
+	if (!sound_started)
+		return;
+
+	SNDDMA_BeginPainting ();
+
+	if (!dma.buffer)
 		return;
 
 // Updates DMA time
@@ -996,37 +964,20 @@ void S_Update_(void)
 // check to make sure that we haven't overshot
 	if (paintedtime < soundtime)
 	{
-		//Con_Printf ("S_Update_ : overflow\n");
+		Con_DPrintf(DEVELOPER_MSG_SOUND, "S_Update_ : overflow\n");
 		paintedtime = soundtime;
 	}
 
 // mix ahead of current position
-	endtime = soundtime + _snd_mixahead->value * shm->speed;
+	endtime = soundtime + s_mixahead->value * dma.speed;
+//endtime = (soundtime + 4096) & ~4095;
 
-// mix to an even submission block size
-	endtime = (endtime + shm->submission_chunk-1) & ~(shm->submission_chunk-1);
-	samps = shm->samples >> (shm->channels-1);
+	// mix to an even submission block size
+	endtime = (endtime + dma.submission_chunk-1)
+		& ~(dma.submission_chunk-1);
+	samps = dma.samples >> (dma.channels-1);
 	if (endtime - soundtime > samps)
 		endtime = soundtime + samps;
-
-#ifdef _WIN32
-// if the buffer was lost or stopped, restore it and/or restart it
-	{
-		DWORD   dwStatus;
-
-		if (pDSBuf)
-		{
-			if (pDSBuf->lpVtbl->GetStatus (pDSBuf, &dwStatus) != DD_OK)
-				Con_Printf ("Couldn't get sound buffer status\n");
-			
-			if (dwStatus & DSBSTATUS_BUFFERLOST)
-				pDSBuf->lpVtbl->Restore (pDSBuf);
-			
-			if (!(dwStatus & DSBSTATUS_PLAYING))
-				pDSBuf->lpVtbl->Play(pDSBuf, 0, 0, DSBPLAY_LOOPING);
-		}
-	}
-#endif
 
 	S_PaintChannels (endtime);
 
@@ -1201,7 +1152,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 	if (s_rawend < paintedtime)
 		s_rawend = paintedtime;
 
-	scale = (float) rate / shm->speed;
+	scale = (float) rate / dma.speed;
 	if (music)
 		intVolume = (int) ((s_musicvolume->value * s_mastervolume->value) * 256);
 	else
@@ -1214,7 +1165,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 			src = i * scale;
 			if (src >= samples)
 				break;
-			dst = s_rawend & (MAX_RAW_SAMPLES - 1);
+			dst = s_rawend & (s_rawsamples_size - 1);
 			s_rawend++;
 			s_rawsamples [dst].left = ((short *) data)[src * 2] * intVolume;
 			s_rawsamples [dst].right = ((short *) data)[src * 2 + 1] * intVolume;
@@ -1227,7 +1178,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 			src = i * scale;
 			if (src >= samples)
 				break;
-			dst = s_rawend & (MAX_RAW_SAMPLES - 1);
+			dst = s_rawend & (s_rawsamples_size - 1);
 			s_rawend++;
 			s_rawsamples [dst].left = ((short *) data)[src] * intVolume;
 			s_rawsamples [dst].right = ((short *) data)[src] * intVolume;
@@ -1242,7 +1193,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 			src = i * scale;
 			if (src >= samples)
 				break;
-			dst = s_rawend & (MAX_RAW_SAMPLES - 1);
+			dst = s_rawend & (s_rawsamples_size - 1);
 			s_rawend++;
 		//	s_rawsamples [dst].left = ((signed char *) data)[src * 2] * intVolume;
 		//	s_rawsamples [dst].right = ((signed char *) data)[src * 2 + 1] * intVolume;
@@ -1259,7 +1210,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 			src = i * scale;
 			if (src >= samples)
 				break;
-			dst = s_rawend & (MAX_RAW_SAMPLES - 1);
+			dst = s_rawend & (s_rawsamples_size - 1);
 			s_rawend++;
 		//	s_rawsamples [dst].left = ((signed char *) data)[src] * intVolume;
 		//	s_rawsamples [dst].right = ((signed char *) data)[src] * intVolume;

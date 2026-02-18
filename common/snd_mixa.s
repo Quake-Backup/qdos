@@ -37,8 +37,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define sc		8+16
 #define count	12+16
 
-.globl C(SND_PaintChannelFrom8)
-C(SND_PaintChannelFrom8):
+.globl C(S_PaintChannelFrom8)
+C(S_PaintChannelFrom8):
 	pushl	%esi				// preserve register variables
 	pushl	%edi
 	pushl	%ebx
@@ -140,8 +140,8 @@ LDone:
 // Transfer of stereo buffer to 16-bit DMA buffer code
 //----------------------------------------------------------------------
 
-.globl C(Snd_WriteLinearBlastStereo16)
-C(Snd_WriteLinearBlastStereo16):
+.globl C(S_WriteLinearBlastStereo16)
+C(S_WriteLinearBlastStereo16):
 //	pushl	%esi				// preserve register variables
 	pushl	%edi
 	pushl	%ebx

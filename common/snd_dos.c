@@ -60,32 +60,11 @@ INTERFACE
 ===============================================================================
 */
 
-static void snd_shutdown_f (void) /* FS: SND_SHUTDOWN */
-{
-	SNDDMA_Shutdown();
-	Con_Printf("\nSound Shutdown.\n");
-	Cache_Flush();
-}
-
-static void snd_restart_f (void) /* FS: Added */
-{
-	SNDDMA_Shutdown();
-	Con_Printf("\nSound Restarting\n");
-	Cache_Flush();
-	SNDDMA_Init();
-	S_StopAllSoundsC(); /* FS: For GUS Clear buffer fix */
-	Con_Printf ("Sound sampling rate: %i\n", shm->speed);
-}
-
 qboolean SNDDMA_Init(void)
 {
 	if (COM_CheckParm("-nosound"))
 		goto nocard;
-	if (!host_initialized)
-	{
-		Cmd_AddCommand ("snd_restart", snd_restart_f); /* FS: Added */
-		Cmd_AddCommand ("snd_shutdown", snd_shutdown_f); /* FS: Added */
-	}
+
 #ifdef USE_SNDPCI
 	if (PCI_Init ()) /* FS: Ruslans patch */
 	{
@@ -98,7 +77,7 @@ qboolean SNDDMA_Init(void)
 	{
 		Con_DPrintf(DEVELOPER_MSG_SOUND, "GUS_Init\n");
 		dmacard = dma_gus;
-		S_StopAllSoundsC(); /* FS: For GUS Buffer Clear Fix */
+		S_StopAllSounds(); /* FS: For GUS Buffer Clear Fix */
 		return true;
 	}
 	if (BLASTER_Init ())
@@ -149,12 +128,16 @@ void SNDDMA_Shutdown(void)
 		break;
 	}
 
-	shm->buffer = NULL;
+	dma.buffer = NULL;
 	dmacard = dma_none;
+}
+
+void SNDDMA_BeginPainting (void)
+{
+	/* Nothing in DOS */
 }
 
 void SNDDMA_Submit(void)
 {
 	/* Nothing in DOS */
 }
-

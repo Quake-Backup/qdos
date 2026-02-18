@@ -141,7 +141,7 @@ This is also called on Host_Error, so it shouldn't cause any errors
 void CL_Disconnect (void)
 {
 // stop sounds (especially looping!)
-	S_StopAllSounds (true);
+	S_StopAllSounds ();
 	
 // bring the console down and fade the colors back to normal
 // SCR_BringDownConsole ();
@@ -737,6 +737,20 @@ void CL_WriteConfig_f (void)
 		Con_Printf ("Usage: writeconfig <name>\n");
 }
 
+void CL_Snd_Shutdown_f (void)
+{
+	S_StopAllSounds();
+	S_Shutdown();
+}
+
+void CL_Snd_Restart_f (void)
+{
+	S_StopAllSounds();
+	S_Shutdown();
+	//Cache_Flush();
+	S_Init();
+}
+
 /*
 =================
 CL_Init
@@ -830,6 +844,8 @@ void CL_Init (void)
 	memset(&browserList, 0, sizeof(browserList));
 	memset(&browserListAll, 0, sizeof(browserListAll));
 #endif
+	Cmd_AddCommand("snd_shutdown", CL_Snd_Shutdown_f); /* FS */
+	Cmd_AddCommand("snd_restart", CL_Snd_Restart_f); /* FS */
 }
 
 #ifdef GAMESPY /* FS: Gamespy Stuff */

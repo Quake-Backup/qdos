@@ -623,7 +623,10 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	cmd_function_t	*cmd;
 	
 	if (host_initialized)	// because hunk allocation would get stomped
-		Sys_Error ("Cmd_AddCommand after host_initialized");
+	{
+		//Sys_Error ("Cmd_AddCommand after host_initialized");
+		return;
+	}
 		
 // fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
@@ -647,6 +650,34 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	cmd->function = function;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
+}
+
+/*
+============
+Cmd_RemoveCommand
+============
+*/
+void	Cmd_RemoveCommand (char *cmd_name)
+{
+	cmd_function_t	*cmd, **back;
+
+	back = &cmd_functions;
+	while (1)
+	{
+		cmd = *back;
+		if (!cmd)
+		{
+			Con_Printf ("Cmd_RemoveCommand: %s not added\n", cmd_name);
+			return;
+		}
+		if (!strcmp (cmd_name, cmd->name))
+		{
+			*back = cmd->next;
+			Z_Free (cmd);
+			return;
+		}
+		back = &cmd->next;
+	}
 }
 
 /*

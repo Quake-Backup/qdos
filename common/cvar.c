@@ -50,52 +50,130 @@ static qboolean Cvar_InfoValidate (char *s)
 	return true;
 }
 
-/* FS: Cvar_List_f from Quakespasm */
-void Cvar_List_f (void)
+static int cmpr_cvars (const void *a, const void *b)
 {
-	cvar_t	*cvar;
-        char      *partial;
-	int		len, count;
+	cvar_t *aa = *(cvar_t **)a;
+	cvar_t *bb = *(cvar_t **)b;
 
-	if (Cmd_Argc() > 1)
-	{
-		partial = Cmd_Argv (1);
-		len = Q_strlen(partial);
-	}
-	else
-	{
-		partial = NULL;
-		len = 0;
-	}
-
-	count=0;
-	for (cvar=cvar_vars ; cvar ; cvar=cvar->next)
-	{
-		if (partial && Q_strncmp (partial,cvar->name, len))
-		{
-			continue;
-		}
-		Con_SafePrintf ("%s%s%s %s \"%s\"\n",
-			cvar->flags & CVAR_ARCHIVE ? "*" : " ",
-#ifdef QUAKE1
-			cvar->flags & CVAR_SERVERINFO ? "s" : " ",
-#else
-			cvar->flags & CVAR_USERINFO ? "i" : " ",
-#endif
-			cvar->flags & CVAR_LATCH ? "l" : " ",
-			cvar->name,
-			cvar->string);
-		count++;
-	}
-
-	Con_SafePrintf ("%i cvars", count);
-	if (partial)
-	{
-		Con_SafePrintf (" beginning with \"%s\"", partial);
-	}
-	Con_SafePrintf ("\n");
+	return strcmp(aa->name, bb->name);
 }
 
+static int GetCVARCount (void)
+{
+	int i = 0;
+	cvar_t* cvar;
+
+	for (cvar = cvar_vars; cvar; cvar = cvar->next)
+	{
+		i++;
+	}
+
+	return i;
+}
+
+/*
+============
+Cvar_List_f
+
+============
+*/
+void Cvar_List_f (void)
+{
+	cvar_t **sorted_cvars = NULL; /* FS: Sort by name. */
+	cvar_t	*head = &cvar_vars[0];
+	cvar_t	*var;
+	const char *search_filter = NULL;
+	int		i = 0, j = 0, q = 0, args = 0, search_filter_len = 0, cvar_count = 0;
+
+	args = Cmd_Argc();
+
+	if (args > 1) /* FS */
+	{
+		search_filter = Cmd_Argv(1);
+		if (search_filter != NULL)
+		{
+			Con_SafePrintf("Listing matches for '%s'...\n", search_filter);
+
+			if (args > 2)
+			{
+				search_filter_len = strlen(search_filter);
+			}
+		}
+	}
+
+	cvar_count = GetCVARCount();
+
+	sorted_cvars = (cvar_t **)malloc(sizeof(cvar_t*)*cvar_count);
+	if (!sorted_cvars)
+	{
+		Sys_Error ("Cvar_List_f: Failed to allocate memory.");
+		return;
+	}
+
+	for (q = 0; q < cvar_count; q++)
+	{
+		sorted_cvars[q] = cvar_vars;
+		cvar_vars = cvar_vars->next;
+	}
+
+	qsort(sorted_cvars, cvar_count, sizeof(cvar_t*), &cmpr_cvars);
+
+	for (i = 0; i < cvar_count; i++)
+	{
+		var = sorted_cvars[i];
+		if (!var)
+		{
+			break;
+		}
+
+		if (search_filter) /* FS */
+		{
+			if (!strstr(var->name, search_filter))
+				continue;
+
+			if ((args > 2) && (strncmp(var->name, search_filter, search_filter_len)))
+				continue;
+
+			j++;
+		}
+
+		if (var->flags & CVAR_ARCHIVE)
+			Con_SafePrintf("*");
+		else
+			Con_SafePrintf(" ");
+		if (var->flags & CVAR_USERINFO)
+			Con_SafePrintf("U");
+		else
+			Con_SafePrintf(" ");
+		if (var->flags & CVAR_SERVERINFO)
+			Con_SafePrintf("S");
+		else
+			Con_SafePrintf(" ");
+		if (var->flags & CVAR_NOSET)
+			Con_SafePrintf("-");
+		else if (var->flags & CVAR_LATCH)
+			Con_SafePrintf("L");
+		else
+			Con_SafePrintf(" ");
+		if (var->description)
+			Con_SafePrintf("D");
+		else
+			Con_SafePrintf(" ");
+
+		if ( (var->flags & CVAR_LATCH) && var->latched_string)
+			Con_SafePrintf("\"%s\" is \"%s\", Default: \"%s\", Latched to: \"%s\"\n", var->name, var->string, var->defaultString, var->latched_string);
+		else
+			Con_SafePrintf(" %s \"%s\", Default: \"%s\"\n", var->name, var->string, var->defaultString);
+	}
+
+	Con_SafePrintf("Legend: * Archive. U Userinfo. S Serverinfo. - Write Protected. L Latched. D Containts a Help Description.\n"); /* FS: Added a legend */
+	Con_SafePrintf("%d cvars\n", search_filter ? j : i);
+
+	free(sorted_cvars);
+	sorted_cvars = NULL;
+
+	cvar_vars = (cvar_t *)head;
+}
 
 /*
 ============

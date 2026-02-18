@@ -37,7 +37,7 @@ qboolean	dibonly;
 
 extern int		Minimized;
 
-HWND		mainwindow;
+HWND		cl_hwnd;
 
 HWND WINAPI InitializeWindow (HINSTANCE hInstance, int nCmdShow);
 
@@ -160,7 +160,7 @@ void VID_RememberWindowPos (void)
 {
 	RECT	rect;
 
-	if (GetWindowRect (mainwindow, &rect))
+	if (GetWindowRect (cl_hwnd, &rect))
 	{
 		if ((rect.left < GetSystemMetrics (SM_CXSCREEN)) &&
 			(rect.top < GetSystemMetrics (SM_CYSCREEN))  &&
@@ -319,7 +319,6 @@ int VID_Suspend (MGLDC *dc, int flags)
 			return MGL_NO_DEACTIVATE;
 		}
 
-		S_BlockSound ();
 		S_ClearBuffer ();
 
 		IN_RestoreOriginalMouseState ();
@@ -1278,7 +1277,7 @@ qboolean VID_SetWindowedMode (int modenum)
 // for the rest of the session
 	if (!vid_mode_set)
 	{
-		mainwindow = CreateWindowEx (
+		cl_hwnd = CreateWindowEx (
 			 ExWindowStyle,
 #ifdef QUAKE1
 			"QDOS",
@@ -1296,21 +1295,21 @@ qboolean VID_SetWindowedMode (int modenum)
 			 global_hInstance,
 			 NULL);
 
-		if (!mainwindow)
+		if (!cl_hwnd)
 			Sys_Error ("Couldn't create DIB window");
 
 	// tell MGL to use this window for fullscreen modes
-		MGL_registerFullScreenWindow (mainwindow);
+		MGL_registerFullScreenWindow (cl_hwnd);
 
 		vid_mode_set = true;
 	}
 	else
 	{
-		SetWindowLong(mainwindow, GWL_STYLE, WindowStyle | WS_VISIBLE);
-		SetWindowLong(mainwindow, GWL_EXSTYLE, ExWindowStyle);
+		SetWindowLong(cl_hwnd, GWL_STYLE, WindowStyle | WS_VISIBLE);
+		SetWindowLong(cl_hwnd, GWL_EXSTYLE, ExWindowStyle);
 	}
 
-	if (!SetWindowPos (mainwindow,
+	if (!SetWindowPos (cl_hwnd,
 					   NULL,
 					   0, 0,
 					   WindowRect.right - WindowRect.left,
@@ -1326,16 +1325,16 @@ qboolean VID_SetWindowedMode (int modenum)
 
 // position and show the DIB window
 	VID_CheckWindowXY ();
-	SetWindowPos (mainwindow, NULL, (int)vid_window_x->value,
+	SetWindowPos (cl_hwnd, NULL, (int)vid_window_x->value,
 				  (int)vid_window_y->value, 0, 0,
 				  SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_DRAWFRAME);
 
 	if (force_minimized)
-		ShowWindow (mainwindow, SW_MINIMIZE);
+		ShowWindow (cl_hwnd, SW_MINIMIZE);
 	else
-		ShowWindow (mainwindow, SW_SHOWDEFAULT);
+		ShowWindow (cl_hwnd, SW_SHOWDEFAULT);
 
-	UpdateWindow (mainwindow);
+	UpdateWindow (cl_hwnd);
 
 	modestate = MS_WINDOWED;
 	vid_fulldib_on_focus_mode = 0;
@@ -1344,12 +1343,12 @@ qboolean VID_SetWindowedMode (int modenum)
 // (to avoid flickering when re-sizing the window on the desktop),
 // we clear the window to black when created, otherwise it will be
 // empty while Quake starts up.
-	hdc = GetDC(mainwindow);
+	hdc = GetDC(cl_hwnd);
 	PatBlt(hdc,0,0,WindowRect.right,WindowRect.bottom,BLACKNESS);
-	ReleaseDC(mainwindow, hdc);
+	ReleaseDC(cl_hwnd, hdc);
 
 	/* Create the MGL window DC and the MGL memory DC */
-	if ((windc = MGL_createWindowedDC(mainwindow)) == NULL)
+	if ((windc = MGL_createWindowedDC(cl_hwnd)) == NULL)
 		MGL_fatalError("Unable to create Windowed DC!");
 
 	if ((dibdc = MGL_createMemoryDC(DIBWidth,DIBHeight,8,&pf)) == NULL)
@@ -1369,8 +1368,8 @@ qboolean VID_SetWindowedMode (int modenum)
 
 	vid_stretched = stretched;
 
-	SendMessage (mainwindow, WM_SETICON, (WPARAM)TRUE, (LPARAM)hIcon);
-	SendMessage (mainwindow, WM_SETICON, (WPARAM)FALSE, (LPARAM)hIcon);
+	SendMessage (cl_hwnd, WM_SETICON, (WPARAM)TRUE, (LPARAM)hIcon);
+	SendMessage (cl_hwnd, WM_SETICON, (WPARAM)FALSE, (LPARAM)hIcon);
 
 	return true;
 }
@@ -1417,8 +1416,8 @@ qboolean VID_SetFullscreenMode (int modenum)
 	window_y = 0;
 
 // set the large icon, so the Quake icon will show up in the taskbar
-	SendMessage (mainwindow, WM_SETICON, (WPARAM)1, (LPARAM)hIcon);
-	SendMessage (mainwindow, WM_SETICON, (WPARAM)0, (LPARAM)hIcon);
+	SendMessage (cl_hwnd, WM_SETICON, (WPARAM)1, (LPARAM)hIcon);
+	SendMessage (cl_hwnd, WM_SETICON, (WPARAM)0, (LPARAM)hIcon);
 
 // shouldn't be needed, but Kendall needs to let us get the activation
 // message for this not to be needed on NT
@@ -1479,10 +1478,10 @@ qboolean VID_SetFullDIBMode (int modenum)
 	ExWindowStyle = 0;
 	AdjustWindowRectEx(&WindowRect, WindowStyle, FALSE, 0);
 
-	SetWindowLong(mainwindow, GWL_STYLE, WindowStyle | WS_VISIBLE);
-	SetWindowLong(mainwindow, GWL_EXSTYLE, ExWindowStyle);
+	SetWindowLong(cl_hwnd, GWL_STYLE, WindowStyle | WS_VISIBLE);
+	SetWindowLong(cl_hwnd, GWL_EXSTYLE, ExWindowStyle);
 
-	if (!SetWindowPos (mainwindow,
+	if (!SetWindowPos (cl_hwnd,
 					   NULL,
 					   0, 0,
 					   WindowRect.right - WindowRect.left,
@@ -1493,21 +1492,21 @@ qboolean VID_SetFullDIBMode (int modenum)
 	}
 
 // position and show the DIB window
-	SetWindowPos (mainwindow, HWND_TOPMOST, 0, 0, 0, 0,
+	SetWindowPos (cl_hwnd, HWND_TOPMOST, 0, 0, 0, 0,
 				  SWP_NOSIZE | SWP_SHOWWINDOW | SWP_DRAWFRAME);
-	ShowWindow (mainwindow, SW_SHOWDEFAULT);
-	UpdateWindow (mainwindow);
+	ShowWindow (cl_hwnd, SW_SHOWDEFAULT);
+	UpdateWindow (cl_hwnd);
 
 	// Because we have set the background brush for the window to NULL
 	// (to avoid flickering when re-sizing the window on the desktop), we
 	// clear the window to black when created, otherwise it will be
 	// empty while Quake starts up.
-	hdc = GetDC(mainwindow);
+	hdc = GetDC(cl_hwnd);
 	PatBlt(hdc,0,0,WindowRect.right,WindowRect.bottom,BLACKNESS);
-	ReleaseDC(mainwindow, hdc);
+	ReleaseDC(cl_hwnd, hdc);
 
 	/* Create the MGL window DC and the MGL memory DC */
-	if ((windc = MGL_createWindowedDC(mainwindow)) == NULL)
+	if ((windc = MGL_createWindowedDC(cl_hwnd)) == NULL)
 		MGL_fatalError("Unable to create Fullscreen DIB DC!");
 
 	if ((dibdc = MGL_createMemoryDC(DIBWidth,DIBHeight,8,&pf)) == NULL)
@@ -1667,7 +1666,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 // ourselves at the top of the z order, then grab the foreground again,
 // Who knows if it helps, but it probably doesn't hurt
 	if (!force_minimized)
-		SetForegroundWindow (mainwindow);
+		SetForegroundWindow (cl_hwnd);
 
 	hdc = GetDC(NULL);
 
@@ -1702,11 +1701,11 @@ int VID_SetMode (int modenum, unsigned char *palette)
 
 	if (!force_minimized)
 	{
-		SetWindowPos (mainwindow, HWND_TOP, 0, 0, 0, 0,
+		SetWindowPos (cl_hwnd, HWND_TOP, 0, 0, 0, 0,
 				  SWP_DRAWFRAME | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW |
 				  SWP_NOCOPYBITS);
 
-		SetForegroundWindow (mainwindow);
+		SetForegroundWindow (cl_hwnd);
 	}
 
 // fix the leftover Alt from any Alt-Tab or the like that switched us away
@@ -2038,7 +2037,7 @@ void VID_Minimize_f (void)
 // we only support minimizing windows; if you're fullscreen,
 // switch to windowed first
 	if (modestate == MS_WINDOWED)
-		ShowWindow (mainwindow, SW_MINIMIZE);
+		ShowWindow (cl_hwnd, SW_MINIMIZE);
 }
 
 
@@ -2193,7 +2192,7 @@ void	VID_Shutdown (void)
 		if (modestate == MS_FULLDIB)
 			ChangeDisplaySettings (NULL, CDS_FULLSCREEN);
 
-		PostMessage (HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)mainwindow, (LPARAM)0);
+		PostMessage (HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)cl_hwnd, (LPARAM)0);
 		PostMessage (HWND_BROADCAST, WM_SYSCOLORCHANGE, (WPARAM)0, (LPARAM)0);
 
 		AppActivate(false, false);
@@ -2204,8 +2203,8 @@ void	VID_Shutdown (void)
 		if (hwnd_dialog)
 			DestroyWindow (hwnd_dialog);
 
-		if (mainwindow)
-			DestroyWindow(mainwindow);
+		if (cl_hwnd)
+			DestroyWindow(cl_hwnd);
 
 		MGL_exit();
 
@@ -2271,7 +2270,7 @@ void FlipScreen(vrect_t *rects)
 	{
 		HDC hdcScreen;
 
-		hdcScreen = GetDC(mainwindow);
+		hdcScreen = GetDC(cl_hwnd);
 
 		if (windc && dibdc)
 		{
@@ -2300,7 +2299,7 @@ void FlipScreen(vrect_t *rects)
 			}
 		}
 
-		ReleaseDC(mainwindow, hdcScreen);
+		ReleaseDC(cl_hwnd, hdcScreen);
 	}
 }
 
@@ -2325,7 +2324,7 @@ void	VID_Update (vrect_t *rects)
 	{
 		if (modestate == MS_WINDOWED)
 		{
-			GetWindowRect (mainwindow, &trect);
+			GetWindowRect (cl_hwnd, &trect);
 
 			if ((trect.left != (int)vid_window_x->value) ||
 				(trect.top  != (int)vid_window_y->value))
@@ -2337,7 +2336,7 @@ void	VID_Update (vrect_t *rects)
 				}
 
 				VID_CheckWindowXY ();
-				SetWindowPos (mainwindow, NULL, (int)vid_window_x->value,
+				SetWindowPos (cl_hwnd, NULL, (int)vid_window_x->value,
 				  (int)vid_window_y->value, 0, 0,
 				  SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_DRAWFRAME);
 			}
@@ -2647,7 +2646,6 @@ void AppActivate(BOOL fActive, BOOL minimize)
 {
     HDC			hdc;
     int			i, t;
-	static BOOL	sound_active;
 
 	ActiveApp = fActive;
 
@@ -2701,20 +2699,6 @@ void AppActivate(BOOL fActive, BOOL minimize)
 		scr_fullupdate = 0;
 
 		ReleaseDC(NULL,hdc);
-	}
-
-// enable/disable sound on focus gain/loss
-	if (!ActiveApp && sound_active)
-	{
-		S_BlockSound ();
-		S_ClearBuffer ();
-		sound_active = false;
-	}
-	else if (ActiveApp && !sound_active)
-	{
-		S_UnblockSound ();
-		S_ClearBuffer ();
-		sound_active = true;
 	}
 
 // minimize/restore fulldib windows/mouse-capture normal windows on demand
@@ -2872,18 +2856,7 @@ LONG WINAPI MainWndProc (
 				// fall through windowed and allow the screen saver to start
 
 				default:
-					if (!in_mode_set)
-					{
-						S_BlockSound ();
-						S_ClearBuffer ();
-					}
-
 					lRet = DefWindowProc (hWnd, uMsg, wParam, lParam);
-
-					if (!in_mode_set)
-					{
-						S_UnblockSound ();
-					}
 			}
 			break;
 
@@ -3008,7 +2981,7 @@ LONG WINAPI MainWndProc (
 			if (vid_initialized && !in_mode_set && windc && MGL_activatePalette(windc,false) && !Minimized)
 			{
 				VID_SetPalette (vid_curpal);
-				InvalidateRect (mainwindow, NULL, false);
+				InvalidateRect (cl_hwnd, NULL, false);
 
 			// specifically required if WM_QUERYNEWPALETTE realizes a new palette
 				lRet = TRUE;
@@ -3030,7 +3003,7 @@ LONG WINAPI MainWndProc (
 		// crash on Win95)
 			if (!in_mode_set)
 			{
-				if (MessageBox (mainwindow, "Are you sure you want to quit?", "Confirm Exit",
+				if (MessageBox (cl_hwnd, "Are you sure you want to quit?", "Confirm Exit",
 							MB_YESNO | MB_SETFOREGROUND | MB_ICONQUESTION) == IDYES)
 				{
 					Sys_Quit ();

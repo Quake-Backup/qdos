@@ -29,6 +29,7 @@ BLASTER SUPPORT
 
 ===============================================================================
 */
+static int	firstInit = true;
 
 static	short *dma_buffer = NULL; // sezero
 static	void  *dma_dosadr = NULL;
@@ -195,13 +196,13 @@ static void StartSB(void)
 
 		WriteDSP(0x41);
 
-		WriteDSP(shm->speed>>8);
-		WriteDSP(shm->speed&0xff);
+		WriteDSP(dma.speed>>8);
+		WriteDSP(dma.speed&0xff);
 
 		WriteDSP(0xb6); // 16-bit output
 		WriteDSP(0x30); // stereo
-		WriteDSP((shm->samples-1) & 0xff);		// # of samples - 1
-		WriteDSP((shm->samples-1) >> 8);
+		WriteDSP((dma.samples-1) & 0xff);		// # of samples - 1
+		WriteDSP((dma.samples-1) >> 8);
 	}
 // version 3.xx startup code
 	else if (dsp_version == 3)
@@ -219,15 +220,15 @@ static void StartSB(void)
 		for (i=0 ; i<0x10000 ; i++)
 			dos_inportb(dsp_port+0xe);				  // ack the dsp
 		
-		timeconstant = 65536-(256000000/(shm->channels*shm->speed));
+		timeconstant = 65536-(256000000/(dma.channels*dma.speed));
 		WriteDSP(0x40);
 		WriteDSP(timeconstant>>8);
 
 		WriteMixer (0xe, ReadMixer(0xe) | 0x20);// turn off filter
 
 		WriteDSP(0x48);
-		WriteDSP((shm->samples-1) & 0xff);		// # of samples - 1
-		WriteDSP((shm->samples-1) >> 8);
+		WriteDSP((dma.samples-1) & 0xff);		// # of samples - 1
+		WriteDSP((dma.samples-1) >> 8);
 
 		WriteDSP(0x90); // high speed 8 bit stereo
 	}
@@ -237,13 +238,13 @@ static void StartSB(void)
 		Con_Printf("Version 2 SB startup\n");
 		WriteDSP(0xd1); // turn on speaker
 
-		timeconstant = 65536-(256000000/(shm->channels*shm->speed));
+		timeconstant = 65536-(256000000/(dma.channels*dma.speed));
 		WriteDSP(0x40);
 		WriteDSP(timeconstant>>8);
 
 		WriteDSP(0x48);
-		WriteDSP((shm->samples-1) & 0xff);		// # of samples - 1
-		WriteDSP((shm->samples-1) >> 8);
+		WriteDSP((dma.samples-1) & 0xff);		// # of samples - 1
+		WriteDSP((dma.samples-1) >> 8);
 
 		WriteDSP(0x1c); // normal speed 8 bit mono
 	}
@@ -350,7 +351,6 @@ qboolean BLASTER_Init(void)
 	if(COM_CheckParm("-nosb"))
 		return false;
 
-	shm = 0;
 	rc = 0;
 
 //
@@ -398,40 +398,40 @@ qboolean BLASTER_Init(void)
 
 
 // everyone does 11khz sampling rate unless told otherwise
-	shm = &sn;
-	shm->speed = 11025;
+	dma.speed = 11025;
 	rc = COM_CheckParm("-sspeed");
 
 
 	if (s_khz->value > 7000) /* FS: S_KHZ.  7000 for future Disney Sound Source someday... */
 	{
-		shm->speed = s_khz->value;
+		dma.speed = s_khz->value;
 	}
 
 	if (rc)
-		shm->speed = Q_atoi(com_argv[rc+1]);
+		dma.speed = Q_atoi(com_argv[rc+1]);
 
 // version 4 cards (sb 16) do 16 bit stereo
 	if (dsp_version >= 4)
 	{
-		shm->channels = 2;
-		shm->samplebits = 16;
+		dma.channels = 2;
+		dma.samplebits = 16;
 	}
 // version 3 cards (sb pro) do 8 bit stereo
 	else if (dsp_version == 3)
 	{
-		shm->channels = 2;
-		shm->samplebits = 8;	 
+		dma.channels = 2;
+		dma.samplebits = 8;	 
 	}
 // v2 cards do 8 bit mono
 	else
 	{
-		shm->channels = 1;
-		shm->samplebits = 8;	 
+		dma.channels = 1;
+		dma.samplebits = 8;	 
 	}
 
-	if(!host_initialized) /* FS: for snd_restart */
+	if(firstInit)
 	{
+		firstInit = false;
 		Cmd_AddCommand("sbinfo", SB_Info_f);
 	}
 
@@ -452,13 +452,10 @@ qboolean BLASTER_Init(void)
 
 	memset(dma_buffer, 0, dma_size);
 
-	shm->soundalive = true;
-	shm->splitbuffer = false;
-
-	shm->samples = size/(shm->samplebits/8);
-	shm->samplepos = 0;
-	shm->submission_chunk = 1;
-	shm->buffer = (unsigned char *) dma_buffer;
+	dma.samples = size/(dma.samplebits/8);
+	dma.samplepos = 0;
+	dma.submission_chunk = 1;
+	dma.buffer = (unsigned char *) dma_buffer;
 
 	StartDMA();
 	StartSB();
@@ -493,24 +490,24 @@ int BLASTER_GetDMAPos(void)
 		dos_outportb(0xc, 0);
 		count = dos_inportb(dma_card*2+1);
 		count += dos_inportb(dma_card*2+1) << 8;
-		if (shm->samplebits == 16)
+		if (dma.samplebits == 16)
 			count /= 2;
-		count = shm->samples - (count+1);
+		count = dma.samples - (count+1);
 	}
 	else
 	{
 		dos_outportb(0xd8, 0);
 		count = dos_inportb(0xc0+(dma_card-4)*4+2);
 		count += dos_inportb(0xc0+(dma_card-4)*4+2) << 8;
-		if (shm->samplebits == 8)
+		if (dma.samplebits == 8)
 			count *= 2;
-		count = shm->samples - (count+1);
+		count = dma.samples - (count+1);
 	}
 
 //		Con_Printf("DMA pos = 0x%x\n", count);
 
-	shm->samplepos = count & (shm->samples-1);
-	return shm->samplepos;
+	dma.samplepos = count & (dma.samples-1);
+	return dma.samplepos;
 }
 
 /*

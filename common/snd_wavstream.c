@@ -233,7 +233,6 @@ void S_StreamWAVBackgroundTrack(void)
 	int		i, samples, maxSamples;
 	int		read, maxRead, total;
 	float	scale;
-	byte	musicWavData[MAX_RAW_SAMPLES];
 
 	if (!s_bgTrack.file || !s_musicvolume->value || !s_mastervolume->value || !cl_wav_music->intValue)
 		return;
@@ -241,13 +240,13 @@ void S_StreamWAVBackgroundTrack(void)
 	if (s_rawend < paintedtime)
 		s_rawend = paintedtime;
 
-	scale = (float)musicWavInfo.rate / shm->speed;
-	maxSamples = sizeof(musicWavData) / musicWavInfo.channels / musicWavInfo.width;
+	scale = (float)musicWavInfo.rate / dma.speed;
+	maxSamples = (sizeof(byte) * s_rawsamples_size) / musicWavInfo.channels / musicWavInfo.width;
 //	Con_Printf("Scale: %f.  Max Samples: %i\n", scale, maxSamples);
 
 	while (1)
 	{
-		samples = (paintedtime + MAX_RAW_SAMPLES - s_rawend) * scale;
+		samples = (paintedtime + s_rawsamples_size - s_rawend) * scale;
 		if (samples <= 0)
 			return;
 		if (samples > maxSamples)
@@ -257,7 +256,7 @@ void S_StreamWAVBackgroundTrack(void)
 		total = 0;
 		while (total < maxRead)
 		{
-			read = fread(musicWavData, 1, maxRead, s_bgTrack.file);
+			read = fread(s_streamDataPtr, 1, maxRead, s_bgTrack.file);
 			if (!read)
 			{	// End of file
 				if (!s_bgTrack.looping)
@@ -302,10 +301,10 @@ void S_StreamWAVBackgroundTrack(void)
 		if (musicWavInfo.width == 2) {
 			total = samples * musicWavInfo.channels;
 			for (i = 0; i < total; i++) {
-				((short *)musicWavData)[i] = LittleShort( ((short *)musicWavData)[i] );
+				((short *)s_streamDataPtr)[i] = LittleShort( ((short *)s_streamDataPtr)[i] );
 			}
 		}
-		S_RawSamples (samples, musicWavInfo.rate, musicWavInfo.width, musicWavInfo.channels, musicWavData, true);
+		S_RawSamples (samples, musicWavInfo.rate, musicWavInfo.width, musicWavInfo.channels, s_streamDataPtr, true);
 	}
 }
 

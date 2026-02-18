@@ -144,4 +144,6 @@ void	Cmd_Print (char *text);
 char *CopyString (char *in);
 void Cbuf_AddEarlyCommands (qboolean clear);
 
+void Cmd_RemoveAutoComplete (void); /* FS */
+
 #endif // __CMD_H

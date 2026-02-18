@@ -3289,9 +3289,6 @@ void M_Draw (void)
 		if (scr_con_current)
 		{
 			Draw_ConsoleBackground (vid.height);
-			VID_UnlockBuffer ();
-			S_ExtraUpdate ();
-			VID_LockBuffer ();
 		}
 		else
 			Draw_FadeScreen ();
@@ -3387,10 +3384,6 @@ void M_Draw (void)
 		S_LocalSound ("misc/menu2.wav");
 		m_entersound = false;
 	}
-
-	VID_UnlockBuffer ();
-	S_ExtraUpdate ();
-	VID_LockBuffer ();
 }
 
 void M_Keydown (int key)

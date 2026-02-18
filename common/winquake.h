@@ -63,7 +63,7 @@ typedef enum {MS_WINDOWED, MS_FULLSCREEN, MS_FULLDIB, MS_UNINIT} modestate_t;
 
 extern modestate_t	modestate;
 
-extern HWND			mainwindow;
+extern HWND			cl_hwnd;
 extern qboolean		ActiveApp, Minimized;
 
 extern qboolean	WinNT;

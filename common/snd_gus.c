@@ -69,6 +69,7 @@ static int current_field_buffer=0;
 static struct section_buffer section_buffers[NUM_SECTION_BUFFERS];
 static struct field_buffer field_buffers[NUM_FIELD_BUFFERS];
 static byte	extVoices,extCodecVoices; /* FS: GUS clicking sounds during map transitions and pauseing fix */
+int	havegus; /* FS: Is GUS our sound card? */
 
 //***************************************************************************
 // Internal routines
@@ -1082,29 +1083,27 @@ qboolean GUS_Init(void)
 			if (GUS_GetGUSData()==false)
 				return(false);
 
-	shm = &sn;
-
 	if (HaveCodec) /* FS: Mythical Gravis UltraSound MAX with Crystal CS4231 CODEC chip or an AMD Interwave/Gravis UltraSound PnP */
 	{
 		// do 11khz sampling rate unless command line parameter wants different
-		shm->speed = 11025;
+		dma.speed = 11025;
 		FSVal = extCodecVoices = 0x03; /* FS: Added extCodecVoices */
 		rc = COM_CheckParm("-sspeed");
 
 		if (s_khz->value >= 22050) /* FS: S_KHZ */
 		{
-			shm->speed = s_khz->value;
+			dma.speed = s_khz->value;
 
 			// Make sure rate not too high
-			if (shm->speed>48000)
-				shm->speed=48000;
+			if (dma.speed>48000)
+				dma.speed=48000;
 
 			// Adjust speed to match one of the possible CODEC rates
 			for (CodecRate=CodecRates;CodecRate->Rate!=0;CodecRate++)
 			{
-				if (shm->speed <= CodecRate->Rate)
+				if (dma.speed <= CodecRate->Rate)
 				{
-					shm->speed=CodecRate->Rate;
+					dma.speed=CodecRate->Rate;
 					FSVal=extCodecVoices=CodecRate->FSVal; /* FS: Added extCodecVoices */
 					break;
 				}
@@ -1113,18 +1112,18 @@ qboolean GUS_Init(void)
 
 		if (rc)
 		{
-			shm->speed = Q_atoi(com_argv[rc+1]);
+			dma.speed = Q_atoi(com_argv[rc+1]);
 	
 			// Make sure rate not too high
-			if (shm->speed>48000)
-				shm->speed=48000;
+			if (dma.speed>48000)
+				dma.speed=48000;
 	
 			// Adjust speed to match one of the possible CODEC rates
 			for (CodecRate=CodecRates;CodecRate->Rate!=0;CodecRate++)
 			{
-				if (shm->speed <= CodecRate->Rate)
+				if (dma.speed <= CodecRate->Rate)
 				{
-					shm->speed=CodecRate->Rate;
+					dma.speed=CodecRate->Rate;
 					FSVal=extCodecVoices=CodecRate->FSVal; /* FS: Added extCodecVoices */
 					break;
 				}
@@ -1133,8 +1132,8 @@ qboolean GUS_Init(void)
 
 	
 		// Always do 16 bit stereo
-		shm->channels = 2;
-		shm->samplebits = 16;
+		dma.channels = 2;
+		dma.samplebits = 16;
 	
 		// allocate buffer twice the size we need so we can get aligned buffer
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
@@ -1151,13 +1150,10 @@ qboolean GUS_Init(void)
 		// Zero off DMA buffer
 		memset(dma_buffer, 0, SND_BUFFER_SIZE);
 
-		shm->soundalive = true;
-		shm->splitbuffer = false;
-
-		shm->samplepos = 0;
-		shm->submission_chunk = 1;
-		shm->buffer = (unsigned char *) dma_buffer;
-		shm->samples = SND_BUFFER_SIZE/(shm->samplebits/8);
+		dma.samplepos = 0;
+		dma.submission_chunk = 1;
+		dma.buffer = (unsigned char *) dma_buffer;
+		dma.samples = SND_BUFFER_SIZE/(dma.samplebits/8);
 
 		GUS_StartDMA(DmaChannel,dma_buffer,SND_BUFFER_SIZE);
 		GUS_StartCODEC(SND_BUFFER_SIZE,FSVal);
@@ -1166,24 +1162,24 @@ qboolean GUS_Init(void)
 	else /* FS: No CODEC?  You must have a Gravis UltraSound "Classic", ACE/SoundBuddy or compatible OEM CLONE! */
 	{
 		// do 19khz sampling rate unless command line parameter wants different
-		shm->speed = 19293; /* FS: Maximum kHZ at 32 Voices.  14 voices gets you 44kHZ. */
+		dma.speed = 19293; /* FS: Maximum kHZ at 32 Voices.  14 voices gets you 44kHZ. */
 		Voices=extVoices=32; /* FS: Added extVoices */
 		rc = COM_CheckParm("-sspeed");
 
 		if (s_khz->value >= 19293) /* FS: S_KHZ */
 		{
-			shm->speed = s_khz->value;
+			dma.speed = s_khz->value;
 
 			// Make sure rate not too high
-			if (shm->speed>44100)
-				shm->speed=44100;
+			if (dma.speed>44100)
+				dma.speed=44100;
 
 			// Adjust speed to match one of the possible GF1 rates
 			for (Gf1Rate=Gf1Rates;Gf1Rate->Rate!=0;Gf1Rate++)
 			{
-				if (shm->speed <= Gf1Rate->Rate)
+				if (dma.speed <= Gf1Rate->Rate)
 				{
-					shm->speed=Gf1Rate->Rate;
+					dma.speed=Gf1Rate->Rate;
 					Voices=extVoices=Gf1Rate->Voices; /* FS: Added extVoices */
 					break;
 				}
@@ -1192,26 +1188,26 @@ qboolean GUS_Init(void)
 
 		if (rc)
 		{
-			shm->speed = Q_atoi(com_argv[rc+1]);
+			dma.speed = Q_atoi(com_argv[rc+1]);
 
 			// Make sure rate not too high
-			if (shm->speed>44100)
-				shm->speed=44100;
+			if (dma.speed>44100)
+				dma.speed=44100;
 
 			// Adjust speed to match one of the possible GF1 rates
 			for (Gf1Rate=Gf1Rates;Gf1Rate->Rate!=0;Gf1Rate++)
 			{
-				if (shm->speed <= Gf1Rate->Rate)
+				if (dma.speed <= Gf1Rate->Rate)
 				{
-					shm->speed=Gf1Rate->Rate;
+					dma.speed=Gf1Rate->Rate;
 					Voices=extVoices=Gf1Rate->Voices; /* FS: Added extVoices */
 					break;
 				}
 			}
 		}
 		// Always do 16 bit stereo
-		shm->channels = 2;
-		shm->samplebits = 16;
+		dma.channels = 2;
+		dma.samplebits = 16;
 
 		// allocate buffer twice the size we need so we can get aligned buffer
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
@@ -1228,13 +1224,10 @@ qboolean GUS_Init(void)
 		// Zero off DMA buffer
 		memset(dma_buffer, 0, SND_BUFFER_SIZE);
 
-		shm->soundalive = true;
-		shm->splitbuffer = false;
-
-		shm->samplepos = 0;
-		shm->submission_chunk = 1;
-		shm->buffer = (unsigned char *) dma_buffer;
-		shm->samples = SND_BUFFER_SIZE/(shm->samplebits/8);
+		dma.samplepos = 0;
+		dma.submission_chunk = 1;
+		dma.buffer = (unsigned char *) dma_buffer;
+		dma.samples = SND_BUFFER_SIZE/(dma.samplebits/8);
 
 		GUS_StartDMA(DmaChannel,dma_buffer,SND_BUFFER_SIZE);
 		SetGf116(SET_DMA_ADDRESS,0x0000);
@@ -1266,18 +1259,18 @@ int GUS_GetDMAPos(void)
 			dos_outportb(0x0C, 0);
 			count = dos_inportb(CountReg);
 			count += dos_inportb(CountReg) << 8;
-			if (shm->samplebits == 16)
+			if (dma.samplebits == 16)
 				count /= 2;
-			count = shm->samples - (count+1);
+			count = dma.samples - (count+1);
 		}
 		else
 		{
 			dos_outportb(0xD8, 0);
 			count = dos_inportb(CountReg);
 			count += dos_inportb(CountReg) << 8;
-			if (shm->samplebits == 8)
+			if (dma.samplebits == 8)
 				count *= 2;
-			count = shm->samples - (count+1);
+			count = dma.samples - (count+1);
 		}
 	}
 	else
@@ -1298,8 +1291,8 @@ int GUS_GetDMAPos(void)
 		}
 	}
 
-	shm->samplepos = count & (shm->samples-1);
-	return(shm->samplepos);
+	dma.samplepos = count & (dma.samples-1);
+	return(dma.samplepos);
 }
 
 //=============================================================================
@@ -1342,13 +1335,10 @@ void GUS_ClearDMA (void) /* FS: This stops the constant clicking sound during ma
 	// Zero off DMA buffer
 	memset(dma_buffer, 0, SND_BUFFER_SIZE);
 
-	shm->soundalive = true;
-	shm->splitbuffer = false;
-
-	shm->samplepos = 0;
-	shm->submission_chunk = 1;
-	shm->buffer = (unsigned char *) dma_buffer;
-	shm->samples = SND_BUFFER_SIZE/(shm->samplebits/8);
+	dma.samplepos = 0;
+	dma.submission_chunk = 1;
+	dma.buffer = (unsigned char *) dma_buffer;
+	dma.samples = SND_BUFFER_SIZE/(dma.samplebits/8);
 
 	if (HaveCodec) /* FS: GUS MAX, AMD InterWave/GUS PnP */
 	{

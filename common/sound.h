@@ -43,6 +43,9 @@ typedef struct
 	int right;
 } portable_samplepair_t;
 
+extern portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];
+extern int s_paintbuffer_size;
+
 typedef struct sfx_s
 {
 	char			name[MAX_QPATH];
@@ -86,9 +89,6 @@ typedef enum {
 
 typedef struct
 {
-	qboolean		gamealive;
-	qboolean		soundalive;
-	qboolean		splitbuffer;
 	int				channels;
 	int				samples;				// mono samples in buffer
 	int				submission_chunk;		// don't mix less than this #
@@ -126,7 +126,8 @@ typedef struct
 
  /* FS: Quake 2 raw samples for music streaming */
 #define	MAX_RAW_SAMPLES	8192
-extern	portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
+extern	portable_samplepair_t	*s_rawsamples;
+extern	size_t	s_rawsamples_size;
 
 void S_Init (void);
 void S_Startup (void);
@@ -134,11 +135,9 @@ void S_Shutdown (void);
 void S_StartSound (int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float fvol,  float attenuation);
 void S_StaticSound (sfx_t *sfx, vec3_t origin, float vol, float attenuation);
 void S_StopSound (int entnum, int entchannel);
-void S_StopAllSounds(qboolean clear);
-void S_StopAllSoundsC (void);
+void S_StopAllSounds(void);
 void S_ClearBuffer (void);
 void S_Update (vec3_t origin, vec3_t v_forward, vec3_t v_right, vec3_t v_up);
-void S_ExtraUpdate (void);
 void S_RawSamples (int samples, int rate, int width, int channels, byte *data, qboolean music);
 				/* Expects data in signed 16 bit, or unsigned 8 bit format. */
 
@@ -151,10 +150,10 @@ void S_PaintChannels(int endtime);
 void S_InitPaintChannels (void);
 
 // picks a channel based on priorities, empty slots, number of channels
-channel_t *SND_PickChannel(int entnum, int entchannel);
+channel_t *S_PickChannel(int entnum, int entchannel);
 
 // spatializes a channel
-void SND_Spatialize(channel_t *ch);
+void S_Spatialize(channel_t *ch);
 
 // initializes cycling through a DMA buffer and returns information on it
 qboolean SNDDMA_Init(void);
@@ -195,17 +194,17 @@ extern vec3_t listener_origin;
 extern vec3_t listener_forward;
 extern vec3_t listener_right;
 extern vec3_t listener_up;
-extern volatile dma_t *shm;
-extern volatile dma_t sn;
+extern dma_t dma;
 extern vec_t sound_nominal_clip_dist;
 
 extern cvar_t	*loadas8bit;
 extern cvar_t	*bgmvolume;
 extern cvar_t	*volume;
-extern cvar_t	*_snd_mixahead;
+extern cvar_t	*s_mixahead;
 extern cvar_t	*s_khz; /* FS: Added */
 extern cvar_t	*s_musicvolume; /* FS: Added */
 extern cvar_t	*s_mastervolume; /* FS: added */
+extern cvar_t	*s_primary;
 
 extern qboolean	snd_initialized;
 
@@ -219,7 +218,7 @@ sfxcache_t *S_LoadSound (sfx_t *s);
 
 wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength);
 
-void SND_InitScaletable (void);
+void S_InitScaletable (void);
 void SNDDMA_Submit(void);
 
 void S_AmbientOff (void);
@@ -232,5 +231,9 @@ void S_StopBackgroundTrack(void); /* FS: So we can suport both */
 #define GUS_MAXPNP 2
 extern int havegus; /* FS: Added */
 void GUS_ClearDMA(void); /* FS: Added */
+
+extern void SNDDMA_BeginPainting (void);
+
+extern byte *s_streamDataPtr;
 
 #endif // __SOUND_H
