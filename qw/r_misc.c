@@ -98,7 +98,7 @@ void R_TimeRefresh_f (void)
 	}
 	stop = Sys_DoubleTime();
 	time = stop-start;
-	Con_Printf ("%f seconds (%f fps)\n", time, 128/time);
+	Com_Printf ("%f seconds (%f fps)\n", time, 128/time);
 	
 	r_refdef.viewangles[1] = startangle;
 }
@@ -263,7 +263,7 @@ void R_PrintTimes (void)
 
 	ms = 1000* (r_time2 - r_time1);
 	
-	Con_Printf ("%5.1f ms %3i/%3i/%3i poly %3i surf\n",
+	Com_Printf ("%5.1f ms %3i/%3i/%3i poly %3i surf\n",
 				ms, c_faceclip, r_polycount, r_drawnpolycount, c_surf);
 	c_surf = 0;
 }
@@ -288,7 +288,7 @@ void R_PrintDSpeeds (void)
 	dv_time = (dv_time2 - dv_time1) * 1000;
 	ms = (r_time2 - r_time1) * 1000;
 
-	Con_Printf ("%3i %4.1fp %3iw %4.1fb %3is %4.1fe %4.1fv\n",
+	Com_Printf ("%3i %4.1fp %3iw %4.1fb %3is %4.1fe %4.1fv\n",
 				(int)ms, dp_time, (int)rw_time, db_time, (int)se_time, de_time,
 				dv_time);
 }
@@ -301,7 +301,7 @@ R_PrintAliasStats
 */
 void R_PrintAliasStats (void)
 {
-	Con_Printf ("%3i polygon model drawn\n", r_amodels_drawn);
+	Com_Printf ("%3i polygon model drawn\n", r_amodels_drawn);
 }
 
 
@@ -444,7 +444,7 @@ r_drawflat->value = 0;
 		if ((surface_p - surfaces) > r_maxsurfsseen)
 			r_maxsurfsseen = surface_p - surfaces;
 
-		Con_Printf ("Used %d of %d surfs; %d max\n", surface_p - surfaces,
+		Com_Printf ("Used %d of %d surfs; %d max\n", surface_p - surfaces,
 				surf_max - surfaces, r_maxsurfsseen);
 	}
 
@@ -455,7 +455,7 @@ r_drawflat->value = 0;
 		if (edgecount > r_maxedgesseen)
 			r_maxedgesseen = edgecount;
 
-		Con_Printf ("Used %d of %d edges; %d max\n", edgecount,
+		Com_Printf ("Used %d of %d edges; %d max\n", edgecount,
 				r_numallocatededges, r_maxedgesseen);
 	}
 

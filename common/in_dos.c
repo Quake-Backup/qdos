@@ -123,14 +123,14 @@ static void IN_StartupMouse (void)
 	mouse_avail = regs.x.ax;
 	if (!mouse_avail)
 	{
-		Con_Printf ("No mouse found\n");
+		Com_Printf ("No mouse found\n");
 		return;
 	}
 
 	mouse_buttons = regs.x.bx;
 	if (mouse_buttons > 3)
 		mouse_buttons = 3;
-	Con_Printf("%d-button mouse available\n", mouse_buttons);
+	Com_Printf("%d-button mouse available\n", mouse_buttons);
 	mouseactive = true;
 
 	if (COM_CheckParm ("-nowheel"))
@@ -141,7 +141,7 @@ static void IN_StartupMouse (void)
 	if (regs.x.ax == 0x574D && regs.h.cl == 1)
 	{
 		mouse_wheel = true;
-		Con_Printf("mouse wheel support available\n");
+		Com_Printf("mouse wheel support available\n");
 	}
 
 	if (COM_CheckParm ("-nops2"))
@@ -156,7 +156,7 @@ static void IN_StartupMouse (void)
 	dos_int86(0x15);
 	if (regs.h.dl)
 	{
-		Con_Printf("PS/2 mouse resolution: %s.  sample rate: %d.\n", IN_MouseGetPS2ResolutionString(regs.h.cl), regs.h.dl);
+		Com_Printf("PS/2 mouse resolution: %s.  sample rate: %d.\n", IN_MouseGetPS2ResolutionString(regs.h.cl), regs.h.dl);
 	}
 	else
 	{
@@ -478,7 +478,7 @@ qboolean IN_ReadJoystick (void)
 			return true;
 	}
 	
-	Con_Printf ("IN_ReadJoystick: no response\n");
+	Com_Printf ("IN_ReadJoystick: no response\n");
 	joy_avail = false;
 	return false;
 }
@@ -500,7 +500,7 @@ qboolean WaitJoyButton (void)
 		key_count = 0;
 		if (key_lastpress == K_ESCAPE)
 		{
-			Con_Printf ("aborted.\n");
+			Com_Printf ("aborted.\n");
 			return false;
 		}
 		key_lastpress = 0;
@@ -520,7 +520,7 @@ qboolean WaitJoyButton (void)
 		key_count = 0;
 		if (key_lastpress == K_ESCAPE)
 		{
-			Con_Printf ("aborted.\n");
+			Com_Printf ("aborted.\n");
 			return false;
 		}
 		key_lastpress = 0;
@@ -547,7 +547,7 @@ void IN_StartupJoystick (void)
 { 
 	int     centerx, centery; 
  
- 	Con_Printf ("\n");
+ 	Com_Printf ("\n");
 
 	joy_avail = false; 
 	if ( COM_CheckParm ("-nojoy") ) 
@@ -556,27 +556,27 @@ void IN_StartupJoystick (void)
 	if (!IN_ReadJoystick ()) 
 	{ 
 		joy_avail = false; 
-		Con_Printf ("joystick not found\n"); 
+		Com_Printf ("joystick not found\n"); 
 		return; 
 	} 
 
-	Con_Printf ("joystick found\n"); 
+	Com_Printf ("joystick found\n"); 
  
-	Con_Printf ("CENTER the joystick\nand press button 1 (ESC to skip):\n"); 
+	Com_Printf ("CENTER the joystick\nand press button 1 (ESC to skip):\n"); 
 	if (!WaitJoyButton ()) 
 		return; 
 	IN_ReadJoystick (); 
 	centerx = joystickx; 
 	centery = joysticky; 
  
-	Con_Printf ("Push the joystick to the UPPER LEFT\nand press button 1 (ESC to skip):\n"); 
+	Com_Printf ("Push the joystick to the UPPER LEFT\nand press button 1 (ESC to skip):\n"); 
 	if (!WaitJoyButton ()) 
 		return; 
 	IN_ReadJoystick (); 
 	joyxl = (centerx + joystickx)/2; 
 	joyyl = (centerx + joysticky)/2; 
  
-	Con_Printf ("Push the joystick to the LOWER RIGHT\nand press button 1 (ESC to skip):\n"); 
+	Com_Printf ("Push the joystick to the LOWER RIGHT\nand press button 1 (ESC to skip):\n"); 
 	if (!WaitJoyButton ()) 
 		return; 
 	IN_ReadJoystick (); 
@@ -584,9 +584,9 @@ void IN_StartupJoystick (void)
 	joyyh = (centery + joysticky)/2; 
 
 	joy_avail = true; 
-	Con_Printf ("joystick configured.\n"); 
+	Com_Printf ("joystick configured.\n"); 
 
- 	Con_Printf ("\n");
+ 	Com_Printf ("\n");
 } 
  
  
@@ -609,8 +609,8 @@ void IN_StartupExternal (void)
 	if (extern_control->numButtons > 32)
 		extern_control->numButtons = 32;
 
-	Con_Printf("%s Initialized\n", extern_control->deviceName);
-	Con_Printf("  %ld axes  %ld buttons\n", extern_control->numAxes, extern_control->numButtons);
+	Com_Printf("%s Initialized\n", extern_control->deviceName);
+	Com_Printf("  %ld axes  %ld buttons\n", extern_control->numAxes, extern_control->numButtons);
 
 	extern_avail = true;
 	extern_buttons = extern_control->numButtons;
@@ -636,11 +636,11 @@ void IN_ExternalMove (usercmd_t *cmd)
 	extern_control->sidemove = cmd->sidemove;
 	extern_control->upmove = cmd->upmove;
 
-	Con_DPrintf(DEVELOPER_MSG_IO, "IN:  y:%f p:%f r:%f f:%f s:%f u:%f\n", extern_control->viewangles[YAW], extern_control->viewangles[PITCH], extern_control->viewangles[ROLL], extern_control->forwardmove, extern_control->sidemove, extern_control->upmove);
+	Com_DPrintf(DEVELOPER_MSG_IO, "IN:  y:%f p:%f r:%f f:%f s:%f u:%f\n", extern_control->viewangles[YAW], extern_control->viewangles[PITCH], extern_control->viewangles[ROLL], extern_control->forwardmove, extern_control->sidemove, extern_control->upmove);
 
 	dos_int86(extern_control->interruptVector);
 
-	Con_DPrintf(DEVELOPER_MSG_IO, "OUT: y:%f p:%f r:%f f:%f s:%f u:%f\n", extern_control->viewangles[YAW], extern_control->viewangles[PITCH], extern_control->viewangles[ROLL], extern_control->forwardmove, extern_control->sidemove, extern_control->upmove);
+	Com_DPrintf(DEVELOPER_MSG_IO, "OUT: y:%f p:%f r:%f f:%f s:%f u:%f\n", extern_control->viewangles[YAW], extern_control->viewangles[PITCH], extern_control->viewangles[ROLL], extern_control->forwardmove, extern_control->sidemove, extern_control->upmove);
 
 	cl.viewangles[YAW] = extern_control->viewangles[YAW];
 	cl.viewangles[PITCH] = extern_control->viewangles[PITCH];
@@ -688,32 +688,32 @@ static void IN_MouseSetPS2Rate (void)
 	else
 		rate = (short)m_ps2_sample_rate->intValue;
 
-	Con_Printf("Setting PS/2 sample rate to ");
+	Com_Printf("Setting PS/2 sample rate to ");
 	switch (rate)
 	{
 		case 0:
-			Con_Printf("10hz\n");
+			Com_Printf("10hz\n");
 			break;
 		case 1:
-			Con_Printf("20hz\n");
+			Com_Printf("20hz\n");
 			break;
 		case 2:
-			Con_Printf("40hz\n");
+			Com_Printf("40hz\n");
 			break;
 		case 3:
-			Con_Printf("60hz\n");
+			Com_Printf("60hz\n");
 			break;
 		case 4:
-			Con_Printf("80hz\n");
+			Com_Printf("80hz\n");
 			break;
 		case 5:
-			Con_Printf("100hz\n");
+			Com_Printf("100hz\n");
 			break;
 		case 6:
-			Con_Printf("200hz\n");
+			Com_Printf("200hz\n");
 			break;
 		default:
-			Con_Printf("UNKNOWN!  THIS IS AN ERROR!\n");
+			Com_Printf("UNKNOWN!  THIS IS AN ERROR!\n");
 			break;
 	}
 
@@ -724,7 +724,7 @@ static void IN_MouseSetPS2Rate (void)
 	dos_int86(0x15);
 	if (regs.h.ah)
 	{
-		Con_Printf("Set PS/2 sample rate failed: %d\n", regs.h.ah);
+		Com_Printf("Set PS/2 sample rate failed: %d\n", regs.h.ah);
 	}
 
 	m_ps2_sample_rate->modified = false;
@@ -746,7 +746,7 @@ static void IN_MouseSetPS2Resolution (void)
 	else
 		resolution = (short)m_ps2_resolution->intValue;
 
-	Con_Printf("Setting PS/2 resolution to %s\n", IN_MouseGetPS2ResolutionString(resolution));
+	Com_Printf("Setting PS/2 resolution to %s\n", IN_MouseGetPS2ResolutionString(resolution));
 
 	regs.h.ah = 0;
 	regs.x.ax = 0xC203;
@@ -755,7 +755,7 @@ static void IN_MouseSetPS2Resolution (void)
 	dos_int86(0x15);
 	if (regs.h.ah)
 	{
-		Con_Printf("Set PS/2 resolution failed: %d\n", regs.h.ah);
+		Com_Printf("Set PS/2 resolution failed: %d\n", regs.h.ah);
 	}
 
 	m_ps2_resolution->modified = false;

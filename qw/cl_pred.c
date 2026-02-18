@@ -53,7 +53,7 @@ void CL_NudgePosition (void)
 				return;
 		}
 	}
-	Con_DPrintf (DEVELOPER_MSG_PHYSICS, "CL_NudgePosition: stuck\n");
+	Com_DPrintf (DEVELOPER_MSG_PHYSICS, "CL_NudgePosition: stuck\n");
 }
 
 /*

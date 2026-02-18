@@ -1133,7 +1133,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		if (!cl_allownewmap->value)
 			Sys_Error ("Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", mod->name, i, BSPVERSION);
 		else
-		Con_Printf ("\nWARNING: %s has wrong version number (%i should be %i).  Error check bypassed.\n", mod->name, i, BSPVERSION); /* FS: gross map version hack */
+		Com_Printf ("\nWARNING: %s has wrong version number (%i should be %i).  Error check bypassed.\n", mod->name, i, BSPVERSION); /* FS: gross map version hack */
 	}
 // swap all the lumps
 	mod_base = (byte *)header;
@@ -1882,10 +1882,10 @@ void Mod_Print (void)
 	int             i;
 	model_t *mod;
 
-	Con_Printf ("Cached models:\n");
+	Com_Printf ("Cached models:\n");
 	for (i=0, mod=mod_known ; i < mod_numknown ; i++, mod++)
 	{
-		Con_Printf ("%8p : %s\n",mod->cache.data, mod->name);
+		Com_Printf ("%8p : %s\n",mod->cache.data, mod->name);
 	}
 }
 

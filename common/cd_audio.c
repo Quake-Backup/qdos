@@ -332,7 +332,7 @@ static int CDAudio_GetAudioTrackInfo (byte track, int *start)
 
 	if (cdRequest->status & STATUS_ERROR_BIT)
 	{
-		Con_DPrintf(DEVELOPER_MSG_CD, "CDAudio_GetAudioTrackInfo %04x\n", cdRequest->status & 0xffff);
+		Com_DPrintf(DEVELOPER_MSG_CD, "CDAudio_GetAudioTrackInfo %04x\n", cdRequest->status & 0xffff);
 		return -1;
 	}
 
@@ -368,7 +368,7 @@ static int CDAudio_GetAudioDiskInfo (void)
 
 	if (cdRequest->status & STATUS_ERROR_BIT)
 	{
-		Con_DPrintf(DEVELOPER_MSG_CD, "CDAudio_GetAudioDiskInfo %04x\n", cdRequest->status & 0xffff);
+		Com_DPrintf(DEVELOPER_MSG_CD, "CDAudio_GetAudioDiskInfo %04x\n", cdRequest->status & 0xffff);
 		return -1;
 	}
 
@@ -517,7 +517,7 @@ void CDAudio_Play (byte track, qboolean looping)
 
 	if (track < cd.lowTrack || track > cd.highTrack)
 	{
-		Con_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Play: Bad track number %u.\n", track);
+		Com_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Play: Bad track number %u.\n", track);
 		return;
 	}
 
@@ -525,7 +525,7 @@ void CDAudio_Play (byte track, qboolean looping)
 
 	if (cd.track[track].isData)
 	{
-		Con_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Play: Can not play data.\n");
+		Com_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Play: Can not play data.\n");
 		return;
 	}
 
@@ -559,7 +559,7 @@ void CDAudio_Play (byte track, qboolean looping)
 
 	if (cdRequest->status & STATUS_ERROR_BIT)
 	{
-		Con_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Play: track %u failed\n", track);
+		Com_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Play: track %u failed\n", track);
 		cd.valid = false;
 		playing = false;
 		return;
@@ -666,7 +666,7 @@ static void CD_f (void)
 		{
 			for (n = 1; n < 256; n++)
 				if (remap[n] != n)
-					Con_Printf("  %u -> %u\n", n, remap[n]);
+					Com_Printf("  %u -> %u\n", n, remap[n]);
 			return;
 		}
 		for (n = 1; n <= ret; n++)
@@ -676,7 +676,7 @@ static void CD_f (void)
 
 	if (!cd.valid)
 	{
-		Con_Printf("No CD in player.\n");
+		Com_Printf("No CD in player.\n");
 		return;
 	}
 
@@ -721,17 +721,17 @@ static void CD_f (void)
 
 	if (Q_strcasecmp(command, "info") == 0)
 	{
-		Con_Printf("%u tracks\n", cd.highTrack - cd.lowTrack + 1);
+		Com_Printf("%u tracks\n", cd.highTrack - cd.lowTrack + 1);
 		for (n = cd.lowTrack; n <= cd.highTrack; n++)
 		{
 			ret = CDAudio_GetAudioTrackInfo (n, &startAddress);
-			Con_Printf("Track %2u: %s at %2u:%02u\n", n, ret ? "data " : "music", (startAddress >> 16) & 0xff, (startAddress >> 8) & 0xff);
+			Com_Printf("Track %2u: %s at %2u:%02u\n", n, ret ? "data " : "music", (startAddress >> 16) & 0xff, (startAddress >> 8) & 0xff);
 		}
 		if (playing)
-			Con_Printf("Currently %s track %u\n", playLooping ? "looping" : "playing", playTrack);
-		Con_Printf("Volume is %u\n", cdvolume);
+			Com_Printf("Currently %s track %u\n", playLooping ? "looping" : "playing", playTrack);
+		Com_Printf("Volume is %u\n", cdvolume);
 		CDAudio_MediaChange();
-		Con_Printf("Status %04x\n", cdRequest->status & 0xffff);
+		Com_Printf("Status %04x\n", cdRequest->status & 0xffff);
 		return;
 	}
 }
@@ -761,7 +761,7 @@ void CDAudio_Update (void)
 		ret = CDAudio_MediaChange();
 		if (ret == MEDIA_CHANGED)
 		{
-			Con_DPrintf(DEVELOPER_MSG_CD, "CDAudio: media changed\n");
+			Com_DPrintf(DEVELOPER_MSG_CD, "CDAudio: media changed\n");
 			playing = false;
 			wasPlaying = false;
 			cd.valid = false;
@@ -837,7 +837,7 @@ static byte get_cddev_arg (const char *arg)
 	if (r.x.ax != 0 /*&& r.x.bx == 0xadad*/)
 		return drivenum;
 
-	Con_Printf("%c: is not a CDROM drive\n", drivenum + 'A');
+	Com_Printf("%c: is not a CDROM drive\n", drivenum + 'A');
 	return 0xff;
 }
 
@@ -877,7 +877,7 @@ int CDAudio_Init (void)
 	dos_int86 (0x2f);
 	if (regs.x.bx == 0)
 	{
-		Con_Printf ("MSCDEX not loaded, CD Audio is disabled.\n");
+		Com_Printf ("MSCDEX not loaded, CD Audio is disabled.\n");
 		return -1;
 	}
 
@@ -890,36 +890,36 @@ int CDAudio_Init (void)
 	dos_int86 (0x2f);
 	if (regs.x.bx == 0)
 	{
-		Con_Printf("%s: MSCDEX version 2.00 or later required.\n", __FUNCTION__);
+		Com_Printf("%s: MSCDEX version 2.00 or later required.\n", __FUNCTION__);
 		return -1;
 	}
 
 	if (!get_cdroms_list ())
 	{
 		cdroms_list[0] = firstcdrom;
-		Con_Printf("CDAudio_Init: Couldn't get available CD drive letters\n");
+		Com_Printf("CDAudio_Init: Couldn't get available CD drive letters\n");
 	}
 
-	Con_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Init: %u CD-ROM drive(s) available:", numcdroms);
+	Com_DPrintf(DEVELOPER_MSG_CD, "CDAudio_Init: %u CD-ROM drive(s) available:", numcdroms);
 	for (n = 0; n < numcdroms && cdroms_list[n]; n++)
-		Con_DPrintf (DEVELOPER_MSG_CD, " %c", cdroms_list[n] + 'A');
-	Con_DPrintf(DEVELOPER_MSG_CD, ".\n");
+		Com_DPrintf (DEVELOPER_MSG_CD, " %c", cdroms_list[n] + 'A');
+	Com_DPrintf(DEVELOPER_MSG_CD, ".\n");
 
 	if ((n = COM_CheckParm("-cddev")) != 0 && n < com_argc - 1)
 	{
 		cdrom = get_cddev_arg(com_argv[n + 1]);
 		if (cdrom == 0xff)
 		{
-			Con_Printf("Invalid argument to -cddev\n");
+			Com_Printf("Invalid argument to -cddev\n");
 			return -1;
 		}
 	}
-	Con_Printf("CDAudio_Init: Using CD-ROM drive %c:\n", cdrom + 'A');
+	Com_Printf("CDAudio_Init: Using CD-ROM drive %c:\n", cdrom + 'A');
 
 	memory = (char *) dos_getmemory(sizeof(struct cd_request) + sizeof(union readInfo_u));
 	if (memory == NULL)
 	{
-		Con_DPrintf(DEVELOPER_MSG_CD, "%s: Unable to allocate low memory.\n", __FUNCTION__);
+		Com_DPrintf(DEVELOPER_MSG_CD, "%s: Unable to allocate low memory.\n", __FUNCTION__);
 		return -1;
 	}
 
@@ -938,13 +938,13 @@ int CDAudio_Init (void)
 	CDAudio_SetVolume (255);
 	if (CDAudio_GetAudioDiskInfo())
 	{
-		Con_Printf("CDAudio_Init: No CD in player.\n");
+		Com_Printf("CDAudio_Init: No CD in player.\n");
 		enabled = false;
 	}
 
 	Cmd_AddCommand ("cd", CD_f);
 
-	Con_Printf("CD Audio Initialized\n");
+	Com_Printf("CD Audio Initialized\n");
 
 	return 0;
 }

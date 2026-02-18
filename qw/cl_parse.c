@@ -164,7 +164,7 @@ qboolean	CL_CheckOrDownloadFile (char *filename, qboolean queue)
 
 	if (strstr (filename, ".."))
 	{
-		Con_Printf ("Refusing to download a path with ..\n");
+		Com_Printf ("Refusing to download a path with ..\n");
 		return true;
 	}
 
@@ -177,7 +177,7 @@ qboolean	CL_CheckOrDownloadFile (char *filename, qboolean queue)
 
 	//ZOID - can't download when recording
 	if (cls.demorecording) {
-		Con_Printf("Unable to download %s in record mode.\n", cls.downloadname->str);
+		Com_Printf("Unable to download %s in record mode.\n", cls.downloadname->str);
 		return true;
 	}
 	//ZOID - can't download when playback
@@ -195,9 +195,9 @@ qboolean	CL_CheckOrDownloadFile (char *filename, qboolean queue)
 
 	dstring_copystr (cls.downloadname, filename);
 	if(cls.download_queue && cls.download_queue_total)
-		Con_Printf("Downloading %s [%d remaining files]...\n", cls.downloadname->str, cls.download_queue_total-cls.download_queue);
+		Com_Printf("Downloading %s [%d remaining files]...\n", cls.downloadname->str, cls.download_queue_total-cls.download_queue);
 	else
-		Con_Printf ("Downloading %s...\n", cls.downloadname->str);
+		Com_Printf ("Downloading %s...\n", cls.downloadname->str);
 
 	// download to a temp name, and only rename
 	// to the real name when done, so if interrupted
@@ -224,7 +224,7 @@ void Model_NextDownload (qboolean queue)
 
 	if (cls.downloadnumber == 0)
 	{
-		Con_Printf ("Checking models...\n");
+		Com_Printf ("Checking models...\n");
 		cls.downloadnumber = 1;
 		cls.download_queue = cls.download_queue_total = 0;
 	}
@@ -272,9 +272,9 @@ void Model_Precache (void)
 
 		if (!cl.model_precache[i])
 		{
-			Con_Printf ("\nThe required model file '%s' could not be found or downloaded.\n\n"
+			Com_Printf ("\nThe required model file '%s' could not be found or downloaded.\n\n"
 				, cl.model_name[i]);
-			Con_Printf ("You may need to download or purchase a %s client "
+			Com_Printf ("You may need to download or purchase a %s client "
 				"pack in order to play on this server.\n\n", gamedirfile);
 			CL_Disconnect ();
 			return;
@@ -302,7 +302,7 @@ void Sound_NextDownload (qboolean queue)
 
 	if (cls.downloadnumber == 0)
 	{
-		Con_Printf ("Checking sounds...\n");
+		Com_Printf ("Checking sounds...\n");
 		cls.downloadnumber = 1;
 		cls.download_queue = cls.download_queue_total = 0;
 	}
@@ -376,7 +376,7 @@ qboolean CL_CreateDownload(int size, qboolean extended)
 	{
 		if(!extended)
 			msg_readcount += size;
-		Con_Printf ("Failed to open %s\n", cls.downloadtempname->str);
+		Com_Printf ("Failed to open %s\n", cls.downloadtempname->str);
 		CL_FinishDownload(false);
 		dstring_delete(name);
 		return false;
@@ -415,12 +415,12 @@ void CL_FinishDownload(qboolean rename_files)
 				dsprintf (oldn, "qw/%s", cls.downloadtempname->str);
 				dsprintf (newn, "qw/%s", cls.downloadname->str);
 			}
-			Con_DPrintf(DEVELOPER_MSG_IO, "oldn: %s\n", oldn->str);
-			Con_DPrintf(DEVELOPER_MSG_IO, "newn: %s\n", newn->str);
+			Com_DPrintf(DEVELOPER_MSG_IO, "oldn: %s\n", oldn->str);
+			Com_DPrintf(DEVELOPER_MSG_IO, "newn: %s\n", newn->str);
 			r = rename (oldn->str, newn->str);
 
 			if (r)
-				Con_Printf ("failed to rename. r: %i\n", r); /* FS: Added */
+				Com_Printf ("failed to rename. r: %i\n", r); /* FS: Added */
 		}
 		dstring_delete(oldn);
 		dstring_delete(newn);
@@ -434,7 +434,7 @@ void CL_FinishDownload(qboolean rename_files)
 	{
 		oldrate = dstring_new();
 		dsprintf(oldrate, "%i", cls.downloadoldrate);
-		Con_DPrintf(DEVELOPER_MSG_NET, "Changing rate from %i to %i\n", cls.downloadmaxrate, cls.downloadoldrate);
+		Com_DPrintf(DEVELOPER_MSG_NET, "Changing rate from %i to %i\n", cls.downloadmaxrate, cls.downloadoldrate);
 		Cvar_Set("rate", oldrate->str);
 		dstring_delete(oldrate);
 	}
@@ -527,13 +527,13 @@ void CL_Parse_OOB_ChunkedDownload(void)
 
 	if (chunked_download_number != MSG_ReadLong ())
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "Dropping OOB chunked message, out of sequence\n");
+		Com_DPrintf(DEVELOPER_MSG_NET, "Dropping OOB chunked message, out of sequence\n");
 		return;
 	}
 
 	if (MSG_ReadByte() != svc_download)
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "Something wrong in OOB message and chunked download\n");
+		Com_DPrintf(DEVELOPER_MSG_NET, "Something wrong in OOB message and chunked download\n");
 		return;
 	}
 
@@ -559,7 +559,7 @@ void CL_ParseChunkedDownload(void)
 		{ 
 			// Ensure FILE is closed
 			if (totalsize != -3) // -3 = dl stopped, so this known issue, do not warn
-				Con_Printf ("cls.download shouldn't have been set\n");
+				Com_Printf ("cls.download shouldn't have been set\n");
 
 			fclose (cls.download);
 			cls.download = NULL;
@@ -572,9 +572,9 @@ void CL_ParseChunkedDownload(void)
 		{
 			switch (totalsize)
 			{
-				case -3: Con_DPrintf(DEVELOPER_MSG_NET, "Server cancel downloading file %s\n", svname);			break;
-				case -2: Con_Printf("Server permissions deny downloading file %s\n", svname);	break;
-				default: Con_Printf("Couldn't find file %s on the server\n", svname);			break;
+				case -3: Com_DPrintf(DEVELOPER_MSG_NET, "Server cancel downloading file %s\n", svname);			break;
+				case -2: Com_Printf("Server permissions deny downloading file %s\n", svname);	break;
+				default: Com_Printf("Couldn't find file %s on the server\n", svname);			break;
 			}
 
 			CL_FinishDownload(false); // this also request next dl
@@ -601,7 +601,7 @@ void CL_ParseChunkedDownload(void)
 			cls.downloadoldrate = rate->intValue;
 			cls.downloadmaxrate = 250000;
 			dsprintf(maxrate, "%i", cls.downloadmaxrate);
-			Con_DPrintf(DEVELOPER_MSG_NET, "Changing rate from %i to %i\n", cls.downloadoldrate, cls.downloadmaxrate);
+			Com_DPrintf(DEVELOPER_MSG_NET, "Changing rate from %i to %i\n", cls.downloadoldrate, cls.downloadmaxrate);
 			Cvar_Set("rate", maxrate->str);
 			dstring_delete(maxrate);
 		}
@@ -697,7 +697,7 @@ void CL_RequestNextDownload (void)
 		break;
 	case dl_none:
 	default:
-		Con_DPrintf(DEVELOPER_MSG_NET, "Unknown download type.\n");
+		Com_DPrintf(DEVELOPER_MSG_NET, "Unknown download type.\n");
 	}
 }
 
@@ -735,10 +735,10 @@ void CL_ParseDownload (void)
 
 	if (size == -1)
 	{
-		Con_Printf ("File not found.\n");
+		Com_Printf ("File not found.\n");
 		if (cls.download)
 		{
-			Con_Printf ("cls.download shouldn't have been set\n");
+			Com_Printf ("cls.download shouldn't have been set\n");
 			fclose (cls.download);
 			cls.download = NULL;
 		}
@@ -838,12 +838,12 @@ void CL_NextUpload(void)
 	MSG_WriteByte (&cls.netchan.message, percent);
 	SZ_Write (&cls.netchan.message, buffer, r);
 
-	Con_DPrintf (DEVELOPER_MSG_NET, "UPLOAD: %6d: %d written\n", upload_pos - r, r);
+	Com_DPrintf (DEVELOPER_MSG_NET, "UPLOAD: %6d: %d written\n", upload_pos - r, r);
 
 	if (upload_pos != upload_size)
 		return;
 
-	Con_Printf ("Upload completed\n");
+	Com_Printf ("Upload completed\n");
 
 	free(upload_data);
 	upload_data = 0;
@@ -859,7 +859,7 @@ void CL_StartUpload (byte *data, int size)
 	if (upload_data)
 		free(upload_data);
 
-Con_DPrintf(DEVELOPER_MSG_NET, "Upload starting of %d...\n", size);
+Com_DPrintf(DEVELOPER_MSG_NET, "Upload starting of %d...\n", size);
 
 	upload_data = malloc(size);
 	memcpy(upload_data, data, size);
@@ -905,7 +905,7 @@ void CL_ParseServerData (void)
 	extern	char	gamedirfile[MAX_OSPATH];
 	int protover;
 	
-	Con_DPrintf (DEVELOPER_MSG_NET, "Serverdata packet received.\n");
+	Com_DPrintf (DEVELOPER_MSG_NET, "Serverdata packet received.\n");
 //
 // wipe the client_state_t struct
 //
@@ -923,7 +923,7 @@ void CL_ParseServerData (void)
 		if (protover == PROTOCOL_VERSION_FTE)
 		{
 			cls.fteprotocolextensions =  MSG_ReadLong();
-			Con_DPrintf (DEVELOPER_MSG_NET, "Using FTE extensions 0x%x\n", cls.fteprotocolextensions);
+			Com_DPrintf (DEVELOPER_MSG_NET, "Using FTE extensions 0x%x\n", cls.fteprotocolextensions);
 			continue;
 		}
 		if (protover == PROTOCOL_VERSION) //this ends the version info
@@ -1001,8 +1001,8 @@ void CL_ParseServerData (void)
 	movevars.entgravity         = MSG_ReadFloat();
 
 	// seperate the printfs so the server message can have a color
-	Con_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
-	Con_Printf ("%c%s\n", 2, str);
+	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
+	Com_Printf ("%c%s\n", 2, str);
 
 	// ask for the sound list next
 	memset(cl.sound_name, 0, sizeof(cl.sound_name));
@@ -1295,7 +1295,7 @@ void CL_ParseClientdata (void)
 
 	if (latency < 0 || latency > 1.0)
 	{
-//		Con_Printf ("Odd latency: %5.2f\n", latency);
+//		Com_Printf ("Odd latency: %5.2f\n", latency);
 	}
 	else
 	{
@@ -1452,7 +1452,7 @@ void CL_SetInfo (void)
 		}
 	}
 
-	Con_DPrintf(DEVELOPER_MSG_NET, "SETINFO %s: %s=%s\n", player->name, key, value);
+	Com_DPrintf(DEVELOPER_MSG_NET, "SETINFO %s: %s=%s\n", player->name, key, value);
 
 	Info_SetValueForKey (player->userinfo, key, value, MAX_INFO_STRING);
 
@@ -1467,13 +1467,13 @@ void	CL_ShowChat (char *name, int val)
 		switch(val)
 		{
 			case 1:
-				Con_Printf("%s->chat=Typing...\n", name);
+				Com_Printf("%s->chat=Typing...\n", name);
 				break;
 			case 2:
-				Con_Printf("%s->chat=AFK...\n", name);
+				Com_Printf("%s->chat=AFK...\n", name);
 				break;
 			case 3:
-				Con_Printf("%s->chat=Typing...\n", name);
+				Com_Printf("%s->chat=Typing...\n", name);
 				break;
 			default:
 				break;
@@ -1494,7 +1494,7 @@ void CL_ServerInfo (void)
 	Q_strlcpy (key, MSG_ReadString(), sizeof(key));
 	Q_strlcpy (value, MSG_ReadString(), sizeof(value));
 
-	Con_DPrintf(DEVELOPER_MSG_NET, "SERVERINFO: %s=%s\n", key, value);
+	Com_DPrintf(DEVELOPER_MSG_NET, "SERVERINFO: %s=%s\n", key, value);
 
 	Info_SetValueForKey (cl.serverinfo, key, value, MAX_SERVERINFO_STRING);
 }
@@ -1563,7 +1563,7 @@ void CL_MuzzleFlash (void)
 }
 
 
-#define SHOWNET(x) if(cl_shownet->value==2)Con_Printf ("%3i:%s\n", msg_readcount-1, x);
+#define SHOWNET(x) if(cl_shownet->value==2)Com_Printf ("%3i:%s\n", msg_readcount-1, x);
 /*
 =====================
 CL_ParseServerMessage
@@ -1584,9 +1584,9 @@ void CL_ParseServerMessage (void)
 // if recording demos, copy the message out
 //
 	if (cl_shownet->value == 1)
-		Con_Printf ("%i ",net_message.cursize);
+		Com_Printf ("%i ",net_message.cursize);
 	else if (cl_shownet->value == 2)
-		Con_Printf ("------------------\n");
+		Com_Printf ("------------------\n");
 
 
 	CL_ParseClientdata ();
@@ -1621,7 +1621,7 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case svc_nop:
-//			Con_Printf ("svc_nop\n");
+//			Com_Printf ("svc_nop\n");
 			break;
 			
 		case svc_disconnect:
@@ -1642,7 +1642,7 @@ void CL_ParseServerMessage (void)
 			s = MSG_ReadString();
 			if (!strncmp(s, "Downloading: ", 13)) /* FS: MVDSV XE hack */
 			{
-				Con_DPrintf(DEVELOPER_MSG_NET, "%s", s);
+				Com_DPrintf(DEVELOPER_MSG_NET, "%s", s);
 				con_ormask = 0;
 				break;
 			}
@@ -1654,7 +1654,7 @@ void CL_ParseServerMessage (void)
 				cls.spamTime = realtime + 1.5f; /* FS: 1.5 second delay */
 			}
 
-			Con_Printf ("%s", s); /* FS: f_version and q_version reply */
+			Com_Printf ("%s", s); /* FS: f_version and q_version reply */
 			con_ormask = 0;
 			break;
 			
@@ -1668,7 +1668,7 @@ void CL_ParseServerMessage (void)
 			
 		case svc_stufftext:
 			s = MSG_ReadString ();
-			Con_DPrintf (DEVELOPER_MSG_NET, "stufftext: %s\n", s);
+			Com_DPrintf (DEVELOPER_MSG_NET, "stufftext: %s\n", s);
 
 			if(CL_MaliciousStuffText(s)) /* FS: Ignore malicious stufftext */
 				break;
@@ -1920,7 +1920,7 @@ qboolean CL_MaliciousStuffText(char *stufftext) /* FS: Check for malicious stuff
 
 	if((Q_strncasecmp(stufftext, "fov ", 4) == 0) || (Q_strncasecmp(stufftext, "_snd_mixahead ", 14) == 0) || (Q_strncasecmp(stufftext, "rate ", 5) == 0) || (Q_strncasecmp(stufftext, "r_restart", 9) == 0) ) /* FS: Ignore malicious stufftexts */
 	{
-		Con_DPrintf (DEVELOPER_MSG_NET, "Ignoring malicious stufftext: %s\n", stufftext);
+		Com_DPrintf (DEVELOPER_MSG_NET, "Ignoring malicious stufftext: %s\n", stufftext);
 		return true;
 	}
 
@@ -1941,11 +1941,11 @@ void CL_PlayBackgroundTrack (int track)
 	int	have_extmusic;
 	int	fakeHandle;
 
-	Con_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack\n");
+	Com_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack\n");
 
 	if (track == 0)
 	{	// Stop any playing track
-		Con_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack: stopping\n");
+		Com_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack: stopping\n");
 		CDAudio_Stop();
 		S_StopBackgroundTrack();
 		return;

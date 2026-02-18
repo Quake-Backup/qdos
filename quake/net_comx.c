@@ -416,7 +416,7 @@ static void ComPort_Enable(ComPort *p)
 
 	if (p->enabled)
 	{
-		Con_Printf("Already enabled\n");
+		Com_Printf("Already enabled\n");
 		return;
 	}
 
@@ -474,7 +474,7 @@ static void ComPort_Enable(ComPort *p)
 	n = _go32_dpmi_allocate_iret_wrapper(&p->protectedModeInfo);
 	if (n)
 	{
-		Con_Printf("serial: protected mode callback allocation failed\n");
+		Com_Printf("serial: protected mode callback allocation failed\n");
 		return;
 	}
 
@@ -513,7 +513,7 @@ static void ComPort_Disable(ComPort *p)
 {
 	if (!p->enabled)
 	{
-		Con_Printf("Already disabled\n");
+		Com_Printf("Already disabled\n");
 		return;
 	}
 
@@ -548,24 +548,24 @@ static int CheckStatus (ComPort *p)
 		if (p->lineStatus & (LSR_OVERRUN_ERROR | LSR_PARITY_ERROR | LSR_FRAMING_ERROR | LSR_BREAK_DETECT))
 		{
 			if (p->lineStatus & LSR_OVERRUN_ERROR)
-				Con_DPrintf(DEVELOPER_MSG_NET, "Serial overrun error\n");
+				Com_DPrintf(DEVELOPER_MSG_NET, "Serial overrun error\n");
 			if (p->lineStatus & LSR_PARITY_ERROR)
-				Con_DPrintf(DEVELOPER_MSG_NET, "Serial parity error\n");
+				Com_DPrintf(DEVELOPER_MSG_NET, "Serial parity error\n");
 			if (p->lineStatus & LSR_FRAMING_ERROR)
-				Con_DPrintf(DEVELOPER_MSG_NET, "Serial framing error\n");
+				Com_DPrintf(DEVELOPER_MSG_NET, "Serial framing error\n");
 			if (p->lineStatus & LSR_BREAK_DETECT)
-				Con_DPrintf(DEVELOPER_MSG_NET, "Serial break detect\n");
+				Com_DPrintf(DEVELOPER_MSG_NET, "Serial break detect\n");
 			ret = ERR_TTY_LINE_STATUS;
 		}
 
 		if ((p->modemStatus & MODEM_STATUS_MASK) != MODEM_STATUS_MASK)
 		{
 			if (!(p->modemStatus & MSR_CTS))
-				Con_Printf ("Serial lost CTS\n");
+				Com_Printf ("Serial lost CTS\n");
 			if (!(p->modemStatus & MSR_DSR))
-				Con_Printf ("Serial lost DSR\n");
+				Com_Printf ("Serial lost DSR\n");
 			if (!(p->modemStatus & MSR_CD))
-				Con_Printf ("Serial lost Carrier\n");
+				Com_Printf ("Serial lost Carrier\n");
 			ret = ERR_TTY_MODEM_STATUS;
 		}
 	}
@@ -579,7 +579,7 @@ static void Modem_Init(ComPort *p)
 	double	start;
 	char	*response;
 
-	Con_Printf ("Initializing modem...\n");
+	Com_Printf ("Initializing modem...\n");
 
 	// write 0 to MCR, wait 1/2 sec, then write the real value back again
 	// I got this from the guys at head-to-head who say it's necessary.
@@ -600,7 +600,7 @@ static void Modem_Init(ComPort *p)
 		{
 			if ((Sys_DoubleTime() - start) > 3.0)
 			{
-				Con_Printf("No response - clear failed\n");
+				Com_Printf("No response - clear failed\n");
 				p->enabled = false;
 				goto failed;
 			}
@@ -625,7 +625,7 @@ static void Modem_Init(ComPort *p)
 		{
 			if ((Sys_DoubleTime() - start) > 3.0)
 			{
-				Con_Printf("No response - init failed\n");
+				Com_Printf("No response - init failed\n");
 				p->enabled = false;
 				goto failed;
 			}
@@ -757,14 +757,14 @@ int TTY_Connect(int handle, char *host)
 
 	if ((p->modemStatus & MODEM_STATUS_MASK) != MODEM_STATUS_MASK)
 	{
-		Con_Printf ("Serial: line not ready (");
+		Com_Printf ("Serial: line not ready (");
 		if ((p->modemStatus & MSR_CTS) == 0)
-			Con_Printf(" CTS");
+			Com_Printf(" CTS");
 		if ((p->modemStatus & MSR_DSR) == 0)
-			Con_Printf(" DSR");
+			Com_Printf(" DSR");
 		if ((p->modemStatus & MSR_CD) == 0)
-			Con_Printf(" CD");
-		Con_Printf(" )");
+			Com_Printf(" CD");
+		Com_Printf(" )");
 		return -1;
 	}
 
@@ -780,7 +780,7 @@ int TTY_Connect(int handle, char *host)
 		key_dest = key_console;
 		key_count = -2;
 
-		Con_Printf ("Dialing...\n");
+		Com_Printf ("Dialing...\n");
 		sprintf((char *)dialstring, "AT D%c %s\r", p->dialType, host);
 		Modem_Command (p, (char *)dialstring);
 		start = Sys_DoubleTime();
@@ -788,7 +788,7 @@ int TTY_Connect(int handle, char *host)
 		{
 			if ((Sys_DoubleTime() - start) > 60.0)
 			{
-				Con_Printf("Dialing failure!\n");
+				Com_Printf("Dialing failure!\n");
 				break;
 			}
 
@@ -800,7 +800,7 @@ int TTY_Connect(int handle, char *host)
 					key_count = -2;
 					continue;
 				}
-				Con_Printf("Aborting...\n");
+				Com_Printf("Aborting...\n");
 				while ((Sys_DoubleTime() - start) < 5.0)
 					;
 				disable();
@@ -900,7 +900,7 @@ qboolean TTY_CheckForConnection(int handle)
 		{
 			if ((net_time - p->timestamp) > 35.0)
 			{
-				Con_Printf("Unable to establish modem connection\n");
+				Com_Printf("Unable to establish modem connection\n");
 				p->modemRang = false;
 				return false;
 			}
@@ -916,7 +916,7 @@ qboolean TTY_CheckForConnection(int handle)
 			p->outputQueue.head = p->outputQueue.tail = 0;
 			p->inputQueue.head = p->inputQueue.tail = 0;
 			enable();
-			Con_Printf("Modem Connect\n");
+			Com_Printf("Modem Connect\n");
 			return true;
 		}
 		return true;
@@ -962,30 +962,30 @@ void Com_f (void)
 
 	if (Cmd_Argc() == 1)
 	{
-		Con_Printf("Settings for COM%i\n", portNumber + 1);
-		Con_Printf("enabled:   %s\n", p->enabled ? "true" : "false");
-		Con_Printf("uart:      ");
+		Com_Printf("Settings for COM%i\n", portNumber + 1);
+		Com_Printf("enabled:   %s\n", p->enabled ? "true" : "false");
+		Com_Printf("uart:      ");
 		if (p->uartType == UART_AUTO)
-			Con_Printf("auto\n");
+			Com_Printf("auto\n");
 		else if (p->uartType == UART_8250)
-			Con_Printf("8250\n");
+			Com_Printf("8250\n");
 		else
-			Con_Printf("16550\n");
-		Con_Printf("port:      %x\n", p->uart);
-		Con_Printf("irq:       %i\n", p->irq);
-		Con_Printf("baud:      %i\n", 115200 / p->baudBits);	
-		Con_Printf("CTS:       %s\n", (p->modemStatusIgnore & MSR_CTS) ? "ignored" : "honored");
-		Con_Printf("DSR:       %s\n", (p->modemStatusIgnore & MSR_DSR) ? "ignored" : "honored");
-		Con_Printf("CD:        %s\n", (p->modemStatusIgnore & MSR_CD) ? "ignored" : "honored");
+			Com_Printf("16550\n");
+		Com_Printf("port:      %x\n", p->uart);
+		Com_Printf("irq:       %i\n", p->irq);
+		Com_Printf("baud:      %i\n", 115200 / p->baudBits);	
+		Com_Printf("CTS:       %s\n", (p->modemStatusIgnore & MSR_CTS) ? "ignored" : "honored");
+		Com_Printf("DSR:       %s\n", (p->modemStatusIgnore & MSR_DSR) ? "ignored" : "honored");
+		Com_Printf("CD:        %s\n", (p->modemStatusIgnore & MSR_CD) ? "ignored" : "honored");
 		if (p->useModem)
 		{
-			Con_Printf("type:      Modem\n");
-			Con_Printf("clear:     %s\n", p->clear);
-			Con_Printf("startup:   %s\n", p->startup);
-			Con_Printf("shutdown:  %s\n", p->shutdown);
+			Com_Printf("type:      Modem\n");
+			Com_Printf("clear:     %s\n", p->clear);
+			Com_Printf("startup:   %s\n", p->startup);
+			Com_Printf("shutdown:  %s\n", p->shutdown);
 		}
 		else
-			Con_Printf("type:      Direct connect\n");
+			Com_Printf("type:      Direct connect\n");
 
 		return;
 	}
@@ -1010,7 +1010,7 @@ void Com_f (void)
 	{
 		if (p->enabled)
 			{
-				Con_Printf("COM port must be disabled to change port\n");
+				Com_Printf("COM port must be disabled to change port\n");
 				return;
 			}
 		p->uart = Q_atoi (Cmd_Argv (i+1));
@@ -1020,7 +1020,7 @@ void Com_f (void)
 	{
 		if (p->enabled)
 			{
-				Con_Printf("COM port must be disabled to change irq\n");
+				Com_Printf("COM port must be disabled to change irq\n");
 				return;
 			}
 		p->irq = Q_atoi (Cmd_Argv (i+1));
@@ -1030,12 +1030,12 @@ void Com_f (void)
 	{
 		if (p->enabled)
 			{
-				Con_Printf("COM port must be disabled to change baud\n");
+				Com_Printf("COM port must be disabled to change baud\n");
 				return;
 			}
 		n = Q_atoi (Cmd_Argv (i+1));
 		if (n == 0)
-			Con_Printf("Invalid baud rate specified\n");
+			Com_Printf("Invalid baud rate specified\n");
 		else
 			p->baudBits = 115200 / n;
 	}
@@ -1044,7 +1044,7 @@ void Com_f (void)
 	{
 		if (p->enabled)
 			{
-				Con_Printf("COM port must be disabled to change uart\n");
+				Com_Printf("COM port must be disabled to change uart\n");
 				return;
 			}
 		p->uartType = UART_8250;
@@ -1053,7 +1053,7 @@ void Com_f (void)
 	{
 		if (p->enabled)
 			{
-				Con_Printf("COM port must be disabled to change uart\n");
+				Com_Printf("COM port must be disabled to change uart\n");
 				return;
 			}
 		p->uartType = UART_16550;
@@ -1062,7 +1062,7 @@ void Com_f (void)
 	{
 		if (p->enabled)
 			{
-				Con_Printf("COM port must be disabled to change uart\n");
+				Com_Printf("COM port must be disabled to change uart\n");
 				return;
 			}
 		p->uartType = UART_AUTO;
@@ -1229,7 +1229,7 @@ static char *Modem_Response(ComPort *p)
 		if (b == '\r' && p->bufferUsed)
 		{
 			p->buffer[p->bufferUsed] = 0;
-			Con_Printf("%s\n", p->buffer);
+			Com_Printf("%s\n", p->buffer);
 			SCR_UpdateScreen ();
 			p->bufferUsed = 0;
 			return p->buffer;
@@ -1251,7 +1251,7 @@ static void Modem_Hangup4(ComPort *p);
 
 static void Modem_Hangup(ComPort *p)
 {
-	Con_Printf("Hanging up modem...\n");
+	Com_Printf("Hanging up modem...\n");
 	disable();
 	p->modemRang = false;
 	p->outputQueue.head = p->outputQueue.tail = 0;
@@ -1281,6 +1281,6 @@ static void Modem_Hangup3(ComPort *p)
 static void Modem_Hangup4(ComPort *p)
 {
 	Modem_Response(p);
-	Con_Printf("Hangup complete\n");
+	Com_Printf("Hangup complete\n");
 	p->modemConnected = false;
 }

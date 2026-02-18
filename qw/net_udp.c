@@ -216,14 +216,14 @@ int UDP_OpenSocket (int port)
 
 	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
 	{
-		Con_Printf ("ERROR: UDP_OpenSocket: socket: %s", NET_ErrorString());
+		Com_Printf ("ERROR: UDP_OpenSocket: socket: %s", NET_ErrorString());
 		return 0;
 	}
 
 	// make it non-blocking
 	if (ioctlsocket (newsocket, FIONBIO, (char *) &_true) == SOCKET_ERROR)
 	{
-		Con_Printf ("ERROR: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
+		Com_Printf ("ERROR: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
 		return 0;
 	}
 
@@ -231,7 +231,7 @@ int UDP_OpenSocket (int port)
 //ZOID -- check for interface binding option
 	if ((i = COM_CheckParm("-ip")) != 0 && i < com_argc) {
 		address.sin_addr.s_addr = inet_addr(com_argv[i+1]);
-		Con_Printf("Binding to IP Interface Address of %s\n",
+		Com_Printf("Binding to IP Interface Address of %s\n",
 				inet_ntoa(address.sin_addr));
 	} else
 		address.sin_addr.s_addr = INADDR_ANY;
@@ -261,7 +261,7 @@ void NET_GetLocalAddress (void)
                 Sys_Error ("NET_Init: getsockname: %s\n", strerror(errno));
 	net_local_adr.port = address.sin_port;
 
-	Con_Printf("IP address %s\n", NET_AdrToString (net_local_adr) );
+	Com_Printf("IP address %s\n", NET_AdrToString (net_local_adr) );
 }
 
 /*
@@ -282,7 +282,7 @@ void NET_Init (int port)
 
 	if (err != 0)
 	{
-		Con_Printf("WATTCP initialization failed (%s)", sock_init_err(err));
+		Com_Printf("WATTCP initialization failed (%s)", sock_init_err(err));
 	}
 
 	//
@@ -301,7 +301,7 @@ void NET_Init (int port)
 	//
 	NET_GetLocalAddress ();
 
-	Con_Printf("WATTCP Initialized\n");
+	Com_Printf("WATTCP Initialized\n");
 
 }
 
