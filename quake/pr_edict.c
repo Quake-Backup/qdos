@@ -446,11 +446,11 @@ void ED_Print (edict_t *ed)
 
 	if (ed->free)
 	{
-		Con_Printf ("FREE\n");
+		Com_Printf ("FREE\n");
 		return;
 	}
 
-	Con_Printf("\nEDICT %i:\n", NUM_FOR_EDICT(ed));
+	Com_Printf("\nEDICT %i:\n", NUM_FOR_EDICT(ed));
 	for (i=1 ; i<progs->numfielddefs ; i++)
 	{
 		d = &pr_fielddefs[i];
@@ -469,12 +469,12 @@ void ED_Print (edict_t *ed)
 		if (j == type_size[type])
 			continue;
 	
-		Con_Printf ("%s",name);
+		Com_Printf ("%s",name);
 		l = strlen (name);
 		while (l++ < 15)
-			Con_Printf (" ");
+			Com_Printf (" ");
 
-		Con_Printf ("%s\n", PR_ValueString(d->type, (eval_t *)v));		
+		Com_Printf ("%s\n", PR_ValueString(d->type, (eval_t *)v));		
 	}
 }
 
@@ -546,7 +546,7 @@ void ED_PrintEdicts (void)
 {
 	int		i;
 	
-	Con_Printf ("%i entities\n", sv.num_edicts);
+	Com_Printf ("%i entities\n", sv.num_edicts);
 	for (i=0 ; i<sv.num_edicts ; i++)
 		ED_PrintNum (i);
 }
@@ -565,7 +565,7 @@ void ED_PrintEdict_f (void)
 	i = Q_atoi (Cmd_Argv(1));
 	if (i >= sv.num_edicts)
 	{
-		Con_Printf("Bad edict number\n");
+		Com_Printf("Bad edict number\n");
 		return;
 	}
 	ED_PrintNum (i);
@@ -599,11 +599,11 @@ void ED_Count (void)
 			step++;
 	}
 
-	Con_Printf ("num_edicts:%3i\n", sv.num_edicts);
-	Con_Printf ("active    :%3i\n", active);
-	Con_Printf ("view      :%3i\n", models);
-	Con_Printf ("touch     :%3i\n", solid);
-	Con_Printf ("step      :%3i\n", step);
+	Com_Printf ("num_edicts:%3i\n", sv.num_edicts);
+	Com_Printf ("active    :%3i\n", active);
+	Com_Printf ("view      :%3i\n", models);
+	Com_Printf ("touch     :%3i\n", solid);
+	Com_Printf ("step      :%3i\n", step);
 
 }
 
@@ -681,7 +681,7 @@ void ED_ParseGlobals (char *data)
 		key = ED_FindGlobal (keyname);
 		if (!key)
 		{
-			Con_Printf ("'%s' is not a global\n", keyname);
+			Com_Printf ("'%s' is not a global\n", keyname);
 			continue;
 		}
 
@@ -778,7 +778,7 @@ qboolean	ED_ParseEpair (void *base, ddef_t *key, char *s)
 		{
 			//johnfitz -- HACK -- suppress error becuase fog/sky fields might not be mentioned in defs.qc
 			if (strncmp(s, "sky", 3) && strcmp(s, "fog"))
-				Con_DPrintf(DEVELOPER_MSG_PROGS, "Can't find field %s\n", s);
+				Com_DPrintf(DEVELOPER_MSG_PROGS, "Can't find field %s\n", s);
 			return false;
 		}
 		*(int *)d = G_INT(def->ofs);
@@ -788,7 +788,7 @@ qboolean	ED_ParseEpair (void *base, ddef_t *key, char *s)
 		func = ED_FindFunction (s);
 		if (!func)
 		{
-			Con_Printf ("Can't find function %s\n", s);
+			Com_Printf ("Can't find function %s\n", s);
 			return false;
 		}
 		*(func_t *)d = func - pr_functions;
@@ -882,7 +882,7 @@ if (!strcmp(com_token, "light"))
 		{
 			//johnfitz -- HACK -- suppress error becuase fog/sky/alpha fields might not be mentioned in defs.qc
 			if (strncmp(keyname, "sky", 3) && strcmp(keyname, "fog") && strcmp(keyname, "alpha"))
-				Con_DPrintf(DEVELOPER_MSG_PROGS, "\"%s\" is not a field\n", keyname); //johnfitz -- was Con_Printf
+				Com_DPrintf(DEVELOPER_MSG_PROGS, "\"%s\" is not a field\n", keyname); //johnfitz -- was Com_Printf
 			continue;
 		}
 
@@ -969,7 +969,7 @@ void ED_LoadFromFile (char *data)
 //
 		if (!ent->v.classname)
 		{
-			Con_Printf ("No classname for:\n");
+			Com_Printf ("No classname for:\n");
 			ED_Print (ent);
 			ED_Free (ent);
 			continue;
@@ -980,7 +980,7 @@ void ED_LoadFromFile (char *data)
 
 		if (!func)
 		{
-			Con_Printf ("No spawn function for:\n");
+			Com_Printf ("No spawn function for:\n");
 			ED_Print (ent);
 			ED_Free (ent);
 			continue;
@@ -990,7 +990,7 @@ void ED_LoadFromFile (char *data)
 		PR_ExecuteProgram (func - pr_functions);
 	}	
 
-	Con_DPrintf(DEVELOPER_MSG_PROGS, "%i entities inhibited\n", inhibit);
+	Com_DPrintf(DEVELOPER_MSG_PROGS, "%i entities inhibited\n", inhibit);
 }
 
 
@@ -1012,7 +1012,7 @@ void PR_LoadProgs (void)
 	progs = (dprograms_t *)COM_LoadHunkFile ("progs.dat");
 	if (!progs)
 		Sys_Error ("PR_LoadProgs: couldn't load progs.dat");
-	Con_DPrintf(DEVELOPER_MSG_PROGS, "Programs occupy %iK.\n", com_filesize/1024);
+	Com_DPrintf(DEVELOPER_MSG_PROGS, "Programs occupy %iK.\n", com_filesize/1024);
 
 	for (i=0 ; i<com_filesize ; i++)
 		CRC_ProcessByte (&pr_crc, ((byte *)progs)[i]);

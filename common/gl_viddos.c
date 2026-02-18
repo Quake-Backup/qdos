@@ -123,14 +123,14 @@ static qboolean VID_Check3dfxGamma (void)
 	ret = glGetDeviceGammaRamp3DFX(orig_ramps);
 	if (ret != 0)
 	{
-		Con_SafePrintf ("Using 3dfx glide3 specific gamma ramps\n");
+		Com_SafePrintf ("Using 3dfx glide3 specific gamma ramps\n");
 		return true;
 	}
 #else
 	ret = Init_3dfxGammaCtrl();
 	if (ret > 0)
 	{
-		Con_SafePrintf ("Using 3dfx glide%d gamma controls\n", ret);
+		Com_SafePrintf ("Using 3dfx glide%d gamma controls\n", ret);
 		return true;
 	}
 #endif
@@ -144,7 +144,7 @@ static void VID_InitGamma (void)
 
 	if (COM_CheckParm("-no3dfxgamma") || r_ignorehwgamma->intValue)
 	{
-		Con_SafePrintf("ignoring hardware gamma\n");
+		Com_SafePrintf("ignoring hardware gamma\n");
 		return;
 	}
 
@@ -154,7 +154,7 @@ static void VID_InitGamma (void)
 		fx_gamma = VID_Check3dfxGamma();
 
 	if (!gammaworks && !fx_gamma)
-		Con_SafePrintf("gamma adjustment not available\n");
+		Com_SafePrintf("gamma adjustment not available\n");
 }
 
 static void VID_ShutdownGamma (void)
@@ -250,7 +250,7 @@ void CheckMultiTextureExtensions(void)
 			glActiveTextureARB_fp = (glActiveTextureARB_f) DOSGL_GetProcAddress("glActiveTextureARB");
 			if (glMultiTexCoord2fARB_fp && glActiveTextureARB_fp)
 			{
-				Con_Printf("FOUND: ARB_multitexture\n");
+				Com_Printf("FOUND: ARB_multitexture\n");
 				TEXTURE0 = GL_TEXTURE0_ARB;
 				TEXTURE1 = GL_TEXTURE1_ARB;
 				gl_mtexable = true;
@@ -273,18 +273,18 @@ static void DOSGL_Init (void)
 	if (rc < 0) {
 		Sys_Error("Unable to find a supported API for DOSGL.");
 	}
-	Con_SafePrintf("DOSGL: driver using %s API.\n", DOSGL_APIName());
+	Com_SafePrintf("DOSGL: driver using %s API.\n", DOSGL_APIName());
 }
 
 #ifdef GL_DLSYM
 static qboolean GL_OpenLibrary (const char *name)
 {
-	Con_SafePrintf("Loading OpenGL library %s\n", name);
+	Com_SafePrintf("Loading OpenGL library %s\n", name);
 
 	// open the library
 	if (!(gl_handle = Sys_dlopen(name, false)))
 	{
-		Con_SafePrintf("Unable to dlopen %s\n", name);
+		Com_SafePrintf("Unable to dlopen %s\n", name);
 		return false;
 	}
 
@@ -331,14 +331,14 @@ void GL_Strings_f (void) /* FS: Print the extensions string */
 	char *extString, *p;
 	char *savedExtStrings;
 
-	Con_Printf("GL_EXTENSIONS: ");
+	Com_Printf("GL_EXTENSIONS: ");
 
 	savedExtStrings = strdup((char *)gl_extensions);
 	extString = strtok_r(savedExtStrings, seperators, &p);
 
 	while(extString != NULL)
 	{
-		Con_Printf("%s\n", extString);
+		Com_Printf("%s\n", extString);
 		extString = strtok_r(NULL, seperators, &p);
 	}
 	free((void *)savedExtStrings);
@@ -386,12 +386,12 @@ void GL_Init (void)
 	GL_Init_Functions();
 #endif
 	gl_vendor = (const char *)glGetString_fp (GL_VENDOR);
-	Con_Printf ("GL_VENDOR: %s\n", gl_vendor);
+	Com_Printf ("GL_VENDOR: %s\n", gl_vendor);
 	gl_renderer = (const char *)glGetString_fp (GL_RENDERER);
-	Con_Printf ("GL_RENDERER: %s\n", gl_renderer);
+	Com_Printf ("GL_RENDERER: %s\n", gl_renderer);
 
 	gl_version = (const char *)glGetString_fp (GL_VERSION);
-	Con_Printf ("GL_VERSION: %s\n", gl_version);
+	Com_Printf ("GL_VERSION: %s\n", gl_version);
 	gl_extensions = (const char *)glGetString_fp (GL_EXTENSIONS);
 	Con_SafeDPrintf (DEVELOPER_MSG_VIDEO, "GL_EXTENSIONS: %s\n", gl_extensions);
 
@@ -401,7 +401,7 @@ void GL_Init (void)
 	    !Q_strncasecmp((char *)gl_renderer, "Glide ", 6)	  || /* possible with Mesa 3.x/4.x/5.0.x */
 	    !Q_strncasecmp((char *)gl_renderer, "Mesa Glide", 10))
 	{
-		Con_SafePrintf("3dfx Voodoo found\n");
+		Com_SafePrintf("3dfx Voodoo found\n");
 		is_3dfx = true;
 	}
 
@@ -456,7 +456,7 @@ void VID_Init8bitPalette()
 				char thePalette[256*3];
 				char *oldPalette, *newPalette;
 
-				Con_SafePrintf("... Using GL_EXT_shared_texture_palette\n");
+				Com_SafePrintf("... Using GL_EXT_shared_texture_palette\n");
 				glEnable_fp( GL_SHARED_TEXTURE_PALETTE_EXT );
 				oldPalette = (char *) d_8to24table; //d_8to24table3dfx;
 				newPalette = thePalette;
@@ -618,7 +618,7 @@ void VID_Init(unsigned char *palette)
 	vid_menukeyfn = VID_MenuKey;
 
 	Com_sprintf(currentVideoModeDesc, sizeof(currentVideoModeDesc), "%dx%dx%d", width, height, bpp);
-	Con_SafePrintf ("Video mode %s initialized.\n", currentVideoModeDesc);
+	Com_SafePrintf ("Video mode %s initialized.\n", currentVideoModeDesc);
 
 	vid.recalc_refdef = 1;				// force a surface cache flush
 }

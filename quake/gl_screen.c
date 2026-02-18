@@ -53,7 +53,7 @@ draw
 CenterPrint ()
 SlowPrint ()
 Screen_Update ();
-Con_Printf ();
+Com_Printf ();
 
 net 
 turn off messages option
@@ -709,7 +709,7 @@ void SCR_ScreenShot_f (void)
 	} 
 	if (i==100) 
 	{
-		Con_Printf ("SCR_ScreenShot_f: Couldn't create a PCX file\n"); 
+		Com_Printf ("SCR_ScreenShot_f: Couldn't create a PCX file\n"); 
 		return;
  	}
 
@@ -736,7 +736,7 @@ void SCR_ScreenShot_f (void)
 	COM_WriteFile (pcxname, buffer, glwidth*glheight*3 + 18 );
 
 	free (buffer);
-	Con_Printf ("Wrote %s\n", pcxname);
+	Com_Printf ("Wrote %s\n", pcxname);
 } 
 
 
@@ -932,7 +932,7 @@ void SCR_UpdateScreen (void)
 		if (realtime - scr_disabled_time > 60)
 		{
 			scr_disabled_for_loading = false;
-			Con_Printf ("load failed.\n");
+			Com_Printf ("load failed.\n");
 		}
 		else
 			return;

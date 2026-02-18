@@ -923,7 +923,7 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 		if (length > buf->maxsize)
 			Sys_Error ("SZ_GetSpace: %i is > full buffer size", length);
 		buf->overflowed = true;
-		Con_Printf ("SZ_GetSpace: overflow");
+		Com_Printf ("SZ_GetSpace: overflow");
 		SZ_Clear (buf); 
 	}
 
@@ -1244,9 +1244,9 @@ void COM_CheckRegistered (void)
 #if WINDED
 	Sys_Error ("This dedicated server requires a full registered copy of Quake");
 #endif
-		Con_Printf ("Playing shareware version.\n");
+		Com_Printf ("Playing shareware version.\n");
 		if (com_modified)
-			Con_Printf ("You must have the registered version to use modified games");
+			Com_Printf ("You must have the registered version to use modified games");
 		return;
 	}
 
@@ -1260,7 +1260,7 @@ void COM_CheckRegistered (void)
 	Cvar_Set ("cmdline", com_cmdline+1); //johnfitz -- eliminate leading space
 	Cvar_ForceSet("registered", "1");
 	static_registered = 1;
-	Con_Printf ("Playing registered version.\n");
+	Com_Printf ("Playing registered version.\n");
 }
 
 
@@ -1556,15 +1556,15 @@ void COM_Path_f (void)
 {
 	searchpath_t    *s;
 	
-	Con_Printf ("Current search path:\n");
+	Com_Printf ("Current search path:\n");
 	for (s=com_searchpaths ; s ; s=s->next)
 	{
 		if (s->pack)
 		{
-			Con_Printf ("%s (%i files)\n", s->pack->filename, s->pack->numfiles);
+			Com_Printf ("%s (%i files)\n", s->pack->filename, s->pack->numfiles);
 		}
 		else
-			Con_Printf ("%s\n", s->filename);
+			Com_Printf ("%s\n", s->filename);
 	}
 }
 
@@ -1945,7 +1945,7 @@ pack_t *COM_LoadPackFile (char *packfile)
 	}
 	if (!numpackfiles)
 	{
-		Con_Printf ("WARNING: %s has no files, ignored\n", packfile);
+		Com_Printf ("WARNING: %s has no files, ignored\n", packfile);
 		Sys_FileClose (packhandle);
 		return NULL;
 	}
@@ -1981,7 +1981,7 @@ pack_t *COM_LoadPackFile (char *packfile)
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
 
-	//Con_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
+	//Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
 	return pack;
 }
 
@@ -2112,8 +2112,8 @@ void COM_Dir_f (void)
 				*tmp = '/';
 			tmp++;
 		}
-		Con_Printf( "Directory of %s\n", findname );
-		Con_Printf( "----\n" );
+		Com_Printf( "Directory of %s\n", findname );
+		Com_Printf( "----\n" );
 
 		if ( ( dirnames = COM_ListFiles( findname, &ndirs, 0, 0 ) ) != 0 )
 		{
@@ -2122,15 +2122,15 @@ void COM_Dir_f (void)
 			for ( i = 0; i < ndirs-1; i++ )
 			{
 				if ( strrchr( dirnames[i], '/' ) )
-					Con_Printf( "%s\n", strrchr( dirnames[i], '/' ) + 1 );
+					Com_Printf( "%s\n", strrchr( dirnames[i], '/' ) + 1 );
 				else
-					Con_Printf( "%s\n", dirnames[i] );
+					Com_Printf( "%s\n", dirnames[i] );
 
 				free( dirnames[i] );
 			}
 			free( dirnames );
 		}
-		Con_Printf( "\n" );
+		Com_Printf( "\n" );
 	};
 }
 
@@ -2410,7 +2410,7 @@ void Com_sprintf (char *dest, int size, char *fmt, ...)
 	va_end (argptr);
 	if (size > 0) dest[size - 1] = 0;
 	if (len < 0 || len >= size) {
-		Con_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
+		Com_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
 	}
 }
 
@@ -2418,15 +2418,15 @@ void Com_sprintf (char *dest, int size, char *fmt, ...)
 void Com_strcpy (char *dest, int destSize, const char *src)
 {
 	if (!dest) {
-		Con_Printf ("Com_strcpy: NULL dst\n");
+		Com_Printf ("Com_strcpy: NULL dst\n");
 		return;
 	}
 	if (!src) {
-		Con_Printf ("Com_strcpy: NULL src\n");
+		Com_Printf ("Com_strcpy: NULL src\n");
 		return;
 	}
 	if (destSize < 1) {
-		Con_Printf ("Com_strcpy: dstSize < 1\n");
+		Com_Printf ("Com_strcpy: dstSize < 1\n");
 		return;
 	}
 

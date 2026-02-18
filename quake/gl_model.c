@@ -740,7 +740,7 @@ void Mod_LoadTexinfo (lump_t *l)
 
 	//johnfitz: report missing textures
 	if (missing && loadmodel->numtextures > 1)
-		Con_DPrintf (DEVELOPER_MSG_STANDARD, "Mod_LoadTexinfo: %d texture(s) missing from BSP file\n", missing);
+		Com_DPrintf (DEVELOPER_MSG_STANDARD, "Mod_LoadTexinfo: %d texture(s) missing from BSP file\n", missing);
 	//johnfitz
 }
 
@@ -1039,7 +1039,7 @@ void Mod_LoadNodes_S (lump_t *l)
 					out->children[j] = (mnode_t *)(loadmodel->leafs + p);
 				else
 				{
-					Con_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
+					Com_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
 					out->children[j] = (mnode_t *)(loadmodel->leafs); //map it to the solid leaf
 				}
 			}
@@ -1091,7 +1091,7 @@ void Mod_LoadNodes_L1 (lump_t *l)
 					out->children[j] = (mnode_t *)(loadmodel->leafs + p);
 				else
 				{
-					Con_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
+					Com_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
 					out->children[j] = (mnode_t *)(loadmodel->leafs); //map it to the solid leaf
 				}
 			}
@@ -1143,7 +1143,7 @@ void Mod_LoadNodes_L2 (lump_t *l)
 					out->children[j] = (mnode_t *)(loadmodel->leafs + p);
 				else
 				{
-					Con_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
+					Com_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
 					out->children[j] = (mnode_t *)(loadmodel->leafs); //map it to the solid leaf
 				}
 			}
@@ -2334,10 +2334,10 @@ void Mod_Print (void)
 	int		i;
 	model_t	*mod;
 
-	Con_Printf ("Cached models:\n");
+	Com_Printf ("Cached models:\n");
 	for (i=0, mod=mod_known ; i < mod_numknown ; i++, mod++)
 	{
-		Con_Printf ("%8p : %s\n",mod->cache.data, mod->name);
+		Com_Printf ("%8p : %s\n",mod->cache.data, mod->name);
 	}
 }
 

@@ -277,7 +277,7 @@ void CL_KeepaliveMessage (void)
 	lastmsg = time;
 
 // write out a nop
-	Con_Printf ("--> client to server keepalive\n");
+	Com_Printf ("--> client to server keepalive\n");
 
 	MSG_WriteByte (&cls.message, clc_nop);
 	NET_SendMessage (cls.netcon, &cls.message);
@@ -297,7 +297,7 @@ void CL_ParseServerInfo (void)
 	char	model_precache[MAX_MODELS][MAX_QPATH];
 	char	sound_precache[MAX_SOUNDS][MAX_QPATH];
 
-	Con_DPrintf (DEVELOPER_MSG_NET, "Serverinfo packet received.\n");
+	Com_DPrintf (DEVELOPER_MSG_NET, "Serverinfo packet received.\n");
 
 // bring up loading plaque for map changes within a demo.
 // it will be hidden in CL_SignonReply() -- ericw
@@ -314,7 +314,7 @@ void CL_ParseServerInfo (void)
 // johnfitz -- support multiple protocols
 	if (i != PROTOCOL_NETQUAKE && i != PROTOCOL_FITZQUAKE)
 	{
-		Con_Printf ("\n"); //because there's no newline after serverinfo print
+		Com_Printf ("\n"); //because there's no newline after serverinfo print
 		Host_Error ("Server returned version %i, not %i or %i", i, PROTOCOL_NETQUAKE, PROTOCOL_FITZQUAKE);
 	}
 	cl.protocol = i;
@@ -336,11 +336,11 @@ void CL_ParseServerInfo (void)
 	Q_strlcpy (cl.levelname, str, sizeof(cl.levelname));
 
 // seperate the printfs so the server message can have a color
-	Con_Printf ("\n%s\n", Con_Quakebar(40)); //johnfitz
-	Con_Printf ("%c%s\n", 2, str);
+	Com_Printf ("\n%s\n", Con_Quakebar(40)); //johnfitz
+	Com_Printf ("%c%s\n", 2, str);
 
 // johnfitz -- tell user which protocol this is
-	Con_Printf ("Using protocol %i\n", i);
+	Com_Printf ("Using protocol %i\n", i);
 
 // first we go through and touch all of the precache data that still
 // happens to be in the cache, so precaching something else doesn't
@@ -949,7 +949,7 @@ void CL_ParseStaticSound (int version) //johnfitz -- added argument
 }
 
 
-#define SHOWNET(x) if(cl_shownet->value==2)Con_Printf ("%3i:%s\n", msg_readcount-1, x);
+#define SHOWNET(x) if(cl_shownet->value==2)Com_Printf ("%3i:%s\n", msg_readcount-1, x);
 
 /*
 =====================
@@ -967,9 +967,9 @@ void CL_ParseServerMessage (void)
 // if recording demos, copy the message out
 //
 	if (cl_shownet->value == 1)
-		Con_Printf ("%i ",net_message.cursize);
+		Com_Printf ("%i ",net_message.cursize);
 	else if (cl_shownet->value == 2)
-		Con_Printf ("------------------\n");
+		Com_Printf ("------------------\n");
 	
 	cl.onground = false;	// unless the server says otherwise	
 //
@@ -1008,7 +1008,7 @@ void CL_ParseServerMessage (void)
 				break;
 			
 			case svc_nop:
-//				Con_Printf ("svc_nop\n");
+//				Com_Printf ("svc_nop\n");
 				break;
 			
 			case svc_time:
@@ -1042,7 +1042,7 @@ void CL_ParseServerMessage (void)
 					cls.spamTime = realtime + 1.5f; /* FS: 1.5 second delay */
 				}
 
-				Con_Printf ("%s", str); /* FS: f_version and q_version reply */
+				Com_Printf ("%s", str); /* FS: f_version and q_version reply */
 				break;
 			
 			case svc_centerprint:
@@ -1055,7 +1055,7 @@ void CL_ParseServerMessage (void)
 			
 			case svc_stufftext:
 				str = MSG_ReadString ();
-				Con_DPrintf (DEVELOPER_MSG_NET, "stufftext: %s\n", str);
+				Com_DPrintf (DEVELOPER_MSG_NET, "stufftext: %s\n", str);
 
 				if(CL_MaliciousStuffText(str)) /* FS: Ignore malicious stufftext */
 					break;
@@ -1302,7 +1302,7 @@ qboolean CL_MaliciousStuffText(char *stufftext) /* FS: Check for malicious stuff
 
 	if((Q_strncasecmp(stufftext, "fov ", 4) == 0) || (Q_strncasecmp(stufftext, "_snd_mixahead ", 14) == 0) || (Q_strncasecmp(stufftext, "rate ", 5) == 0) || (Q_strncasecmp(stufftext, "r_restart", 9) == 0) ) /* FS: Ignore malicious stufftexts */
 	{
-		Con_DPrintf (DEVELOPER_MSG_NET, "Ignoring malicious stufftext: %s\n", stufftext);
+		Com_DPrintf (DEVELOPER_MSG_NET, "Ignoring malicious stufftext: %s\n", stufftext);
 		return true;
 	}
 
@@ -1323,11 +1323,11 @@ void CL_PlayBackgroundTrack (int track)
 	int	have_extmusic;
 	int	fakeHandle;
 
-	Con_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack\n");
+	Com_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack\n");
 
 	if (track == 0)
 	{	// Stop any playing track
-		Con_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack: stopping\n");
+		Com_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack: stopping\n");
 		CDAudio_Stop();
 		S_StopBackgroundTrack();
 		return;

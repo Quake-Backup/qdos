@@ -122,7 +122,7 @@ void NET_Ban_f (void)
 			Cmd_ForwardToServer ();
 			return;
 		}
-		print = Con_Printf;
+		print = Com_Printf;
 	}
 	else
 	{
@@ -344,16 +344,16 @@ int	Datagram_GetMessage (qsocket_t *sock)
 
 		if (length == -1)
 		{
-			Con_Printf("Read error\n");
+			Com_Printf("Read error\n");
 			return -1;
 		}
 
 		if (sfunc.AddrCompare(&readaddr, &sock->addr) != 0)
 		{
 #ifdef DEBUG
-			Con_DPrintf(DEVELOPER_MSG_NET, "Forged packet received\n");
-			Con_DPrintf(DEVELOPER_MSG_NET, "Expected: %s\n", StrAddr (&sock->addr));
-			Con_DPrintf(DEVELOPER_MSG_NET, "Received: %s\n", StrAddr (&readaddr));
+			Com_DPrintf(DEVELOPER_MSG_NET, "Forged packet received\n");
+			Com_DPrintf(DEVELOPER_MSG_NET, "Expected: %s\n", StrAddr (&sock->addr));
+			Com_DPrintf(DEVELOPER_MSG_NET, "Received: %s\n", StrAddr (&readaddr));
 #endif
 			continue;
 		}
@@ -378,7 +378,7 @@ int	Datagram_GetMessage (qsocket_t *sock)
 		{
 			if (sequence < sock->unreliableReceiveSequence)
 			{
-				Con_DPrintf(DEVELOPER_MSG_NET, "Got a stale datagram\n");
+				Com_DPrintf(DEVELOPER_MSG_NET, "Got a stale datagram\n");
 				ret = 0;
 				break;
 			}
@@ -386,7 +386,7 @@ int	Datagram_GetMessage (qsocket_t *sock)
 			{
 				count = sequence - sock->unreliableReceiveSequence;
 				droppedDatagrams += count;
-				Con_DPrintf(DEVELOPER_MSG_NET, "Dropped %u datagram(s)\n", count);
+				Com_DPrintf(DEVELOPER_MSG_NET, "Dropped %u datagram(s)\n", count);
 			}
 			sock->unreliableReceiveSequence = sequence + 1;
 
@@ -403,18 +403,18 @@ int	Datagram_GetMessage (qsocket_t *sock)
 		{
 			if (sequence != (sock->sendSequence - 1))
 			{
-				Con_DPrintf(DEVELOPER_MSG_NET, "Stale ACK received\n");
+				Com_DPrintf(DEVELOPER_MSG_NET, "Stale ACK received\n");
 				continue;
 			}
 			if (sequence == sock->ackSequence)
 			{
 				sock->ackSequence++;
 				if (sock->ackSequence != sock->sendSequence)
-					Con_DPrintf(DEVELOPER_MSG_NET, "ack sequencing error\n");
+					Com_DPrintf(DEVELOPER_MSG_NET, "ack sequencing error\n");
 			}
 			else
 			{
-				Con_DPrintf(DEVELOPER_MSG_NET, "Duplicate ACK received\n");
+				Com_DPrintf(DEVELOPER_MSG_NET, "Duplicate ACK received\n");
 				continue;
 			}
 			sock->sendMessageLength -= MAX_DATAGRAM;
@@ -472,10 +472,10 @@ int	Datagram_GetMessage (qsocket_t *sock)
 
 void PrintStats(qsocket_t *s)
 {
-	Con_Printf("canSend = %4u   \n", s->canSend);
-	Con_Printf("sendSeq = %4u   ", s->sendSequence);
-	Con_Printf("recvSeq = %4u   \n", s->receiveSequence);
-	Con_Printf("\n");
+	Com_Printf("canSend = %4u   \n", s->canSend);
+	Com_Printf("sendSeq = %4u   ", s->sendSequence);
+	Com_Printf("recvSeq = %4u   \n", s->receiveSequence);
+	Com_Printf("\n");
 }
 
 void NET_Stats_f (void)
@@ -484,16 +484,16 @@ void NET_Stats_f (void)
 
 	if (Cmd_Argc () == 1)
 	{
-		Con_Printf("unreliable messages sent   = %i\n", unreliableMessagesSent);
-		Con_Printf("unreliable messages recv   = %i\n", unreliableMessagesReceived);
-		Con_Printf("reliable messages sent     = %i\n", messagesSent);
-		Con_Printf("reliable messages received = %i\n", messagesReceived);
-		Con_Printf("packetsSent                = %i\n", packetsSent);
-		Con_Printf("packetsReSent              = %i\n", packetsReSent);
-		Con_Printf("packetsReceived            = %i\n", packetsReceived);
-		Con_Printf("receivedDuplicateCount     = %i\n", receivedDuplicateCount);
-		Con_Printf("shortPacketCount           = %i\n", shortPacketCount);
-		Con_Printf("droppedDatagrams           = %i\n", droppedDatagrams);
+		Com_Printf("unreliable messages sent   = %i\n", unreliableMessagesSent);
+		Com_Printf("unreliable messages recv   = %i\n", unreliableMessagesReceived);
+		Com_Printf("reliable messages sent     = %i\n", messagesSent);
+		Com_Printf("reliable messages received = %i\n", messagesReceived);
+		Com_Printf("packetsSent                = %i\n", packetsSent);
+		Com_Printf("packetsReSent              = %i\n", packetsReSent);
+		Com_Printf("packetsReceived            = %i\n", packetsReceived);
+		Com_Printf("receivedDuplicateCount     = %i\n", receivedDuplicateCount);
+		Com_Printf("shortPacketCount           = %i\n", shortPacketCount);
+		Com_Printf("droppedDatagrams           = %i\n", droppedDatagrams);
 	}
 	else if (Q_strcmp(Cmd_Argv(1), "*") == 0)
 	{
@@ -568,7 +568,7 @@ static void Test_Poll(void)
 		connectTime = MSG_ReadLong();
 		Q_strcpy(address, MSG_ReadString());
 
-		Con_Printf("[%u]%s\n  frags:%3i  colors:%u %u  time:%u\n  %s\n", playerNumber, name, frags, colors >> 4, colors & 0x0f, connectTime / 60, address);
+		Com_Printf("[%u]%s\n  frags:%3i  colors:%u %u  time:%u\n  %s\n", playerNumber, name, frags, colors >> 4, colors & 0x0f, connectTime / 60, address);
 	}
 	testPollCount--;
 	if (testPollCount)
@@ -688,7 +688,7 @@ static void Test2_Poll(void)
 		goto Done;
 	Q_strcpy(value, MSG_ReadString());
 
-	Con_Printf("%-16.16s  %-16.16s\n", name, value);
+	Com_Printf("%-16.16s  %-16.16s\n", name, value);
 
 	SZ_Clear(&net_message);
 	// save space for the header, filled in later
@@ -704,7 +704,7 @@ Reschedule:
 	return;
 
 Error:
-	Con_Printf("Unexpected repsonse to Rule Info request\n");
+	Com_Printf("Unexpected repsonse to Rule Info request\n");
 Done:
 	dfunc.CloseSocket(test2Socket);
 	test2InProgress = false;
@@ -819,7 +819,7 @@ static void Test3_Poll(void)
 		users = MSG_ReadByte();
 		maxusers = MSG_ReadByte();
 
-		Con_Printf("Hostname: %s.  Map: %s.  Players: %u/%u.\n", name, map, users, maxusers);
+		Com_Printf("Hostname: %s.  Map: %s.  Players: %u/%u.\n", name, map, users, maxusers);
 	}
 
 	testPollCount--;
@@ -1376,7 +1376,7 @@ static qsocket_t *_Datagram_Connect (char *host)
 		goto ErrorReturn;
 
 	// send the connection request
-	Con_Printf("trying...\n"); SCR_UpdateScreen ();
+	Com_Printf("trying...\n"); SCR_UpdateScreen ();
 	start_time = net_time;
 
 	for (reps = 0; reps < 3; reps++)
@@ -1400,9 +1400,9 @@ static qsocket_t *_Datagram_Connect (char *host)
 				if (sfunc.AddrCompare(&readaddr, &sendaddr) != 0)
 				{
 #ifdef DEBUG
-					Con_Printf("wrong reply address\n");
-					Con_Printf("Expected: %s\n", StrAddr (&sendaddr));
-					Con_Printf("Received: %s\n", StrAddr (&readaddr));
+					Com_Printf("wrong reply address\n");
+					Com_Printf("Expected: %s\n", StrAddr (&sendaddr));
+					Com_Printf("Received: %s\n", StrAddr (&readaddr));
 					SCR_UpdateScreen ();
 #endif
 					ret = 0;
@@ -1440,14 +1440,14 @@ static qsocket_t *_Datagram_Connect (char *host)
 		while (ret == 0 && (SetNetTime() - start_time) < 2.5);
 		if (ret)
 			break;
-		Con_Printf("still trying...\n"); SCR_UpdateScreen ();
+		Com_Printf("still trying...\n"); SCR_UpdateScreen ();
 		start_time = SetNetTime();
 	}
 
 	if (ret == 0)
 	{
 		reason = "No Response";
-		Con_Printf("%s\n", reason);
+		Com_Printf("%s\n", reason);
 		Q_strcpy(m_return_reason, reason);
 		goto ErrorReturn;
 	}
@@ -1455,7 +1455,7 @@ static qsocket_t *_Datagram_Connect (char *host)
 	if (ret == -1)
 	{
 		reason = "Network Error";
-		Con_Printf("%s\n", reason);
+		Com_Printf("%s\n", reason);
 		Q_strcpy(m_return_reason, reason);
 		goto ErrorReturn;
 	}
@@ -1464,7 +1464,7 @@ static qsocket_t *_Datagram_Connect (char *host)
 	if (ret == CCREP_REJECT)
 	{
 		reason = MSG_ReadString();
-		Con_Printf("%s\n", reason);
+		Com_Printf("%s\n", reason);
 		Q_strlcpy(m_return_reason, reason, sizeof(m_return_reason));
 		goto ErrorReturn;
 	}
@@ -1477,21 +1477,21 @@ static qsocket_t *_Datagram_Connect (char *host)
 	else
 	{
 		reason = "Bad Response";
-		Con_Printf("%s\n", reason);
+		Com_Printf("%s\n", reason);
 		Q_strcpy(m_return_reason, reason);
 		goto ErrorReturn;
 	}
 
 	dfunc.GetNameFromAddr (&sendaddr, sock->address);
 
-	Con_Printf ("Connection accepted\n");
+	Com_Printf ("Connection accepted\n");
 	sock->lastMessageTime = SetNetTime();
 
 	// switch the connection to the specified address
 	if (dfunc.Connect (newsock, &sock->addr) == -1)
 	{
 		reason = "Connect to Game failed";
-		Con_Printf("%s\n", reason);
+		Com_Printf("%s\n", reason);
 		Q_strcpy(m_return_reason, reason);
 		goto ErrorReturn;
 	}

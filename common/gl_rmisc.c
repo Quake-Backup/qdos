@@ -312,7 +312,7 @@ void R_TranslatePlayerSkin (int playernum)
 	paliashdr = (aliashdr_t *)Mod_Extradata (model);
 	s = paliashdr->skinwidth * paliashdr->skinheight;
 	if (currententity->skinnum < 0 || currententity->skinnum >= paliashdr->numskins) {
-		Con_Printf("(%d): Invalid player skin #%d\n", playernum, currententity->skinnum);
+		Com_Printf("(%d): Invalid player skin #%d\n", playernum, currententity->skinnum);
 		original = (byte *)paliashdr + paliashdr->texels[0];
 	} else
 		original = (byte *)paliashdr + paliashdr->texels[currententity->skinnum];
@@ -607,7 +607,7 @@ void R_TimeRefresh_f (void)
 	glFinish_fp ();
 	stop = Sys_DoubleTime();
 	time = stop-start;
-	Con_Printf ("%f seconds (%f fps)\n", time, 128/time);
+	Com_Printf ("%f seconds (%f fps)\n", time, 128/time);
 
 	glDrawBuffer_fp  (GL_BACK);
 	GL_EndRendering ();

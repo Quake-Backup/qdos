@@ -154,7 +154,7 @@ void CL_Disconnect (void)
 		if (cls.demorecording)
 			CL_Stop_f ();
 
-		Con_DPrintf (DEVELOPER_MSG_NET, "Sending clc_disconnect\n");
+		Com_DPrintf (DEVELOPER_MSG_NET, "Sending clc_disconnect\n");
 		SZ_Clear (&cls.message);
 		MSG_WriteByte (&cls.message, clc_disconnect);
 		NET_SendUnreliableMessage (cls.netcon, &cls.message);
@@ -175,7 +175,7 @@ void CL_Disconnect (void)
 void CL_Disconnect_f (void)
 {
 	if(cls.state > ca_disconnected) /* FS: Added message. */
-		Con_Printf("*** Disconnected from server *** \n");
+		Com_Printf("*** Disconnected from server *** \n");
 
 	CL_Disconnect();
 
@@ -204,7 +204,7 @@ void CL_EstablishConnection (char *host)
 	cls.netcon = NET_Connect (host);
 	if (!cls.netcon)
 		Host_Error ("CL_Connect: connect failed\n");
-	Con_DPrintf (DEVELOPER_MSG_NET, "CL_EstablishConnection: connected to %s\n", host);
+	Com_DPrintf (DEVELOPER_MSG_NET, "CL_EstablishConnection: connected to %s\n", host);
 	
 	cls.demonum = -1;		 // not in the demo loop now
 	cls.state = ca_connected;
@@ -224,7 +224,7 @@ void CL_SignonReply (void)
 {
 	char  str[8192];
 
-	Con_DPrintf (DEVELOPER_MSG_NET, "CL_SignonReply: %i\n", cls.signon);
+	Com_DPrintf (DEVELOPER_MSG_NET, "CL_SignonReply: %i\n", cls.signon);
 
 	switch (cls.signon)
 	{
@@ -277,9 +277,9 @@ void CL_NextDemo (void)
 		if (!cls.demos[cls.demonum][0])
 		{
 			if (!cl_demos->value || nostartupdemos) /* FS: Disable startup demos */
-				Con_DPrintf(DEVELOPER_MSG_STANDARD, "Startup demos disabled.");
+				Com_DPrintf(DEVELOPER_MSG_STANDARD, "Startup demos disabled.");
 			else
-				Con_Printf ("No demos listed with startdemos\n");
+				Com_Printf ("No demos listed with startdemos\n");
 
 			cls.demonum = -1;
 			CL_Disconnect();
@@ -306,13 +306,13 @@ void CL_PrintEntities_f (void)
 	
 	for (i=0,ent=cl_entities ; i<cl.num_entities ; i++,ent++)
 	{
-		Con_Printf ("%3i:",i);
+		Com_Printf ("%3i:",i);
 		if (!ent->model)
 		{
-			Con_Printf ("EMPTY\n");
+			Com_Printf ("EMPTY\n");
 			continue;
 		}
-		Con_Printf ("%s:%2i  (%5.1f,%5.1f,%5.1f) [%5.1f %5.1f %5.1f]\n"
+		Com_Printf ("%s:%2i  (%5.1f,%5.1f,%5.1f) [%5.1f %5.1f %5.1f]\n"
 		,ent->model->name,ent->frame, ent->origin[0], ent->origin[1], ent->origin[2], ent->angles[0], ent->angles[1], ent->angles[2]);
 	}
 }
@@ -418,13 +418,13 @@ float CL_LerpPoint (void)
 		f = 0.1;
 	}
 	frac = (cl.time - cl.mtime[1]) / f;
-//Con_Printf ("frac: %f\n",frac);
+//Com_Printf ("frac: %f\n",frac);
 	if (frac < 0)
 	{
 		if (frac < -0.01)
 		{
 			cl.time = cl.mtime[1];
-//			 Con_Printf ("low frac\n");
+//			 Com_Printf ("low frac\n");
 		}
 		frac = 0;
 	}
@@ -433,7 +433,7 @@ float CL_LerpPoint (void)
 		if (frac > 1.01)
 		{
 			cl.time = cl.mtime[0];
-//			 Con_Printf ("high frac\n");
+//			 Com_Printf ("high frac\n");
 		}
 		frac = 1;
 	}
@@ -640,7 +640,7 @@ int CL_ReadFromServer (void)
 	} while (ret && cls.state == ca_connected);
 	
 	if (cl_shownet->value)
-		Con_Printf ("\n");
+		Com_Printf ("\n");
 
 	CL_RelinkEntities ();
 	CL_UpdateBeams ();
@@ -688,7 +688,7 @@ void CL_SendCmd (void)
 	
 	if (!NET_CanSendMessage (cls.netcon))
 	{
-		Con_DPrintf (DEVELOPER_MSG_NET, "CL_WriteToServer: can't send\n");
+		Com_DPrintf (DEVELOPER_MSG_NET, "CL_WriteToServer: can't send\n");
 		return;
 	}
 
@@ -703,12 +703,12 @@ void CL_Flashlight_f (void) /* FS: Flashlight */
 	if(bFlashlight)
 	{
 		bFlashlight = false;
-		Con_Printf("Flashlight OFF\n");
+		Com_Printf("Flashlight OFF\n");
 	}
 	else
 	{
 		bFlashlight = true;
-		Con_Printf("Flashlight ON\n");
+		Com_Printf("Flashlight ON\n");
 	}
 }
 
@@ -731,10 +731,10 @@ void CL_WriteConfig_f (void)
 			Q_strlcpy (cfgName, Cmd_Argv(1), sizeof(cfgName));
 
 		Host_WriteConfiguration (cfgName);
-		Con_Printf ("Wrote config file %s/%s.cfg.\n", com_gamedir, cfgName);
+		Com_Printf ("Wrote config file %s/%s.cfg.\n", com_gamedir, cfgName);
 	}
 	else
-		Con_Printf ("Usage: writeconfig <name>\n");
+		Com_Printf ("Usage: writeconfig <name>\n");
 }
 
 void CL_Snd_Shutdown_f (void)
@@ -853,8 +853,8 @@ static void CL_Gamespy_Check_Error(GServerList lst, int error)
 {
 	if (error != GE_NOERROR) /* FS: Grab the error code */
 	{
-		Con_Printf("\x02GameSpy Error: ");
-		Con_Printf("%s.\n", ServerListErrorDesc(lst, error));
+		Com_Printf("\x02GameSpy Error: ");
+		Com_Printf("%s.\n", ServerListErrorDesc(lst, error));
 	}
 }
 
@@ -869,7 +869,7 @@ void GameSpy_Async_Think(void)
 	{
 		if (key_dest != key_menu) /* FS: Only print this from an slist2 command, not the server browser. */
 		{
-			Con_Printf("Found %i active servers out of %i in %i seconds.\n", gspyCur, cls.gamespytotalservers, (((int)Sys_DoubleTime()-cls.gamespystarttime)) );
+			Com_Printf("Found %i active servers out of %i in %i seconds.\n", gspyCur, cls.gamespytotalservers, (((int)Sys_DoubleTime()-cls.gamespystarttime)) );
 		}
 		else
 		{
@@ -892,7 +892,7 @@ static void CL_Gspystop_f (void)
 {
 	if(serverlist != NULL && cls.gamespyupdate) /* FS: Immediately abort gspy scans */
 	{
-		Con_Printf("\x02Server scan aborted!\n");
+		Com_Printf("\x02Server scan aborted!\n");
 		S_GamespySound ("gamespy/abort.wav");
 		ServerListHalt(serverlist);
 	}
@@ -915,9 +915,9 @@ static void CL_PrintBrowserList_f (void)
 		{
 			if (browserList[i].curPlayers > 0)
 			{
-				Con_Printf("%02d:  %s:%d [%d] %s ", num_active_servers+1, browserList[i].ip, browserList[i].port, browserList[i].ping, browserList[i].hostname);
-				Con_Printf("\x02%d", browserList[i].curPlayers); /* FS: Show the current players number in the green font */
-				Con_Printf("/%d %s\n", browserList[i].maxPlayers, browserList[i].mapname);
+				Com_Printf("%02d:  %s:%d [%d] %s ", num_active_servers+1, browserList[i].ip, browserList[i].port, browserList[i].ping, browserList[i].hostname);
+				Com_Printf("\x02%d", browserList[i].curPlayers); /* FS: Show the current players number in the green font */
+				Com_Printf("/%d %s\n", browserList[i].maxPlayers, browserList[i].mapname);
 				num_active_servers++;
 			}
 		}
@@ -935,7 +935,7 @@ static void CL_PrintBrowserList_f (void)
 		{
 			if(browserListAll[i].hostname[0] != 0)
 			{
-				Con_Printf("%02d:  %s:%d [%d] %s %d/%d %s\n", (i+num_active_servers+1)-(skip), browserListAll[i].ip, browserListAll[i].port, browserListAll[i].ping, browserListAll[i].hostname, browserListAll[i].curPlayers, browserListAll[i].maxPlayers, browserListAll[i].mapname);
+				Com_Printf("%02d:  %s:%d [%d] %s %d/%d %s\n", (i+num_active_servers+1)-(skip), browserListAll[i].ip, browserListAll[i].port, browserListAll[i].ping, browserListAll[i].hostname, browserListAll[i].curPlayers, browserListAll[i].maxPlayers, browserListAll[i].mapname);
 			}
 			else /* FS: The next one could be 0 if we skipped over it previously in GameSpy_Sort_By_Ping.  So increment the number of skips counter so the server number shows sequentially */
 			{
@@ -1019,16 +1019,16 @@ static void ListCallBack(GServerList lst, int msg, void *instance, void *param1,
 		{
 			if (key_dest != key_menu) /* FS: Only print this from an slist2 command, not the server browser. */
 			{
-				Con_Printf("%s:%d [%d] %s ", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"));
-				Con_Printf("\x02%d", numplayers); /* FS: Show the current players number in the green font */
-				Con_Printf("/%d %s\n", ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
+				Com_Printf("%s:%d [%d] %s ", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"));
+				Com_Printf("\x02%d", numplayers); /* FS: Show the current players number in the green font */
+				Com_Printf("/%d %s\n", ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
 			}
 		}
 		else if (cls.gamespyupdate == SHOW_ALL_SERVERS)
 		{
 			if (key_dest != key_menu) /* FS: Only print this from an slist2 command, not the server browser. */
 			{
-				Con_Printf("%s:%d [%d] %s %d/%d %s\n", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"), ServerGetIntValue(server,"numplayers",0), ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
+				Com_Printf("%s:%d [%d] %s %d/%d %s\n", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"), ServerGetIntValue(server,"numplayers",0), ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
 			}
 		}
 
@@ -1060,7 +1060,7 @@ void CL_PingNetServers_f (void)
 
 	if(cls.gamespyupdate)
 	{
-		Con_Printf("Error: Already querying the GameSpy Master!\n");
+		Com_Printf("Error: Already querying the GameSpy Master!\n");
 		return;
 	}
 
@@ -1079,12 +1079,12 @@ void CL_PingNetServers_f (void)
 	if ((Cmd_Argc() == 1) || (key_dest == key_menu))
 	{
 		cls.gamespyupdate = SHOW_POPULATED_SERVERS;;
-		Con_Printf("\x02Grabbing populated server list from GameSpy master. . .\n");
+		Com_Printf("\x02Grabbing populated server list from GameSpy master. . .\n");
 	}
 	else
 	{
 		cls.gamespyupdate = SHOW_ALL_SERVERS;
-		Con_Printf("\x02Grabbing all servers from GameSpy master. . .\n");
+		Com_Printf("\x02Grabbing all servers from GameSpy master. . .\n");
 	}
 
 	cls.gamespypercent = 0;

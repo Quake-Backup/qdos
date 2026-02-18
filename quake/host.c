@@ -101,7 +101,7 @@ void Max_Edicts_f (void)
 		return;
 
 	if (cls.state == ca_connected || sv.active)
-		Con_Printf ("changes will not take effect until the next level load.\n");
+		Com_Printf ("changes will not take effect until the next level load.\n");
 
 	oldval = max_edicts->value;
 }
@@ -122,7 +122,7 @@ void Host_EndGame (const char *message, ...)
 	va_start (argptr,message);
 	dvsprintf (string,message,argptr);
 	va_end (argptr);
-	Con_DPrintf (DEVELOPER_MSG_NET, "Host_EndGame: %s\n",string->str);
+	Com_DPrintf (DEVELOPER_MSG_NET, "Host_EndGame: %s\n",string->str);
 
 	if (sv.active)
 		Host_ShutdownServer (false);
@@ -163,7 +163,7 @@ void Host_Error (const char *error, ...)
 	va_start (argptr,error);
 	dvsprintf (string,error,argptr);
 	va_end (argptr);
-	Con_Printf ("Host_Error: %s\n",string->str);
+	Com_Printf ("Host_Error: %s\n",string->str);
 
 	if (sv.active)
 		Host_ShutdownServer (false);
@@ -318,7 +318,7 @@ void Host_WriteConfiguration (const char *cfgName)
 		f = fopen (path, "w");
 		if (!f)
 		{
-			Con_Printf ("Couldn't write %s.cfg.\n", cfgName);
+			Com_Printf ("Couldn't write %s.cfg.\n", cfgName);
 			return;
 		}
 
@@ -528,7 +528,7 @@ void Host_ShutdownServer(qboolean crash)
 	MSG_WriteByte(&buf, svc_disconnect);
 	count = NET_SendToAll(&buf, 5.0);
 	if (count)
-		Con_Printf("Host_ShutdownServer: NET_SendToAll failed for %u clients\n", count);
+		Com_Printf("Host_ShutdownServer: NET_SendToAll failed for %u clients\n", count);
 
 	for (i=0, host_client = svs.clients ; i<svs.maxclients ; i++, host_client++)
 		if (host_client->active)
@@ -552,7 +552,7 @@ not reinitialize anything.
 */
 void Host_ClearMemory (void)
 {
-	Con_DPrintf (DEVELOPER_MSG_MEM, "Clearing memory\n");
+	Com_DPrintf (DEVELOPER_MSG_MEM, "Clearing memory\n");
 	D_FlushCaches ();
 	Mod_ClearAll ();
 #ifndef GLQUAKE
@@ -824,7 +824,7 @@ void _Host_Frame (float time)
 		time3 = Sys_DoubleTime();
 		pass2 = (time2 - time1)*1000;
 		pass3 = (time3 - time2)*1000;
-		Con_Printf ("%3i tot %3i server %3i gfx %3i snd\n",
+		Com_Printf ("%3i tot %3i server %3i gfx %3i snd\n",
 					pass1+pass2+pass3, pass1, pass2, pass3);
 	}
 
@@ -865,7 +865,7 @@ void Host_Frame (float time)
 			c++;
 	}
 
-	Con_Printf ("serverprofile: %2i clients %2i msec\n",  c,  m);
+	Com_Printf ("serverprofile: %2i clients %2i msec\n",  c,  m);
 }
 
 //============================================================================
@@ -924,8 +924,8 @@ void Host_Init (quakeparms_t *parms)
 	NET_Init ();
 	SV_Init ();
 
-	Con_Printf ("Exe: "__TIME__" "__DATE__"\n");
-	Con_Printf ("%4.1f megabyte heap\n",parms->memsize/ (1024*1024.0));
+	Com_Printf ("Exe: "__TIME__" "__DATE__"\n");
+	Com_Printf ("%4.1f megabyte heap\n",parms->memsize/ (1024*1024.0));
 
 	R_InitTextures ();		// needed even for dedicated servers
 
@@ -957,7 +957,7 @@ void Host_Init (quakeparms_t *parms)
 
 		if(COM_CheckParm("-safevga")) /* FS: Safe VGA mode */
 		{
-			Con_Printf("Safe VGA mode enabled\n");
+			Com_Printf("Safe VGA mode enabled\n");
 			Cbuf_AddText("vid_mode 0");
 		}
 	}
@@ -996,7 +996,7 @@ void Host_Shutdown(void)
 	}
 	isdown = true;
 
-// keep Con_Printf from trying to update the screen
+// keep Com_Printf from trying to update the screen
 	scr_disabled_for_loading = true;
 
 	Host_WriteConfiguration ("qdos");

@@ -73,7 +73,7 @@ static int WAV_ReadChunkInfo(FILE *f, char *name)
 	len = FGetLittleLong(f);
 	if (len < 0)
 	{
-		Con_Printf("WAV: Negative chunk length\n");
+		Com_Printf("WAV: Negative chunk length\n");
 		return -1;
 	}
 
@@ -121,14 +121,14 @@ static qboolean WAV_ReadRIFFHeader(const char *name, FILE *file, wavinfo_t *info
 	    strncmp(dump, "RIFF", 4) != 0 ||
 	    strncmp(&dump[8], "WAVE", 4) != 0)
 	{
-		Con_Printf("%s is missing RIFF/WAVE chunks\n", name);
+		Com_Printf("%s is missing RIFF/WAVE chunks\n", name);
 		return false;
 	}
 
 	/* Scan for the format chunk */
 	if ((fmtlen = WAV_FindRIFFChunk(file, "fmt ")) < 0)
 	{
-		Con_Printf("%s is missing fmt chunk\n", name);
+		Com_Printf("%s is missing fmt chunk\n", name);
 		return false;
 	}
 
@@ -136,7 +136,7 @@ static qboolean WAV_ReadRIFFHeader(const char *name, FILE *file, wavinfo_t *info
 	value = FGetLittleShort(file); /* wav_format */
 	if (value != WAV_FORMAT_PCM)
 	{
-		Con_Printf("%s is not Microsoft PCM format\n", name);
+		Com_Printf("%s is not Microsoft PCM format\n", name);
 		return false;
 	}
 
@@ -148,7 +148,7 @@ static qboolean WAV_ReadRIFFHeader(const char *name, FILE *file, wavinfo_t *info
 
 	if (value != 8 && value != 16)
 	{
-		Con_Printf("%s is not 8 or 16 bit\n", name);
+		Com_Printf("%s is not 8 or 16 bit\n", name);
 		return false;
 	}
 
@@ -164,7 +164,7 @@ static qboolean WAV_ReadRIFFHeader(const char *name, FILE *file, wavinfo_t *info
 	/* Scan for the data chunk */
 	if ((value = WAV_FindRIFFChunk(file, "data")) < 0) /* size */
 	{
-		Con_Printf("%s is missing data chunk\n", name);
+		Com_Printf("%s is missing data chunk\n", name);
 		return false;
 	}
 
@@ -172,24 +172,24 @@ static qboolean WAV_ReadRIFFHeader(const char *name, FILE *file, wavinfo_t *info
 	fseek(file, 0, SEEK_END);
 	if (info->dataofs + value > ftell(file))
 	{
-		Con_Printf("%s data size mismatch\n", name);
+		Com_Printf("%s data size mismatch\n", name);
 		return false;
 	}
 
 	if (info->channels != 1 && info->channels != 2)
 	{
-		Con_Printf("Unsupported number of channels %d in %s\n",
+		Com_Printf("Unsupported number of channels %d in %s\n",
 						info->channels, name);
 		return false;
 	}
 	info->samples = (value / info->width) / info->channels;
 	if (info->samples == 0)
 	{
-		Con_Printf("%s has zero samples\n", name);
+		Com_Printf("%s has zero samples\n", name);
 		return false;
 	}
 
-//	Con_Printf("Rate: %i, Width: %i, CH: %i. DataOffset: %i, Samples: %i.\n",
+//	Com_Printf("Rate: %i, Width: %i, CH: %i. DataOffset: %i, Samples: %i.\n",
 //		    musicWavInfo.rate, musicWavInfo.width, musicWavInfo.channels,
 //		    musicWavInfo.dataofs, musicWavInfo.samples);
 	fseek(file, info->dataofs, SEEK_SET);
@@ -201,7 +201,7 @@ static qboolean S_OpenWAVBackgroundTrack (char *name, bgTrack_t *track)
 	char	filename[MAX_OSPATH];
 	char	*path = NULL;
 
-//	Con_Printf("Opening background track: %s\n", name);
+//	Com_Printf("Opening background track: %s\n", name);
 	do
 	{
 		path = COM_NextPath( path );
@@ -212,7 +212,7 @@ static qboolean S_OpenWAVBackgroundTrack (char *name, bgTrack_t *track)
 
 	if (!track->file)
 	{
-		Con_Printf("Couldn't find %s\n", name);
+		Com_Printf("Couldn't find %s\n", name);
 		return false;
 	}
 
@@ -242,7 +242,7 @@ void S_StreamWAVBackgroundTrack(void)
 
 	scale = (float)musicWavInfo.rate / dma.speed;
 	maxSamples = (sizeof(byte) * s_rawsamples_size) / musicWavInfo.channels / musicWavInfo.width;
-//	Con_Printf("Scale: %f.  Max Samples: %i\n", scale, maxSamples);
+//	Com_Printf("Scale: %f.  Max Samples: %i\n", scale, maxSamples);
 
 	while (1)
 	{
@@ -296,7 +296,7 @@ void S_StreamWAVBackgroundTrack(void)
 			}
 
 			total+= read;
-//			Con_Printf("Read: %i, Samples: %i, Total: %i\n", read, samples, total);
+//			Com_Printf("Read: %i, Samples: %i, Total: %i\n", read, samples, total);
 		}
 		if (musicWavInfo.width == 2) {
 			total = samples * musicWavInfo.channels;
@@ -370,10 +370,10 @@ void S_WAV_Init (void)
 	Cmd_AddCommand("wav", S_WAV_ParseCmd);
 
 	// Build list of files
-	Con_Printf("Searching for WAV files...\n");
+	Com_Printf("Searching for WAV files...\n");
 	wav_numfiles = 0;
 	S_WAV_LoadFileList ();
-	Con_Printf("%d WAV files found.\n", wav_numfiles);
+	Com_Printf("%d WAV files found.\n", wav_numfiles);
 
 	// Initialize variables
 	if (wav_first_init) {
@@ -466,7 +466,7 @@ static void S_WAV_PlayCmd (void)
 	char	name[MAX_QPATH];
 
 	if (Cmd_Argc() < 3) {
-		Con_Printf("Usage: wav play {track}\n");
+		Com_Printf("Usage: wav play {track}\n");
 		return;
 	}
 	Com_sprintf(name, sizeof(name), "music/%s.wav", Cmd_Argv(2) );
@@ -487,13 +487,13 @@ static void S_WAV_StatusCmd (void)
 	switch (trk_status)
 	{
 	case BGM_PLAY:
-		Con_Printf("Playing file %s.\n", trackName);
+		Com_Printf("Playing file %s.\n", trackName);
 		break;
 	case BGM_PAUSE:
-		Con_Printf("Paused file %s.\n", trackName);
+		Com_Printf("Paused file %s.\n", trackName);
 		break;
 	case BGM_STOP:
-		Con_Printf("Stopped.\n");
+		Com_Printf("Stopped.\n");
 		break;
 	}
 }
@@ -503,14 +503,14 @@ static void S_WAV_ListCmd (void)
 	int i;
 
 	if (wav_numfiles <= 0) {
-		Con_Printf("No WAV files to list.\n");
+		Com_Printf("No WAV files to list.\n");
 		return;
 	}
 
 	for (i = 0; i < wav_numfiles; i++)
-		Con_Printf("%d %s\n", i+1, wav_filelist[i]);
+		Com_Printf("%d %s\n", i+1, wav_filelist[i]);
 
-	Con_Printf("%d WAV files.\n", wav_numfiles);
+	Com_Printf("%d WAV files.\n", wav_numfiles);
 }
 
 static void S_WAV_ParseCmd (void)
@@ -518,7 +518,7 @@ static void S_WAV_ParseCmd (void)
 	char	*command;
 
 	if (Cmd_Argc() < 2) {
-		Con_Printf("Usage: wav {play | pause | resume | stop | status | list}\n");
+		Com_Printf("Usage: wav {play | pause | resume | stop | status | list}\n");
 		return;
 	}
 
@@ -556,5 +556,5 @@ static void S_WAV_ParseCmd (void)
 		return;
 	}
 
-	Con_Printf("Usage: wav {play | pause | resume | stop | status | list}\n");
+	Com_Printf("Usage: wav {play | pause | resume | stop | status | list}\n");
 }

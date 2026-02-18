@@ -65,7 +65,7 @@ int WIPX_Init (void)
 
 		if (r)
 		{
-			Con_Printf ("Winsock initialization failed.\n");
+			Com_Printf ("Winsock initialization failed.\n");
 			return -1;
 		}
 	}
@@ -99,7 +99,7 @@ int WIPX_Init (void)
 
 	if ((net_controlsocket = WIPX_OpenSocket (0)) == -1)
 	{
-		Con_Printf("WIPX_Init: Unable to open control socket\n");
+		Com_Printf("WIPX_Init: Unable to open control socket\n");
 		if (--winsock_initialized == 0)
 			pWSACleanup ();
 		return -1;
@@ -116,7 +116,7 @@ int WIPX_Init (void)
 	if (p)
 		*p = 0;
 
-	Con_Printf("Winsock IPX Initialized\n");
+	Com_Printf("Winsock IPX Initialized\n");
 	ipxAvailable = true;
 
 	return net_controlsocket;

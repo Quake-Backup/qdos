@@ -65,7 +65,7 @@ void SV_CheckAllEnts (void)
          continue;
 
       if (SV_TestEntityPosition (check))
-         Con_Printf ("entity in invalid position\n");
+         Com_Printf ("entity in invalid position\n");
    }
 }
 
@@ -85,12 +85,12 @@ void SV_CheckVelocity (edict_t *ent)
    {
       if (IS_NAN(ent->v.velocity[i]))
       {
-         Con_Printf ("Got a NaN velocity on %s\n", pr_strings + ent->v.classname);
+         Com_Printf ("Got a NaN velocity on %s\n", pr_strings + ent->v.classname);
          ent->v.velocity[i] = 0;
       }
       if (IS_NAN(ent->v.origin[i]))
       {
-         Con_Printf ("Got a NaN origin on %s\n", pr_strings + ent->v.classname);
+         Com_Printf ("Got a NaN origin on %s\n", pr_strings + ent->v.classname);
          ent->v.origin[i] = 0;
       }
       if (ent->v.velocity[i] > sv_maxvelocity->value)
@@ -343,7 +343,7 @@ int SV_FlyMove (edict_t *ent, float time, trace_t *steptrace)
       {  // go along the crease
          if (numplanes != 2)
          {
-//          Con_Printf ("clip velocity, numplanes == %i\n",numplanes);
+//          Com_Printf ("clip velocity, numplanes == %i\n",numplanes);
             VectorCopy (vec3_origin, ent->v.velocity);
             return 7;
          }
@@ -647,7 +647,7 @@ void SV_CheckStuck (edict_t *ent)
    VectorCopy (ent->v.oldorigin, ent->v.origin);
    if (!SV_TestEntityPosition(ent))
    {
-      Con_DPrintf(DEVELOPER_MSG_SERVER, "Unstuck.\n");
+      Com_DPrintf(DEVELOPER_MSG_SERVER, "Unstuck.\n");
       SV_LinkEdict (ent, true);
       return;
    }
@@ -661,14 +661,14 @@ void SV_CheckStuck (edict_t *ent)
             ent->v.origin[2] = org[2] + z;
             if (!SV_TestEntityPosition(ent))
             {
-               Con_DPrintf(DEVELOPER_MSG_SERVER, "Unstuck.\n");
+               Com_DPrintf(DEVELOPER_MSG_SERVER, "Unstuck.\n");
                SV_LinkEdict (ent, true);
                return;
             }
          }
          
    VectorCopy (org, ent->v.origin);
-   Con_DPrintf(DEVELOPER_MSG_SERVER, "player is stuck.\n");
+   Com_DPrintf(DEVELOPER_MSG_SERVER, "player is stuck.\n");
 }
 
 
@@ -785,7 +785,7 @@ int SV_TryUnstick (edict_t *ent, vec3_t oldvel)
       if ( fabs(oldorg[1] - ent->v.origin[1]) > 4
       || fabs(oldorg[0] - ent->v.origin[0]) > 4 )
       {
-//Con_DPrintf(DEVELOPER_MSG_SERVER, "unstuck!\n");
+//Com_DPrintf(DEVELOPER_MSG_SERVER, "unstuck!\n");
          return clip;
       }
          

@@ -92,7 +92,7 @@ void Cvar_List_f (void)
 		search_filter = Cmd_Argv(1);
 		if (search_filter != NULL)
 		{
-			Con_SafePrintf("Listing matches for '%s'...\n", search_filter);
+			Com_SafePrintf("Listing matches for '%s'...\n", search_filter);
 
 			if (args > 2)
 			{
@@ -138,36 +138,36 @@ void Cvar_List_f (void)
 		}
 
 		if (var->flags & CVAR_ARCHIVE)
-			Con_SafePrintf("*");
+			Com_SafePrintf("*");
 		else
-			Con_SafePrintf(" ");
+			Com_SafePrintf(" ");
 		if (var->flags & CVAR_USERINFO)
-			Con_SafePrintf("U");
+			Com_SafePrintf("U");
 		else
-			Con_SafePrintf(" ");
+			Com_SafePrintf(" ");
 		if (var->flags & CVAR_SERVERINFO)
-			Con_SafePrintf("S");
+			Com_SafePrintf("S");
 		else
-			Con_SafePrintf(" ");
+			Com_SafePrintf(" ");
 		if (var->flags & CVAR_NOSET)
-			Con_SafePrintf("-");
+			Com_SafePrintf("-");
 		else if (var->flags & CVAR_LATCH)
-			Con_SafePrintf("L");
+			Com_SafePrintf("L");
 		else
-			Con_SafePrintf(" ");
+			Com_SafePrintf(" ");
 		if (var->description)
-			Con_SafePrintf("D");
+			Com_SafePrintf("D");
 		else
-			Con_SafePrintf(" ");
+			Com_SafePrintf(" ");
 
 		if ( (var->flags & CVAR_LATCH) && var->latched_string)
-			Con_SafePrintf("\"%s\" is \"%s\", Default: \"%s\", Latched to: \"%s\"\n", var->name, var->string, var->defaultString, var->latched_string);
+			Com_SafePrintf("\"%s\" is \"%s\", Default: \"%s\", Latched to: \"%s\"\n", var->name, var->string, var->defaultString, var->latched_string);
 		else
-			Con_SafePrintf(" %s \"%s\", Default: \"%s\"\n", var->name, var->string, var->defaultString);
+			Com_SafePrintf(" %s \"%s\", Default: \"%s\"\n", var->name, var->string, var->defaultString);
 	}
 
-	Con_SafePrintf("Legend: * Archive. U Userinfo. S Serverinfo. - Write Protected. L Latched. D Containts a Help Description.\n"); /* FS: Added a legend */
-	Con_SafePrintf("%d cvars\n", search_filter ? j : i);
+	Com_SafePrintf("Legend: * Archive. U Userinfo. S Serverinfo. - Write Protected. L Latched. D Containts a Help Description.\n"); /* FS: Added a legend */
+	Com_SafePrintf("%d cvars\n", search_filter ? j : i);
 
 	free(sorted_cvars);
 	sorted_cvars = NULL;
@@ -268,7 +268,7 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 	{
 		if (!Cvar_InfoValidate (var_name))
 		{
-			Con_Printf("invalid info cvar name\n");
+			Com_Printf("invalid info cvar name\n");
 			return NULL;
 		}
 	}
@@ -292,7 +292,7 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 	{
 		if (!Cvar_InfoValidate (var_value))
 		{
-			Con_Printf("invalid info cvar value\n");
+			Com_Printf("invalid info cvar value\n");
 			return NULL;
 		}
 	}
@@ -335,7 +335,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	{
 		if (!Cvar_InfoValidate (value))
 		{
-			Con_Printf("invalid info cvar value\n");
+			Com_Printf("invalid info cvar value\n");
 			return var;
 		}
 	}
@@ -344,7 +344,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	{
 		if (var->flags & CVAR_NOSET)
 		{
-			Con_Printf ("%s is write protected.\n", var_name);
+			Com_Printf ("%s is write protected.\n", var_name);
 			return var;
 		}
 
@@ -368,7 +368,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 			if (cls.state == ca_active)
 #endif
 			{
-				Con_Printf ("%s will be changed for next map.\n", var_name);
+				Com_Printf ("%s will be changed for next map.\n", var_name);
 				var->latched_string = CopyString(value);
 			}
 			else
@@ -549,15 +549,15 @@ qboolean	Cvar_Command (void)
 	if (Cmd_Argc() == 1)
 	{
 		if ( (v->flags & CVAR_LATCH) && v->latched_string)
-			Con_Printf ("\"%s\" is \"%s\", Default: \"%s\", Latched to: \"%s\"\n", v->name, v->string, v->defaultString, v->latched_string);
+			Com_Printf ("\"%s\" is \"%s\", Default: \"%s\", Latched to: \"%s\"\n", v->name, v->string, v->defaultString, v->latched_string);
 		else
-			Con_Printf ("\"%s\" is \"%s\",  Default: \"%s\".\n", v->name, v->string, v->defaultString);
+			Com_Printf ("\"%s\" is \"%s\",  Default: \"%s\".\n", v->name, v->string, v->defaultString);
 
 		/* FS: cvar descriptions */
 		/* FS: Always show it for con_show_description so we know what it does */
 		if (v->description) {
 		    if (con_show_description->intValue || v == con_show_description)
-			Con_Printf("Description: %s\n", v->description);
+			Com_Printf("Description: %s\n", v->description);
 		}
 
 		return true;
@@ -583,7 +583,7 @@ void Cvar_Set_f (void)
 	c = Cmd_Argc();
 	if (c != 3 && c != 4)
 	{
-		Con_Printf ("usage: set <variable> <value> [s]\n");
+		Com_Printf ("usage: set <variable> <value> [s]\n");
 		return;
 	}
 
@@ -593,7 +593,7 @@ void Cvar_Set_f (void)
 			flags = CVAR_SERVERINFO;
 		else
 		{
-			Con_Printf ("flags can only be 's'\n");
+			Com_Printf ("flags can only be 's'\n");
 			return;
 		}
 		Cvar_FullSet (Cmd_Argv(1), Cmd_Argv(2), flags);
@@ -649,7 +649,7 @@ void Cvar_Set_Description (const char *var_name, const char *description) /* FS:
 	var = Cvar_FindVar (var_name);
 	if (!var)
 	{
-		Con_DPrintf(DEVELOPER_MSG_STANDARD, "Error: Can't set description for %s!\n", var_name);
+		Com_DPrintf(DEVELOPER_MSG_STANDARD, "Error: Can't set description for %s!\n", var_name);
 		return;
 	}
 	var->description = description;
@@ -657,7 +657,7 @@ void Cvar_Set_Description (const char *var_name, const char *description) /* FS:
 
 void Cvar_ParseDeveloperFlags (void) /* FS: Special stuff for showing all the dev flags */
 {
-	Con_Printf("\"%s\" is \"%s\", Default: \"%s\"\n", developer->name, developer->string, developer->defaultString);
+	Com_Printf("\"%s\" is \"%s\", Default: \"%s\"\n", developer->name, developer->string, developer->defaultString);
 	if(developer->intValue > 0)
 	{
 		unsigned long devFlags = 0;
@@ -665,49 +665,49 @@ void Cvar_ParseDeveloperFlags (void) /* FS: Special stuff for showing all the de
 			devFlags = 65534;
 		else
 			devFlags = (unsigned long)developer->value;
-		Con_Printf("Toggled flags:\n");
+		Com_Printf("Toggled flags:\n");
 		if(devFlags & DEVELOPER_MSG_STANDARD)
-			Con_Printf(" * Standard messages - 2\n");
+			Com_Printf(" * Standard messages - 2\n");
 		if(devFlags & DEVELOPER_MSG_SOUND)
-			Con_Printf(" * Sound messages - 4\n");
+			Com_Printf(" * Sound messages - 4\n");
 		if(devFlags & DEVELOPER_MSG_NET)
-			Con_Printf(" * Network messages - 8\n");
+			Com_Printf(" * Network messages - 8\n");
 		if(devFlags & DEVELOPER_MSG_IO)
-			Con_Printf(" * File IO messages - 16\n");
+			Com_Printf(" * File IO messages - 16\n");
 		if(devFlags & DEVELOPER_MSG_VIDEO)
-			Con_Printf(" * Graphics Renderer messages - 32\n");
+			Com_Printf(" * Graphics Renderer messages - 32\n");
 		if(devFlags & DEVELOPER_MSG_CD)
-			Con_Printf(" * CD Player messages - 64\n");
+			Com_Printf(" * CD Player messages - 64\n");
 		if(devFlags & DEVELOPER_MSG_MEM)
-			Con_Printf(" * Memory messages - 128\n");
+			Com_Printf(" * Memory messages - 128\n");
 #ifdef QUAKE1
 		if(devFlags & DEVELOPER_MSG_SERVER)
-			Con_Printf(" * Server messages - 256\n");
+			Com_Printf(" * Server messages - 256\n");
 		if(devFlags & DEVELOPER_MSG_PROGS)
-			Con_Printf(" * Prog messages - 512\n");
+			Com_Printf(" * Prog messages - 512\n");
 #endif
 //		if(devFlags & DEVELOPER_MSG_WORLD)
-//			Con_Printf(" * World.dll messages - 1024\n");
+//			Com_Printf(" * World.dll messages - 1024\n");
 		if(devFlags & DEVELOPER_MSG_PHYSICS)
-			Con_Printf(" * Physics messages - 2048\n");
+			Com_Printf(" * Physics messages - 2048\n");
 //		if(devFlags & DEVELOPER_MSG_WEAPONS)
-//			Con_Printf(" * Weapons.dll messages - 4096\n");
+//			Com_Printf(" * Weapons.dll messages - 4096\n");
 //		if(devFlags & DEVELOPER_MSG_GCE)
-//			Con_Printf(" * GCE.dll messages - 8192\n");
+//			Com_Printf(" * GCE.dll messages - 8192\n");
 		if(devFlags & DEVELOPER_MSG_ENTITY)
-			Con_Printf(" * Entity messages - 16384\n");
+			Com_Printf(" * Entity messages - 16384\n");
 #ifdef QUAKE1
 		if(devFlags & DEVELOPER_MSG_SAVE)
-			Con_Printf(" * Save/Restore messages - 32768\n");
+			Com_Printf(" * Save/Restore messages - 32768\n");
 #endif
 		if(devFlags & DEVELOPER_MSG_VERBOSE)
-			Con_Printf(" * Extremely Verbose messages - 65536\n");
+			Com_Printf(" * Extremely Verbose messages - 65536\n");
 		if(devFlags & DEVELOPER_MSG_GAMESPY)
-			Con_Printf(" * Extremely Verbose GameSpy messages - 131072\n");
+			Com_Printf(" * Extremely Verbose GameSpy messages - 131072\n");
 	}
 	else
 	{
 		if (developer->description && con_show_description->intValue)
-			Con_Printf("Description: %s\n", developer->description);
+			Com_Printf("Description: %s\n", developer->description);
 	}
 }

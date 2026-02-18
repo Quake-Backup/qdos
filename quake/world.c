@@ -295,7 +295,7 @@ void SV_TouchLinks ( edict_t *ent, areanode_t *node )
 		if (!l)
 		{
 		// my area got removed out from under me!
-			Con_Printf ("SV_TouchLinks: encountered NULL link!\n");
+			Com_Printf ("SV_TouchLinks: encountered NULL link!\n");
 			break;
 		}
 
@@ -652,7 +652,7 @@ qboolean SV_RecursiveHullCheck (hull_t *hull, int num, float p1f, float p2f, vec
 	if (SV_HullPointContents (sv_hullmodel, mid, node->children[side])
 	== CONTENTS_SOLID)
 	{
-		Con_Printf ("mid PointInHullSolid\n");
+		Com_Printf ("mid PointInHullSolid\n");
 		return false;
 	}
 #endif
@@ -687,7 +687,7 @@ qboolean SV_RecursiveHullCheck (hull_t *hull, int num, float p1f, float p2f, vec
 		{
 			trace->fraction = midf;
 			VectorCopy (mid, trace->endpos);
-			Con_DPrintf (DEVELOPER_MSG_NET, "backup past 0\n");
+			Com_DPrintf (DEVELOPER_MSG_NET, "backup past 0\n");
 			return false;
 		}
 		midf = p1f + (p2f - p1f)*frac;

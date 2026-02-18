@@ -162,7 +162,7 @@ static GError InitUpdateList(GServerList serverlist)
 		/* FS: Set non-blocking sockets */
 		if (Set_Non_Blocking_Socket(serverlist->updatelist[i].s) == SOCKET_ERROR)
 		{
-			Con_Printf("ERROR: InitUpdateList: ioctl FIOBNIO:%s\n", NET_ErrorString());
+			Com_Printf("ERROR: InitUpdateList: ioctl FIOBNIO:%s\n", NET_ErrorString());
 			return GE_NOSOCKET;
 		}
 
@@ -178,7 +178,7 @@ static GError FreeUpdateList(GServerList serverlist)
 	int i;
 
 #ifdef __DJGPP__
-	Con_Printf("Freeing gamespy query sockets, please wait. . .\n"); /* FS: This can have a little bit of a delay in DOS, so give a warning about it */
+	Com_Printf("Freeing gamespy query sockets, please wait. . .\n"); /* FS: This can have a little bit of a delay in DOS, so give a warning about it */
 #endif
 	for (i = 0 ; i < serverlist->maxupdates ; i++)
 	{
@@ -195,12 +195,12 @@ static GError CreateServerListSocket(GServerList serverlist)
 
 	if (cl_master_server_ip->string[0] == '\0')
 	{
-		Con_Printf("Error: cl_master_server_ip is blank!  Setting to default: %s\n", CL_MASTER_ADDR);
+		Com_Printf("Error: cl_master_server_ip is blank!  Setting to default: %s\n", CL_MASTER_ADDR);
 		Cvar_Set("cl_master_server_ip", CL_MASTER_ADDR);
 	}
 	if (cl_master_server_port->intValue <= 0)
 	{
-		Con_Printf("Error: cl_master_server_port is invalid!  Setting to default: %s\n", CL_MASTER_PORT);
+		Com_Printf("Error: cl_master_server_port is invalid!  Setting to default: %s\n", CL_MASTER_PORT);
 		Cvar_Set("cl_master_server_port", CL_MASTER_PORT);
 	}
 
@@ -229,7 +229,7 @@ static GError CreateServerListSocket(GServerList serverlist)
 
 	if(Set_Non_Blocking_Socket(serverlist->slsocket) == SOCKET_ERROR)
 	{
-		Con_Printf("ERROR: CreateServerListSocket: ioctl FIOBNIO:%s\n", NET_ErrorString());
+		Com_Printf("ERROR: CreateServerListSocket: ioctl FIOBNIO:%s\n", NET_ErrorString());
 		Close_TCP_Socket(&serverlist->slsocket);
 		return GE_NOSOCKET;
 	}
@@ -251,7 +251,7 @@ static GError CreateServerListLANSocket(GServerList serverlist)
 		return GE_NOSOCKET;
 	if (setsockopt(serverlist->slsocket, SOL_SOCKET, SO_BROADCAST, (char *)&optval, sizeof(optval)) != 0)
 	{
-		Con_Printf("ERROR: CreateServerListLANSocket: setsockopt SOL_SOCKET, SO_BROADCAST:%s\n", NET_ErrorString());
+		Com_Printf("ERROR: CreateServerListLANSocket: setsockopt SOL_SOCKET, SO_BROADCAST:%s\n", NET_ErrorString());
 		Close_TCP_Socket(&serverlist->slsocket);
 		return GE_NOSOCKET;
 	}
@@ -289,7 +289,7 @@ retryRecv:
 		if(error == TCP_BLOCKING_ERROR && (retry < totalRetry))
 		{
 			retry++;
-			Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Retrying Gamespy TCP Validate Handshake, Attempt %i of %i.\n", retry, totalRetry);
+			Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Retrying Gamespy TCP Validate Handshake, Attempt %i of %i.\n", retry, totalRetry);
 			msleep(sleepMs);
 			sleepMs = sleepMs + 10;
 			Sys_SendKeyEvents (); /* FS: Check for aborts */
@@ -302,7 +302,7 @@ retryRecv:
 		}
 	}
 	data[len] = '\0'; //null terminate it
-	Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy validate server key: %s\n", data);
+	Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy validate server key: %s\n", data);
 
 	ptr = strstr ( data, SECURE ) + strlen(SECURE);
 	gs_encrypt   ( (uchar *) serverlist->seckey, 6, (uchar *)ptr, 6 );
@@ -321,7 +321,7 @@ retryRecv:
 	//validate to the master
 	sprintf(data, "\\gamename\\%s\\gamever\\%s\\location\\0\\clientname\\%s\\validate\\%s\\final\\\\queryid\\1.1\\",
 			serverlist->enginename, ENGINE_VERSION, clientName, result); //validate us		
-	Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy validate to the master: %s\n", data);
+	Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy validate to the master: %s\n", data);
 
 	len = send ( serverlist->slsocket, data, strlen(data), 0 );
 	if (len == SOCKET_ERROR || len == 0)
@@ -383,15 +383,15 @@ GError ServerListUpdate(GServerList serverlist, gbool async)
 
 	error = InitUpdateList(serverlist);
 
-	Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListUpdate: Created Update list\n");
+	Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListUpdate: Created Update list\n");
 	if (error)
 		return error;
 	error = CreateServerListSocket(serverlist);
-	Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListUpdate: Created ServerListSocket list\n");
+	Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListUpdate: Created ServerListSocket list\n");
 	if (error)
 		return error;
 	error = SendListRequest(serverlist);
-	Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListUpdate: Send List Request\n");
+	Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListUpdate: Send List Request\n");
 	if (error)
 		return error;
 
@@ -501,7 +501,7 @@ retryRecv:
 		if(error == TCP_BLOCKING_ERROR && (retry < totalRetry))
 		{
 			retry++;
-			Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Retrying Gamespy TCP List RECV, Attempt %i of %i.\n", retry, totalRetry);
+			Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Retrying Gamespy TCP List RECV, Attempt %i of %i.\n", retry, totalRetry);
 			msleep(sleepMs);
 			sleepMs = sleepMs + 10;
 			Sys_SendKeyEvents (); /* FS: Check for aborts */
@@ -509,7 +509,7 @@ retryRecv:
 		}
 		else
 		{
-			Con_DPrintf(DEVELOPER_MSG_GAMESPY,"Error during TCP List RECV: %s\n", NET_ErrorString());
+			Com_DPrintf(DEVELOPER_MSG_GAMESPY,"Error during TCP List RECV: %s\n", NET_ErrorString());
 abort:
 			Close_TCP_Socket(&serverlist->slsocket);
 			data[0] = 0;
@@ -520,7 +520,7 @@ abort:
 
 	data[len + oldlen] = 0; //null terminate it
 	// data is in the form of '\ip\1.2.3.4:1234\ip\1.2.3.4:1234\final\'
-	Con_DPrintf(DEVELOPER_MSG_GAMESPY, "List xfer data: %s\n", data);
+	Com_DPrintf(DEVELOPER_MSG_GAMESPY, "List xfer data: %s\n", data);
 
 	lastip = data;
 	while (*lastip != '\0')
@@ -622,12 +622,12 @@ static GError ServerListQueryLoop(GServerList serverlist)
 					error = Get_Last_Error();
 					if ((error == TCP_BLOCKING_ERROR) && (current_time() - serverlist->updatelist[i].starttime < server_timeout) )
 					{
-//						Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Slow down cowboy..\n");
+//						Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Slow down cowboy..\n");
 						continue;
 					}
 					else /* FS: If we didn't get WOULDBLOCK or if it just kept going past the server_timeout threshold then just give up. */
 					{
-						Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Error during gamespy recv %s.  Removing server from list.\n", NET_ErrorString());
+						Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Error during gamespy recv %s.  Removing server from list.\n", NET_ErrorString());
 						serverlist->updatelist[i].serverindex = -1; //reuse the updatelist
 					}
 				}
@@ -639,7 +639,7 @@ static GError ServerListQueryLoop(GServerList serverlist)
 	{ //we are done!!
 		if(!serverlist->abortupdate) /* FS: Don't print that the scan is complete if this was a forced abort */
 		{
-			Con_Printf("\x02Server scan complete!\n");
+			Com_Printf("\x02Server scan complete!\n");
 			S_GamespySound ("gamespy/complete.wav");
 		}
 		cls.gamespytotalservers = ArrayLength(serverlist->servers);
@@ -659,7 +659,7 @@ static GError ServerListQueryLoop(GServerList serverlist)
 			saddr.sin_family = AF_INET;
 			saddr.sin_addr.s_addr = inet_addr(ServerGetAddress(server));
 
-			Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Attempting to ping[%i]: %s:%i\n", i, ServerGetAddress(server), ServerGetQueryPort(server));
+			Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Attempting to ping[%i]: %s:%i\n", i, ServerGetAddress(server), ServerGetQueryPort(server));
 
 			saddr.sin_port = htons((short)ServerGetQueryPort(server));
 
@@ -671,7 +671,7 @@ static GError ServerListQueryLoop(GServerList serverlist)
 			}
 			else
 			{
-				Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Error pinging server[%i] %s: %s\n", i, ServerGetAddress(server), NET_ErrorString());
+				Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Error pinging server[%i] %s: %s\n", i, ServerGetAddress(server), NET_ErrorString());
 				serverlist->updatelist[i].serverindex = -1; // reuse the update index
 			}
 		}
@@ -692,15 +692,15 @@ GError ServerListThink(GServerList serverlist)
 		case sl_idle:
 			return 0;
 		case sl_listxfer:
-				Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListThink: Server List xfer\n");
+				Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListThink: Server List xfer\n");
 				 //read the data
 				return ServerListReadList(serverlist);
 		case sl_lanlist:
-				Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListThink: Server Lan List Query\n");
+				Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListThink: Server Lan List Query\n");
 				return ServerListLANList(serverlist);
 		case sl_querying: 
 				//do some queries
-				Con_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListThink: Server List Query Loop\n");
+				Com_DPrintf(DEVELOPER_MSG_GAMESPY, "Gamespy ServerListThink: Server List Query Loop\n");
 				return ServerListQueryLoop(serverlist);
 	}
 

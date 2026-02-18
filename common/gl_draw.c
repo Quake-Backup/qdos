@@ -345,7 +345,7 @@ void GL_TextureMode (char *string) /* FS: Blah, I hate this i-1 tricky dicky shi
 				goto stuff;
 			}
 		}
-		Con_Printf ("\"%s\" is not a valid texturemode\n", string);
+		Com_Printf ("\"%s\" is not a valid texturemode\n", string);
 		return;
 	}
 	else if (string[0] >= '0' && string[0] <= '9')
@@ -353,7 +353,7 @@ void GL_TextureMode (char *string) /* FS: Blah, I hate this i-1 tricky dicky shi
 		i = atoi(string);
 		if (i < 1 || i > NUM_GLMODES)
 		{
-			Con_Printf ("\"%s\" is not a valid texturemode\n", string);
+			Com_Printf ("\"%s\" is not a valid texturemode\n", string);
 			Cvar_Set("gl_texturemode", (char *)glmodes[glmode_idx].name); /* FS: Reset the CVAR name to what we selected for identification later and to make the video menu sane */
 			return;
 		}
@@ -361,7 +361,7 @@ void GL_TextureMode (char *string) /* FS: Blah, I hate this i-1 tricky dicky shi
 		Cvar_Set("gl_texturemode", (char *)glmodes[glmode_idx].name); /* FS: Reset the CVAR name to what we selected for identification later and to make the video menu sane */
 	}
 	else
-		Con_Printf ("\"%s\" is not a valid texturemode\n", string);
+		Com_Printf ("\"%s\" is not a valid texturemode\n", string);
 
 stuff:
 	gl_filter_min = glmodes[glmode_idx].minfilter;
@@ -1349,7 +1349,7 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 				// LordHavoc: everyone hates cache mismatchs, so I fixed it
 				if (crc != glt->crc || width != glt->width || height != glt->height)
 				{
-					Con_DPrintf(DEVELOPER_MSG_VIDEO, "GL_LoadTexture: cache mismatch, replacing old texture\n");
+					Com_DPrintf(DEVELOPER_MSG_VIDEO, "GL_LoadTexture: cache mismatch, replacing old texture\n");
 
 					goto GL_LoadTexture_setup; // drop out with glt pointing to the texture to replace
 				}

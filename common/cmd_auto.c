@@ -379,7 +379,7 @@ retryPartial:
 			auto_cvars = var;
 
 			if (retryPartialFlag == RETRY_MULTIPLE)
-				Con_Printf("  %s [C]\n", cmd->name);
+				Com_Printf("  %s [C]\n", cmd->name);
 			else if (retryPartialFlag == RETRY_ONCE)
 				return cmd->name;
 		}
@@ -416,7 +416,7 @@ retryPartial:
 			auto_cvars = var;
 
 			if (retryPartialFlag == RETRY_MULTIPLE)
-				Con_Printf("  %s [A]\n", a->name);
+				Com_Printf("  %s [A]\n", a->name);
 			else if (retryPartialFlag == RETRY_ONCE)
 				return a->name;
 		}
@@ -453,7 +453,7 @@ retryPartial:
 			auto_cvars = var;
 
 			if (retryPartialFlag == RETRY_MULTIPLE)
-				Con_Printf("  %s [V]\n", cvar->name);
+				Com_Printf("  %s [V]\n", cvar->name);
 			else if (retryPartialFlag == RETRY_ONCE)
 				return cvar->name;
 		}
@@ -471,14 +471,14 @@ retryPartial:
 	else if (retryPartialFlag == RETRY_INITIAL)
 	{
 		retryPartialFlag = RETRY_MULTIPLE;
-		Con_Printf("Listing matches for '%s'...\n", partial);
+		Com_Printf("Listing matches for '%s'...\n", partial);
 		goto retryPartial;
 	}
 	else if (foundExactCount + foundPartialCount > 0)
 	{
 		autocomplete_cvar_t *vars = NULL;
 
-		Con_Printf("Found %d matches.\n", foundExactCount + foundPartialCount);
+		Com_Printf("Found %d matches.\n", foundExactCount + foundPartialCount);
 
 		/* FS: Walk through the whole thing to get to the first one in the list */
 		for (vars = auto_cvars; vars; vars = vars->next)

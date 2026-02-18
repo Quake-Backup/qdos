@@ -295,7 +295,7 @@ qboolean VID_SetFullDIBMode (int modenum)
 		{
 			gdevmode.dmDisplayFrequency = gl_displayrefresh->intValue;
 			gdevmode.dmFields |= DM_DISPLAYFREQUENCY;
-			Con_SafePrintf ("...using gl_displayrefresh of %d\n", gl_displayrefresh->intValue );
+			Com_SafePrintf ("...using gl_displayrefresh of %d\n", gl_displayrefresh->intValue );
 		}
 		if (ChangeDisplaySettings (&gdevmode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
 			Sys_Error ("Couldn't set fullscreen DIB mode");
@@ -384,7 +384,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 		Sys_Error ("Bad video mode\n");
 	}
 
-// so Con_Printfs don't mess us up by forcing vid and snd updates
+// so Com_Printfs don't mess us up by forcing vid and snd updates
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
@@ -463,7 +463,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 	ClearAllStates ();
 
 	if (!msg_suppress_1)
-		Con_SafePrintf ("Video mode %s initialized.\n", VID_GetModeDescription (vid_modenum));
+		Com_SafePrintf ("Video mode %s initialized.\n", VID_GetModeDescription (vid_modenum));
 
 	VID_SetPalette (palette);
 
@@ -554,7 +554,7 @@ void CheckMultiTextureExtensions(void)
 			glActiveTextureARB_fp = (glActiveTextureARB_f) wglGetProcAddress("glActiveTextureARB");
 			if (glMultiTexCoord2fARB_fp && glActiveTextureARB_fp)
 			{
-				Con_Printf("FOUND: ARB_multitexture\n");
+				Com_Printf("FOUND: ARB_multitexture\n");
 				TEXTURE0 = GL_TEXTURE0_ARB;
 				TEXTURE1 = GL_TEXTURE1_ARB;
 				gl_mtexable = true;
@@ -569,7 +569,7 @@ void CheckMultiTextureExtensions(void)
 				glActiveTextureARB_fp = (glActiveTextureARB_f) wglGetProcAddress("glSelectTextureSGIS");
 				if (glMultiTexCoord2fARB_fp && glActiveTextureARB_fp)
 				{
-					Con_Printf("FOUND: SGIS_multitexture\n");
+					Com_Printf("FOUND: SGIS_multitexture\n");
 					TEXTURE0 = GL_TEXTURE0_SGIS;
 					TEXTURE1 = GL_TEXTURE1_SGIS;
 					gl_mtexable = true;
@@ -588,14 +588,14 @@ void GL_Strings_f (void) /* FS: Print the extensions string */
 	char *extString, *p;
 	char *savedExtStrings;
 
-	Con_Printf("GL_EXTENSIONS: ");
+	Com_Printf("GL_EXTENSIONS: ");
 
 	savedExtStrings = strdup((char *)gl_extensions);
 	extString = strtok_r(savedExtStrings, seperators, &p);
 
 	while(extString != NULL)
 	{
-		Con_Printf("%s\n", extString);
+		Com_Printf("%s\n", extString);
 		extString = strtok_r(NULL, seperators, &p);
 	}
 	free((void *)savedExtStrings);
@@ -639,16 +639,16 @@ GL_Init
 void GL_Init (void)
 {
 	gl_vendor = glGetString (GL_VENDOR);
-	Con_Printf ("GL_VENDOR: %s\n", gl_vendor);
+	Com_Printf ("GL_VENDOR: %s\n", gl_vendor);
 	gl_renderer = (const char *)glGetString_fp (GL_RENDERER);
-	Con_Printf ("GL_RENDERER: %s\n", gl_renderer);
+	Com_Printf ("GL_RENDERER: %s\n", gl_renderer);
 
 	gl_version = (const char *)glGetString_fp (GL_VERSION);
-	Con_Printf ("GL_VERSION: %s\n", gl_version);
+	Com_Printf ("GL_VERSION: %s\n", gl_version);
 	gl_extensions = (const char *)glGetString_fp (GL_EXTENSIONS);
 	Con_SafeDPrintf (DEVELOPER_MSG_VIDEO, "GL_EXTENSIONS: %s\n", gl_extensions);
 
-//	Con_Printf ("%s %s\n", gl_renderer, gl_version);
+//	Com_Printf ("%s %s\n", gl_renderer, gl_version);
 
     if (strnicmp(gl_renderer,"PowerVR",7)==0)
          fullsbardraw = true;
@@ -913,7 +913,7 @@ int MapKey (int key)
 	if (key > 127)
 		return 0;
 	if (scantokey[key] == 0)
-		Con_DPrintf(DEVELOPER_MSG_STANDARD, "key 0x%02x has no translation\n", key);
+		Com_DPrintf(DEVELOPER_MSG_STANDARD, "key 0x%02x has no translation\n", key);
 	return scantokey[key];
 }
 
@@ -1225,7 +1225,7 @@ VID_DescribeCurrentMode_f
 */
 void VID_DescribeCurrentMode_f (void)
 {
-	Con_Printf ("%s\n", VID_GetExtModeDescription (vid_modenum));
+	Com_Printf ("%s\n", VID_GetExtModeDescription (vid_modenum));
 }
 
 
@@ -1238,9 +1238,9 @@ void VID_NumModes_f (void)
 {
 
 	if (nummodes == 1)
-		Con_Printf ("%d video mode is available\n", nummodes);
+		Com_Printf ("%d video mode is available\n", nummodes);
 	else
-		Con_Printf ("%d video modes are available\n", nummodes);
+		Com_Printf ("%d video modes are available\n", nummodes);
 }
 
 
@@ -1258,7 +1258,7 @@ void VID_DescribeMode_f (void)
 	t = leavecurrentmode;
 	leavecurrentmode = 0;
 
-	Con_Printf ("%s\n", VID_GetExtModeDescription (modenum));
+	Com_Printf ("%s\n", VID_GetExtModeDescription (modenum));
 
 	leavecurrentmode = t;
 }
@@ -1284,7 +1284,7 @@ void VID_DescribeModes_f (void)
 	{
 		pv = VID_GetModePtr (i);
 		pinfo = VID_GetExtModeDescription (i);
-		Con_Printf ("%2d: %s\n", i, pinfo);
+		Com_Printf ("%2d: %s\n", i, pinfo);
 	}
 
 	leavecurrentmode = t;
@@ -1484,7 +1484,7 @@ void VID_InitFullDIB (HINSTANCE hInstance)
 	} while (!done);
 
 	if (nummodes == originalnummodes)
-		Con_SafePrintf ("No fullscreen DIB modes found\n");
+		Com_SafePrintf ("No fullscreen DIB modes found\n");
 }
 
 qboolean VID_Is8bit() {
@@ -1507,7 +1507,7 @@ void VID_Init8bitPalette()
 	if (!glColorTableEXT_fp)
 		return;
 
-	Con_SafePrintf("8-bit GL extensions enabled.\n");
+	Com_SafePrintf("8-bit GL extensions enabled.\n");
     glEnable( GL_SHARED_TEXTURE_PALETTE_EXT );
 	oldPalette = (char *) d_8to24table; //d_8to24table3dfx;
 	newPalette = thePalette;

@@ -271,14 +271,14 @@ void Con_afk_f (void) /* FS: EZQ Chat */
 	if (afk < 2)
 	{
 		Cmd_ChatInfo(EZQ_CHAT_AFK);
-		Con_Printf("AFK Mode ON\n");
+		Com_Printf("AFK Mode ON\n");
 		afk = EZQ_CHAT_AFK;
 	}
 	else
 	{
 		afk = EZQ_CHAT_OFF;
 		Cmd_ChatInfo(afk);
-		Con_Printf("AFK Mode OFF\n");
+		Com_Printf("AFK Mode OFF\n");
 	}
 }
 
@@ -300,7 +300,7 @@ void Con_Init (void)
 	con_linewidth = -1;
 	Con_CheckResize ();
 	
-	Con_Printf ("Console initialized.\n");
+	Com_Printf ("Console initialized.\n");
 
 //
 // register our commands
@@ -421,12 +421,12 @@ void Con_Print (char *txt)
 
 /*
 ================
-Con_Printf
+Com_Printf
 
 Handles cursor positioning, line wrapping, etc
 ================
 */
-void Con_Printf (const char *fmt, ...)
+void Com_Printf (const char *fmt, ...)
 {
 	va_list argptr;
 	static dstring_t *msg;
@@ -442,7 +442,7 @@ void Con_Printf (const char *fmt, ...)
 	va_end (argptr);
 
 	/* FS: Timestamp code */
-	if(timestamp && (timestamp->intValue > 0)) /* FS: A Con_Printf might sneak in before this is init'd */
+	if(timestamp && (timestamp->intValue > 0)) /* FS: A Com_Printf might sneak in before this is init'd */
 	{
 		struct tm *local;
 		time_t utc;
@@ -489,7 +489,7 @@ void Con_Printf (const char *fmt, ...)
 #if 0 /* FS: This makes scrolling painfully slow, and Quake 2 doesn't even use something like this */
 	if (cls.state != ca_active)
 	{
-		// protect against infinite loop if something in SCR_UpdateScreen calls Con_Printf
+		// protect against infinite loop if something in SCR_UpdateScreen calls Com_Printf
 		if (!inupdate)
 		{
 			inupdate = true;
@@ -517,18 +517,18 @@ void Con_Warning (const char *fmt, ...)
 	dvsprintf (msg,fmt,argptr);
 	va_end (argptr);
 
-	Con_SafePrintf ("\x02Warning: ");
-	Con_Printf ("%s", msg->str);
+	Com_SafePrintf ("\x02Warning: ");
+	Com_Printf ("%s", msg->str);
 }
 
 /*
 ================
-Con_DPrintf
+Com_DPrintf
 
-A Con_Printf that only shows up if the "developer" cvar is set
+A Com_Printf that only shows up if the "developer" cvar is set
 ================
 */
-void Con_DPrintf (unsigned long developerFlags, const char *fmt, ...)
+void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 {
 	va_list argptr;
 	static dstring_t *msg;
@@ -552,7 +552,7 @@ void Con_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 	dvsprintf (msg,fmt,argptr);
 	va_end (argptr);
 	
-	Con_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg->str);
 }
 
 /*
@@ -593,10 +593,10 @@ void Con_CenterPrintf (int linewidth, char *fmt, ...)
 			s = (linewidth-len)/2;
 			memset (spaces, ' ', s);
 			spaces[s] = 0;
-			Con_Printf ("%s%s\n", spaces, line);
+			Com_Printf ("%s%s\n", spaces, line);
 		}
 		else
-			Con_Printf ("%s\n", line);
+			Com_Printf ("%s\n", line);
 	}
 }
 
@@ -619,9 +619,9 @@ void Con_LogCenterPrint (char *str)
 
 	if (con_logcenterprint->value)
 	{
-		Con_Printf (Con_Quakebar(40));
+		Com_Printf (Con_Quakebar(40));
 		Con_CenterPrintf (40, "%s\n", str);
-		Con_Printf (Con_Quakebar(40));
+		Com_Printf (Con_Quakebar(40));
 		Con_ClearNotify ();
 	}
 }
@@ -932,12 +932,12 @@ void Con_NotifyBox (char *text)
 	double		t1, t2;
 
 // during startup for sound / cd warnings
-	Con_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n");
+	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n");
 
-	Con_Printf (text);
+	Com_Printf (text);
 
-	Con_Printf ("Press a key.\n");
-	Con_Printf("\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n");
+	Com_Printf ("Press a key.\n");
+	Com_Printf("\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n");
 
 	key_count = -2;		// wait for a key down and up
 	key_dest = key_console;
@@ -951,7 +951,7 @@ void Con_NotifyBox (char *text)
 		realtime += t2-t1;		// make the cursor blink
 	} while (key_count < 0);
 
-	Con_Printf ("\n");
+	Com_Printf ("\n");
 	key_dest = key_game;
 	realtime = 0;				// put the cursor back to invisible
 }
@@ -959,12 +959,12 @@ void Con_NotifyBox (char *text)
 
 /*
 ==================
-Con_SafePrintf
+Com_SafePrintf
 
 Okay to call even when the screen can't be updated
 ==================
 */
-void Con_SafePrintf (const char *fmt, ...)
+void Com_SafePrintf (const char *fmt, ...)
 {
 	va_list				argptr;
 	int					temp;
@@ -980,7 +980,7 @@ void Con_SafePrintf (const char *fmt, ...)
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
-	Con_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg->str);
 
 	scr_disabled_for_loading = temp;
 }
@@ -1008,7 +1008,7 @@ void Con_SafeDPrintf (unsigned long developerFlags, const char *fmt, ...)
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
-	Con_DPrintf (developerFlags, "%s", msg->str);
+	Com_DPrintf (developerFlags, "%s", msg->str);
 
 	scr_disabled_for_loading = temp;
 }

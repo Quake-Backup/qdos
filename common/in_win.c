@@ -347,7 +347,7 @@ qboolean IN_InitDInput (void)
 		
 		if (hInstDI == NULL)
 		{
-			Con_SafePrintf ("Couldn't load dinput.dll\n");
+			Com_SafePrintf ("Couldn't load dinput.dll\n");
 			return false;
 		}
 	}
@@ -358,7 +358,7 @@ qboolean IN_InitDInput (void)
 
 		if (!pDirectInputCreate)
 		{
-			Con_SafePrintf ("Couldn't get DI proc addr\n");
+			Com_SafePrintf ("Couldn't get DI proc addr\n");
 			return false;
 		}
 	}
@@ -376,7 +376,7 @@ qboolean IN_InitDInput (void)
 
 	if (FAILED(hr))
 	{
-		Con_SafePrintf ("Couldn't open DI mouse device\n");
+		Com_SafePrintf ("Couldn't open DI mouse device\n");
 		return false;
 	}
 
@@ -385,7 +385,7 @@ qboolean IN_InitDInput (void)
 
 	if (FAILED(hr))
 	{
-		Con_SafePrintf ("Couldn't set DI mouse format\n");
+		Com_SafePrintf ("Couldn't set DI mouse format\n");
 		return false;
 	}
 
@@ -395,7 +395,7 @@ qboolean IN_InitDInput (void)
 
 	if (FAILED(hr))
 	{
-		Con_SafePrintf ("Couldn't set DI coop level\n");
+		Com_SafePrintf ("Couldn't set DI coop level\n");
 		return false;
 	}
 
@@ -406,7 +406,7 @@ qboolean IN_InitDInput (void)
 
 	if (FAILED(hr))
 	{
-		Con_SafePrintf ("Couldn't set DI buffersize\n");
+		Com_SafePrintf ("Couldn't set DI buffersize\n");
 		return false;
 	}
 
@@ -432,11 +432,11 @@ void IN_StartupMouse (void)
 
 		if (dinput)
 		{
-			Con_SafePrintf ("DirectInput initialized\n");
+			Com_SafePrintf ("DirectInput initialized\n");
 		}
 		else
 		{
-			Con_SafePrintf ("DirectInput not initialized\n");
+			Com_SafePrintf ("DirectInput not initialized\n");
 		}
 	}
 
@@ -811,7 +811,7 @@ void IN_StartupJoystick (void)
 	// verify joystick driver is present
 	if ((numdevs = joyGetNumDevs ()) == 0)
 	{
-		Con_Printf ("\njoystick not found -- driver not present\n\n");
+		Com_Printf ("\njoystick not found -- driver not present\n\n");
 		return;
 	}
 
@@ -829,7 +829,7 @@ void IN_StartupJoystick (void)
 	// abort startup if we didn't find a valid joystick
 	if (mmr != JOYERR_NOERROR)
 	{
-		Con_Printf ("\njoystick not found -- no valid joysticks (%x)\n\n", mmr);
+		Com_Printf ("\njoystick not found -- no valid joysticks (%x)\n\n", mmr);
 		return;
 	}
 
@@ -838,7 +838,7 @@ void IN_StartupJoystick (void)
 	memset (&jc, 0, sizeof(jc));
 	if ((mmr = joyGetDevCaps (joy_id, &jc, sizeof(jc))) != JOYERR_NOERROR)
 	{
-		Con_Printf ("\njoystick not found -- invalid joystick capabilities (%x)\n\n", mmr); 
+		Com_Printf ("\njoystick not found -- invalid joystick capabilities (%x)\n\n", mmr); 
 		return;
 	}
 
@@ -855,7 +855,7 @@ void IN_StartupJoystick (void)
 	joy_avail = true; 
 	joy_advancedinit = false;
 
-	Con_Printf ("joystick detected\n"); //johnfitz -- fewer newlines
+	Com_Printf ("joystick detected\n"); //johnfitz -- fewer newlines
 }
 
 
@@ -920,7 +920,7 @@ void Joy_AdvancedUpdate_f (void)
 		if (Q_strcmp (joy_name->string, "joystick") != 0)
 		{
 			// notify user of advanced controller
-			Con_Printf ("\n%s configured\n\n", joy_name->string);
+			Com_Printf ("\n%s configured\n\n", joy_name->string);
 		}
 
 		// advanced initialization here
@@ -1055,7 +1055,7 @@ qboolean IN_ReadJoystick (void)
 		// read error occurred
 		// turning off the joystick seems too harsh for 1 read error,\
 		// but what should be done?
-		// Con_Printf ("IN_ReadJoystick: no response\n");
+		// Com_Printf ("IN_ReadJoystick: no response\n");
 		// joy_avail = false;
 		return false;
 	}

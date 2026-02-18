@@ -63,24 +63,24 @@ void SV_Protocol_f (void)
 	switch (Cmd_Argc())
 	{
 	case 1:
-		Con_Printf ("\"sv_protocol\" is \"%i\"\n", sv_protocol);
+		Com_Printf ("\"sv_protocol\" is \"%i\"\n", sv_protocol);
 		break;
 	case 2:
 		i = atoi(Cmd_Argv(1));
 
 		if (i != PROTOCOL_NETQUAKE && i != PROTOCOL_FITZQUAKE)
-			Con_Printf ("sv_protocol must be %i or %i\n", PROTOCOL_NETQUAKE, PROTOCOL_FITZQUAKE);
+			Com_Printf ("sv_protocol must be %i or %i\n", PROTOCOL_NETQUAKE, PROTOCOL_FITZQUAKE);
 		else
 		{
 			sv_protocol = i;
 
 			if (sv.active)
-				Con_Printf ("changes will not take effect until the next level load.\n");
+				Com_Printf ("changes will not take effect until the next level load.\n");
 		}
 
 		break;
 	default:
-		Con_SafePrintf ("usage: sv_protocol <protocol>\n");
+		Com_SafePrintf ("usage: sv_protocol <protocol>\n");
 		break;
 	}
 }
@@ -101,7 +101,7 @@ void SV_DumpEntities_f (void)
 		return;
 	}
 
-	Con_Printf ("Dumping Entities to %s.\n", filename);
+	Com_Printf ("Dumping Entities to %s.\n", filename);
 	fputs(sv.worldmodel->entities, f);
 	fclose(f);
 }
@@ -229,7 +229,7 @@ void SV_StartSound (edict_t *entity, int channel, char *sample, int volume, floa
     
     if ( sound_num == MAX_SOUNDS || !sv.sound_precache[sound_num] )
     {
-        Con_Printf ("SV_StartSound: %s not precacheed\n", sample);
+        Com_Printf ("SV_StartSound: %s not precacheed\n", sample);
         return;
     }
     
@@ -372,7 +372,7 @@ void SV_ConnectClient (int clientnum)
 
 	client = svs.clients + clientnum;
 
-	Con_DPrintf(DEVELOPER_MSG_SERVER, "Client %s connected\n", client->netconnection->address);
+	Com_DPrintf(DEVELOPER_MSG_SERVER, "Client %s connected\n", client->netconnection->address);
 
 	edictnum = clientnum+1;
 
@@ -580,7 +580,7 @@ void SV_WriteEntitiesToClient (edict_t *clent, sizebuf_t *msg)
 		//assumed here.  And, for protocol 85 the max size is actually 24 bytes.
 		if (msg->cursize + 24 > msg->maxsize)
 		{
-			Con_Printf ("packet overflow\n");
+			Com_Printf ("packet overflow\n");
 			return;
 		}
 
@@ -1323,7 +1323,7 @@ void SV_SpawnServer (char *server)
 
 	scr_centertime_off = 0;
 
-	Con_DPrintf(DEVELOPER_MSG_SERVER, "SpawnServer: %s\n",server);
+	Com_DPrintf(DEVELOPER_MSG_SERVER, "SpawnServer: %s\n",server);
 	svs.changelevel_issued = false;     // now safe to issue another
 
 	//
@@ -1400,7 +1400,7 @@ void SV_SpawnServer (char *server)
 
 	if (!sv.worldmodel)
 	{
-		Con_Printf ("Couldn't spawn server %s\n", sv.modelname);
+		Com_Printf ("Couldn't spawn server %s\n", sv.modelname);
 		sv.active = false;
 		return;
 	}
@@ -1451,11 +1451,11 @@ void SV_SpawnServer (char *server)
 		char filename[MAX_QPATH];
 
 		Com_sprintf(filename, sizeof(filename), "maps/%s.ent", server);
-		Con_DPrintf(DEVELOPER_MSG_IO, "Attempting to load external ent file %s...\n", filename);
+		Com_DPrintf(DEVELOPER_MSG_IO, "Attempting to load external ent file %s...\n", filename);
 		entitystring = (char *) COM_LoadHunkFile (filename);
 
 		if (!entitystring)
-			Con_DPrintf(DEVELOPER_MSG_IO, "No external ent file found.\n");
+			Com_DPrintf(DEVELOPER_MSG_IO, "No external ent file found.\n");
 		else
 			Con_Warning("External ent file found!\n"); /* FS: Warn about non-standardness */
 
@@ -1496,5 +1496,5 @@ void SV_SpawnServer (char *server)
 		if (host_client->active)
 			SV_SendServerinfo (host_client);
    
-	Con_DPrintf(DEVELOPER_MSG_SERVER, "Server spawned.\n");
+	Com_DPrintf(DEVELOPER_MSG_SERVER, "Server spawned.\n");
 }

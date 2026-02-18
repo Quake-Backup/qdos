@@ -130,7 +130,7 @@ int WINS_Init (void)
 	
 	if (hInst == NULL)
 	{
-		Con_SafePrintf ("Failed to load winsock.dll\n");
+		Com_SafePrintf ("Failed to load winsock.dll\n");
 		winsock_lib_initialized = false;
 		return -1;
 	}
@@ -157,7 +157,7 @@ int WINS_Init (void)
 		!pgethostname || !pgethostbyname || !pgethostbyaddr ||
 		!pgetsockname)
 	{
-		Con_SafePrintf ("Couldn't GetProcAddress from winsock.dll\n");
+		Com_SafePrintf ("Couldn't GetProcAddress from winsock.dll\n");
 		return -1;
 	}
 
@@ -172,7 +172,7 @@ int WINS_Init (void)
 
 		if (r)
 		{
-			Con_SafePrintf ("Winsock initialization failed.\n");
+			Com_SafePrintf ("Winsock initialization failed.\n");
 			return -1;
 		}
 	}
@@ -181,7 +181,7 @@ int WINS_Init (void)
 	// determine my name
 	if (pgethostname(buff, MAXHOSTNAMELEN) == SOCKET_ERROR)
 	{
-		Con_DPrintf (DEVELOPER_MSG_NET, "Winsock TCP/IP Initialization failed.\n");
+		Com_DPrintf (DEVELOPER_MSG_NET, "Winsock TCP/IP Initialization failed.\n");
 		if (--winsock_initialized == 0)
 			pWSACleanup ();
 		return -1;
@@ -229,7 +229,7 @@ int WINS_Init (void)
 
 	if ((net_controlsocket = WINS_OpenSocket (0)) == -1)
 	{
-		Con_Printf("WINS_Init: Unable to open control socket\n");
+		Com_Printf("WINS_Init: Unable to open control socket\n");
 		if (--winsock_initialized == 0)
 			pWSACleanup ();
 		return -1;
@@ -239,7 +239,7 @@ int WINS_Init (void)
 	((struct sockaddr_in *)&broadcastaddr)->sin_addr.s_addr = INADDR_BROADCAST;
 	((struct sockaddr_in *)&broadcastaddr)->sin_port = htons((unsigned short)net_hostport);
 
-	Con_Printf("Winsock TCP/IP Initialized\n");
+	Com_Printf("Winsock TCP/IP Initialized\n");
 	tcpipAvailable = true;
 
 	return net_controlsocket;
@@ -442,7 +442,7 @@ int WINS_Broadcast (int socket, byte *buf, int len)
 		ret = WINS_MakeSocketBroadcastCapable (socket);
 		if (ret == -1)
 		{
-			Con_Printf("Unable to make socket broadcast capable\n");
+			Com_Printf("Unable to make socket broadcast capable\n");
 			return ret;
 		}
 	}

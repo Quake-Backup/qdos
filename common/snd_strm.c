@@ -115,7 +115,7 @@ static qboolean S_OpenBackgroundTrack (char *name, bgTrack_t *track)
 	char	filename[1024];
 	char	*path = NULL;
 
-//	Con_Printf("Opening background track: %s\n", name);
+//	Com_Printf("Opening background track: %s\n", name);
 	do {
 		path = COM_NextPath( path );
 		Com_sprintf( filename, sizeof(filename), "%s/%s", path, name );
@@ -125,24 +125,24 @@ static qboolean S_OpenBackgroundTrack (char *name, bgTrack_t *track)
 
 	if (!track->file)
 	{
-		Con_Printf("S_OpenBackgroundTrack: couldn't find %s\n", name);
+		Com_Printf("S_OpenBackgroundTrack: couldn't find %s\n", name);
 		return false;
 	}
 
 	track->vorbisFile = vorbisFile = Z_Malloc(sizeof(OggVorbis_File));
 
-//	Con_Printf("Opening callbacks for background track\n");
+//	Com_Printf("Opening callbacks for background track\n");
 	if (ov_open_callbacks(track, vorbisFile, NULL, 0, vorbisCallbacks) < 0)
 	{
-		Con_Printf("S_OpenBackgroundTrack: couldn't open OGG stream (%s)\n", name);
+		Com_Printf("S_OpenBackgroundTrack: couldn't open OGG stream (%s)\n", name);
 		return false;
 	}
 
-//	Con_Printf("Getting info for background track\n");
+//	Com_Printf("Getting info for background track\n");
 	vorbisInfo = ov_info(vorbisFile, -1);
 	if (vorbisInfo->channels != 1 && vorbisInfo->channels != 2)
 	{
-		Con_Printf("S_OpenBackgroundTrack: only mono and stereo OGG files supported (%s)\n", name);
+		Com_Printf("S_OpenBackgroundTrack: only mono and stereo OGG files supported (%s)\n", name);
 		return false;
 	}
 
@@ -151,7 +151,7 @@ static qboolean S_OpenBackgroundTrack (char *name, bgTrack_t *track)
 	track->width = 2;
 	track->channels = vorbisInfo->channels; // Knightmare added
 
-//	Con_Printf("Vorbis info: frequency: %i channels: %i bitrate: %i\n",
+//	Com_Printf("Vorbis info: frequency: %i channels: %i bitrate: %i\n",
 //		vorbisInfo->rate, vorbisInfo->channels, vorbisInfo->bitrate_nominal);
 
 	return true;
@@ -355,10 +355,10 @@ void S_OGG_Init (void)
 	Cmd_AddCommand("ogg", S_OGG_ParseCmd);
 
 	// Build list of files
-	Con_Printf("Searching for Ogg Vorbis files...\n");
+	Com_Printf("Searching for Ogg Vorbis files...\n");
 	ogg_numfiles = 0;
 	S_OGG_LoadFileList ();
-	Con_Printf("%d Ogg Vorbis files found.\n", ogg_numfiles);
+	Com_Printf("%d Ogg Vorbis files found.\n", ogg_numfiles);
 
 	// Initialize variables
 	if (ogg_first_init) {
@@ -479,7 +479,7 @@ static void S_OGG_PlayCmd (void)
 	char	name[MAX_QPATH];
 
 	if (Cmd_Argc() < 3) {
-		Con_Printf("Usage: ogg play {track}\n");
+		Com_Printf("Usage: ogg play {track}\n");
 		return;
 	}
 	Com_sprintf(name, sizeof(name), "music/%s.ogg", Cmd_Argv(2) );
@@ -506,24 +506,24 @@ static void S_OGG_StatusCmd (void)
 	switch (trk_status) {
 	case BGM_PLAY:
 #if !defined(VORBIS_USE_TREMOR)
-		Con_Printf("Playing file %s at %0.2f seconds.\n",
+		Com_Printf("Playing file %s at %0.2f seconds.\n",
 		    trackName, ov_time_tell(s_bgTrack.vorbisFile));
 #else
-		Con_Printf("Playing file %s at %0.2f seconds.\n",
+		Com_Printf("Playing file %s at %0.2f seconds.\n",
 		    trackName, ov_time_tell(s_bgTrack.vorbisFile)/1000.0);
 #endif
 		break;
 	case BGM_PAUSE:
 #if !defined(VORBIS_USE_TREMOR)
-		Con_Printf("Paused file %s at %0.2f seconds.\n",
+		Com_Printf("Paused file %s at %0.2f seconds.\n",
 		    trackName, ov_time_tell(s_bgTrack.vorbisFile));
 #else
-		Con_Printf("Paused file %s at %0.2f seconds.\n",
+		Com_Printf("Paused file %s at %0.2f seconds.\n",
 		    trackName, ov_time_tell(s_bgTrack.vorbisFile)/1000.0);
 #endif
 		break;
 	case BGM_STOP:
-		Con_Printf("Stopped.\n");
+		Com_Printf("Stopped.\n");
 		break;
 	}
 }
@@ -541,14 +541,14 @@ static void S_OGG_ListCmd (void)
 	int i;
 
 	if (ogg_numfiles <= 0) {
-		Con_Printf("No Ogg Vorbis files to list.\n");
+		Com_Printf("No Ogg Vorbis files to list.\n");
 		return;
 	}
 
 	for (i = 0; i < ogg_numfiles; i++)
-		Con_Printf("%d %s\n", i+1, ogg_filelist[i]);
+		Com_Printf("%d %s\n", i+1, ogg_filelist[i]);
 
-	Con_Printf("%d Ogg Vorbis files.\n", ogg_numfiles);
+	Com_Printf("%d Ogg Vorbis files.\n", ogg_numfiles);
 }
 
 /*
@@ -564,7 +564,7 @@ static void S_OGG_ParseCmd (void)
 	char	*command;
 
 	if (Cmd_Argc() < 2) {
-		Con_Printf("Usage: ogg {play | pause | resume | stop | status | list}\n");
+		Com_Printf("Usage: ogg {play | pause | resume | stop | status | list}\n");
 		return;
 	}
 
@@ -602,7 +602,7 @@ static void S_OGG_ParseCmd (void)
 		return;
 	}
 
-	Con_Printf("Usage: ogg {play | pause | resume | stop | status | list}\n");
+	Com_Printf("Usage: ogg {play | pause | resume | stop | status | list}\n");
 }
 
 #endif /* OGG_SUPPORT */

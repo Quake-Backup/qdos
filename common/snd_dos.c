@@ -68,21 +68,21 @@ qboolean SNDDMA_Init(void)
 #ifdef USE_SNDPCI
 	if (PCI_Init ()) /* FS: Ruslans patch */
 	{
-		Con_DPrintf(DEVELOPER_MSG_SOUND, "PCI_Init\n");
+		Com_DPrintf(DEVELOPER_MSG_SOUND, "PCI_Init\n");
 		dmacard = dma_pci;
 		return true;
 	}
 #endif
 	if (GUS_Init ())
 	{
-		Con_DPrintf(DEVELOPER_MSG_SOUND, "GUS_Init\n");
+		Com_DPrintf(DEVELOPER_MSG_SOUND, "GUS_Init\n");
 		dmacard = dma_gus;
 		S_StopAllSounds(); /* FS: For GUS Buffer Clear Fix */
 		return true;
 	}
 	if (BLASTER_Init ())
 	{
-		Con_DPrintf(DEVELOPER_MSG_SOUND, "BLASTER_Init\n");
+		Com_DPrintf(DEVELOPER_MSG_SOUND, "BLASTER_Init\n");
 		dmacard = dma_blaster;
 		return true;
 	}

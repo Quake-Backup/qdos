@@ -84,10 +84,10 @@ void Con_CheckResize (void);
 void Con_Init (void);
 void Con_DrawConsole (int lines);
 void Con_Print (char *txt);
-void Con_Printf (const char *fmt, ...);
+void Com_Printf (const char *fmt, ...);
 void Con_Warning (const char *fmt, ...); //johnfitz
-void Con_DPrintf (unsigned long developerFlags, const char *fmt, ...);
-void Con_SafePrintf (const char *fmt, ...);
+void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...);
+void Com_SafePrintf (const char *fmt, ...);
 void Con_SafeDPrintf (unsigned long developerFlags, const char *fmt, ...);
 void Con_Clear_f (void);
 void Con_DrawNotify (void);

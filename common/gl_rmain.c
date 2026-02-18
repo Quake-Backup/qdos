@@ -169,7 +169,7 @@ mspriteframe_t *R_GetSpriteFrame (entity_t *currententity)
 
 	if ((frame >= psprite->numframes) || (frame < 0))
 	{
-		Con_Printf ("R_DrawSprite: no such frame %d\n", frame);
+		Com_Printf ("R_DrawSprite: no such frame %d\n", frame);
 		frame = 0;
 	}
 
@@ -423,7 +423,7 @@ void R_SetupAliasFrame (int frame, aliashdr_t *paliashdr)
 
 	if ((frame >= paliashdr->numframes) || (frame < 0))
 	{
-		Con_DPrintf (DEVELOPER_MSG_STANDARD, "R_AliasSetupFrame: no such frame %d\n", frame);
+		Com_DPrintf (DEVELOPER_MSG_STANDARD, "R_AliasSetupFrame: no such frame %d\n", frame);
 		frame = 0;
 	}
 
@@ -1227,7 +1227,7 @@ void R_RenderView (void)
 	{
 //		glFinish_fp ();
 		time2 = Sys_DoubleTime();
-		Con_Printf ("%3i ms  %4i wpoly %4i epoly\n", (int)((time2-time1)*1000), c_brush_polys, c_alias_polys); 
+		Com_Printf ("%3i ms  %4i wpoly %4i epoly\n", (int)((time2-time1)*1000), c_brush_polys, c_alias_polys); 
 	}
 }
 

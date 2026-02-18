@@ -54,7 +54,7 @@ static char *PF_VarString (int	first)
 		}
 	}
 	if (s > 255)
-		Con_DPrintf(DEVELOPER_MSG_PROGS, "PF_VarString: %i characters exceeds standard limit of 255.\n", (int) s);
+		Com_DPrintf(DEVELOPER_MSG_PROGS, "PF_VarString: %i characters exceeds standard limit of 255.\n", (int) s);
 	return out;
 }
 
@@ -74,7 +74,7 @@ void PF_error (void)
 	edict_t	*ed;
 	
 	s = PF_VarString(0);
-	Con_Printf ("======SERVER ERROR in %s:\n%s\n"
+	Com_Printf ("======SERVER ERROR in %s:\n%s\n"
 	,pr_strings + pr_xfunction->s_name,s);
 	ed = PROG_TO_EDICT(pr_global_struct->self);
 	ED_Print (ed);
@@ -98,7 +98,7 @@ void PF_objerror (void)
 	edict_t	*ed;
 	
 	s = PF_VarString(0);
-	Con_Printf ("======OBJECT ERROR in %s:\n%s\n"
+	Com_Printf ("======OBJECT ERROR in %s:\n%s\n"
 	,pr_strings + pr_xfunction->s_name,s);
 	ed = PROG_TO_EDICT(pr_global_struct->self);
 	ED_Print (ed);
@@ -319,7 +319,7 @@ void PF_sprint (void)
 	
 	if (entnum < 1 || entnum > svs.maxclients)
 	{
-		Con_Printf ("tried to sprint to a non-client\n");
+		Com_Printf ("tried to sprint to a non-client\n");
 		return;
 	}
 		
@@ -350,7 +350,7 @@ void PF_centerprint (void)
 	
 	if (entnum < 1 || entnum > svs.maxclients)
 	{
-		Con_Printf ("tried to sprint to a non-client\n");
+		Com_Printf ("tried to sprint to a non-client\n");
 		return;
 	}
 		
@@ -545,7 +545,7 @@ void PF_ambientsound (void)
 			
 	if (!*check)
 	{
-		Con_Printf ("no precache: %s\n", samp);
+		Com_Printf ("no precache: %s\n", samp);
 		return;
 	}
 
@@ -633,7 +633,7 @@ break()
 */
 void PF_break (void)
 {
-Con_Printf ("break statement\n");
+Com_Printf ("break statement\n");
 *(int *)-4 = 0;	// dump to debugger
 //	PR_RunError ("break statement");
 }
@@ -929,7 +929,7 @@ PF_dprint
 */
 void PF_dprint (void)
 {
-	Con_DPrintf (DEVELOPER_MSG_PROGS, "%s",PF_VarString(0));
+	Com_DPrintf (DEVELOPER_MSG_PROGS, "%s",PF_VarString(0));
 }
 
 char	pr_string_temp[128];

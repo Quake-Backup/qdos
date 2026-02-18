@@ -144,7 +144,7 @@ int CL_GetMessage (void)
 
 	// discard nop keepalive message
 		if (net_message.cursize == 1 && net_message.data[0] == svc_nop)
-			Con_Printf ("<-- server to client keepalive\n");
+			Com_Printf ("<-- server to client keepalive\n");
 		else
 			break;
 	}
@@ -170,7 +170,7 @@ void CL_Stop_f (void)
 
 	if (!cls.demorecording)
 	{
-		Con_Printf ("Not recording a demo.\n");
+		Com_Printf ("Not recording a demo.\n");
 		return;
 	}
 
@@ -183,7 +183,7 @@ void CL_Stop_f (void)
 	fclose (cls.demofile);
 	cls.demofile = NULL;
 	cls.demorecording = false;
-	Con_Printf ("Completed demo\n");
+	Com_Printf ("Completed demo\n");
 }
 
 /*
@@ -205,19 +205,19 @@ void CL_Record_f (void)
 	c = Cmd_Argc();
 	if (c != 2 && c != 3 && c != 4)
 	{
-		Con_Printf ("record <demoname> [<map> [cd track]]\n");
+		Com_Printf ("record <demoname> [<map> [cd track]]\n");
 		return;
 	}
 
 	if (strstr(Cmd_Argv(1), ".."))
 	{
-		Con_Printf ("Relative pathnames are not allowed.\n");
+		Com_Printf ("Relative pathnames are not allowed.\n");
 		return;
 	}
 
 	if (c == 2 && cls.state == ca_connected)
 	{
-		Con_Printf("Can not record - already connected to server\nClient demo recording must be started before connecting\n");
+		Com_Printf("Can not record - already connected to server\nClient demo recording must be started before connecting\n");
 		return;
 	}
 
@@ -225,7 +225,7 @@ void CL_Record_f (void)
 	if (c == 4)
 	{
 		track = atoi(Cmd_Argv(3));
-		Con_Printf ("Forcing CD track to %i\n", cls.forcetrack);
+		Com_Printf ("Forcing CD track to %i\n", cls.forcetrack);
 	}
 	else
 		track = -1;
@@ -246,11 +246,11 @@ void CL_Record_f (void)
 //
 	COM_DefaultExtension (name, ".dem");
 
-	Con_Printf ("recording to %s.\n", name);
+	Com_Printf ("recording to %s.\n", name);
 	cls.demofile = fopen (name, "wb");
 	if (!cls.demofile)
 	{
-		Con_Printf ("ERROR: couldn't open.\n");
+		Com_Printf ("ERROR: couldn't open.\n");
 		return;
 	}
 
@@ -279,7 +279,7 @@ void CL_PlayDemo_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Con_Printf ("play <demoname> : plays a demo\n");
+		Com_Printf ("play <demoname> : plays a demo\n");
 		return;
 	}
 
@@ -296,11 +296,11 @@ void CL_PlayDemo_f (void)
 
 	COM_DefaultExtension (name->str, ".dem");
 
-	Con_Printf ("Playing demo from %s.\n", name->str);
+	Com_Printf ("Playing demo from %s.\n", name->str);
 	COM_FOpenFile (name->str, &cls.demofile);
 	if (!cls.demofile)
 	{
-		Con_Printf ("ERROR: couldn't open %s.\n", name->str);
+		Com_Printf ("ERROR: couldn't open %s.\n", name->str);
 		cls.demonum = -1;		// stop demo loop
 		dstring_delete(name);
 		return;
@@ -331,7 +331,7 @@ void CL_PlayDemo_f (void)
 		fclose (cls.demofile);
 		cls.demofile = NULL;
 		cls.demonum = -1;	// stop demo loop
-		Con_Printf ("ERROR: demo \"%s\" is invalid\n", name->str);
+		Com_Printf ("ERROR: demo \"%s\" is invalid\n", name->str);
 		dstring_delete(name);
 		return;
 	}
@@ -365,7 +365,7 @@ void CL_FinishTimeDemo (void)
 	time = realtime - cls.td_starttime;
 	if (!time)
 		time = 1;
-	Con_Printf ("%i frames %5.1f seconds %5.1f fps\n", frames, time, frames/time);
+	Com_Printf ("%i frames %5.1f seconds %5.1f fps\n", frames, time, frames/time);
 }
 
 /*
@@ -382,7 +382,7 @@ void CL_TimeDemo_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Con_Printf ("timedemo <demoname> : gets demo speeds\n");
+		Com_Printf ("timedemo <demoname> : gets demo speeds\n");
 		return;
 	}
 

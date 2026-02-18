@@ -39,7 +39,7 @@ static int load_sndpci_dxe(void)
 	AU_cardbuf_space_fp = (unsigned int (*)(au_context*)) Sys_dlsym(sndpci_dxe, "_AU_cardbuf_space");
 	if (!AU_search_fp || !AU_start_fp || !AU_close_fp || !AU_getinfo_fp ||
 	    !AU_setrate_fp || !AU_setmixer_all_fp || !AU_cardbuf_space_fp) {
-	fail:	Con_Printf("PCI Audio: failed loading sndpci.dxe\n");
+	fail:	Com_Printf("PCI Audio: failed loading sndpci.dxe\n");
 		return -1;
 	}
 	return 0;
@@ -84,7 +84,7 @@ qboolean PCI_Init(void)
 	ctx = AU_search_fp(1);/* 1: stereo speaker output (meaningful only for Intel HDA chips) */
 	if (!ctx)
 	{
-		Con_Printf("PCI Audio: Detection failed.\n");
+		Com_Printf("PCI Audio: Detection failed.\n");
 		return false;
 	}
 
@@ -108,7 +108,7 @@ qboolean PCI_Init(void)
 	dma.submission_chunk = 1;
 	dma.buffer = (unsigned char *) aui->card_DMABUFF;
 
-	Con_Printf("%s\n", aui->infostr);
+	Com_Printf("%s\n", aui->infostr);
 
 	AU_setmixer_all_fp(ctx, 80); /* 80% volume */
 	AU_start_fp(ctx); /* also clears dma buffer */

@@ -168,7 +168,7 @@ static void NET_Listen_f (void)
 {
 	if (Cmd_Argc () != 2)
 	{
-		Con_Printf ("\"listen\" is \"%u\"\n", listening ? 1 : 0);
+		Com_Printf ("\"listen\" is \"%u\"\n", listening ? 1 : 0);
 		return;
 	}
 
@@ -189,13 +189,13 @@ static void MaxPlayers_f (void)
 
 	if (Cmd_Argc () != 2)
 	{
-		Con_Printf ("\"maxplayers\" is \"%u\"\n", svs.maxclients);
+		Com_Printf ("\"maxplayers\" is \"%u\"\n", svs.maxclients);
 		return;
 	}
 
 	if (sv.active)
 	{
-		Con_Printf ("maxplayers can not be changed while a server is running.\n");
+		Com_Printf ("maxplayers can not be changed while a server is running.\n");
 		return;
 	}
 
@@ -205,7 +205,7 @@ static void MaxPlayers_f (void)
 	if (n > svs.maxclientslimit)
 	{
 		n = svs.maxclientslimit;
-		Con_Printf ("\"maxplayers\" set to \"%u\"\n", n);
+		Com_Printf ("\"maxplayers\" set to \"%u\"\n", n);
 	}
 
 	if ((n == 1) && listening)
@@ -238,14 +238,14 @@ static void NET_Port_f (void)
 
 	if (Cmd_Argc () != 2)
 	{
-		Con_Printf ("\"port\" is \"%u\"\n", net_hostport);
+		Com_Printf ("\"port\" is \"%u\"\n", net_hostport);
 		return;
 	}
 
 	n = Q_atoi(Cmd_Argv(1));
 	if (n < 1 || n > 65534)
 	{
-		Con_Printf ("Bad value, must be between 1 and 65534\n");
+		Com_Printf ("Bad value, must be between 1 and 65534\n");
 		return;
 	}
 
@@ -263,8 +263,8 @@ static void NET_Port_f (void)
 
 static void PrintSlistHeader(void)
 {
-	Con_Printf("Server          Map             Users\n");
-	Con_Printf("--------------- --------------- -----\n");
+	Com_Printf("Server          Map             Users\n");
+	Com_Printf("--------------- --------------- -----\n");
 	slistLastShown = 0;
 }
 
@@ -276,9 +276,9 @@ static void PrintSlist(void)
 	for (n = slistLastShown; n < hostCacheCount; n++)
 	{
 		if (hostcache[n].maxusers)
-			Con_Printf("%-15.15s %-15.15s %2u/%2u\n", hostcache[n].name, hostcache[n].map, hostcache[n].users, hostcache[n].maxusers);
+			Com_Printf("%-15.15s %-15.15s %2u/%2u\n", hostcache[n].name, hostcache[n].map, hostcache[n].users, hostcache[n].maxusers);
 		else
-			Con_Printf("%-15.15s %-15.15s\n", hostcache[n].name, hostcache[n].map);
+			Com_Printf("%-15.15s %-15.15s\n", hostcache[n].name, hostcache[n].map);
 	}
 	slistLastShown = n;
 }
@@ -287,9 +287,9 @@ static void PrintSlist(void)
 static void PrintSlistTrailer(void)
 {
 	if (hostCacheCount)
-		Con_Printf("== end list ==\n\n");
+		Com_Printf("== end list ==\n\n");
 	else
-		Con_Printf("No Quake servers found.\n\n");
+		Com_Printf("No Quake servers found.\n\n");
 }
 
 
@@ -300,7 +300,7 @@ void NET_Slist_f (void)
 
 	if (! slistSilent)
 	{
-		Con_Printf("Looking for Quake servers...\n");
+		Com_Printf("Looking for Quake servers...\n");
 		PrintSlistHeader();
 	}
 
@@ -410,7 +410,7 @@ qsocket_t *NET_Connect (char *host)
 		if (hostCacheCount != 1)
 			return NULL;
 		host = hostcache[0].cname;
-		Con_Printf("Connecting to...\n%s @ %s\n\n", hostcache[0].name, host);
+		Com_Printf("Connecting to...\n%s @ %s\n\n", hostcache[0].name, host);
 	}
 
 	if (hostCacheCount)
@@ -433,7 +433,7 @@ JustDoIt:
 
 	if (host)
 	{
-		Con_Printf("\n");
+		Com_Printf("\n");
 		PrintSlistHeader();
 		PrintSlist();
 		PrintSlistTrailer();
@@ -515,7 +515,7 @@ int	NET_GetMessage (qsocket_t *sock)
 
 	if (sock->disconnected)
 	{
-		Con_Printf("NET_GetMessage: disconnected socket\n");
+		Com_Printf("NET_GetMessage: disconnected socket\n");
 		return -1;
 	}
 
@@ -528,7 +528,7 @@ int	NET_GetMessage (qsocket_t *sock)
 	{
 		if (net_time - sock->lastMessageTime > net_messagetimeout->value)
 		{
-			Con_Printf("connection has timed out\n");
+			Com_Printf("connection has timed out\n");
 			NET_Close(sock);
 			return -1;
 		}
@@ -544,7 +544,7 @@ int	NET_GetMessage (qsocket_t *sock)
 				messagesReceived++;
 			else if (ret == 2)
 				{
-				//Con_Printf("unreliableMessageReceived\n");
+				//Com_Printf("unreliableMessageReceived\n");
 				unreliableMessagesReceived++;
 				}
 		}
@@ -574,7 +574,7 @@ int NET_SendMessage (qsocket_t *sock, sizebuf_t *data)
 
 	if (sock->disconnected)
 	{
-		Con_Printf("NET_SendMessage: disconnected socket\n");
+		Com_Printf("NET_SendMessage: disconnected socket\n");
 		return -1;
 	}
 
@@ -596,7 +596,7 @@ int NET_SendUnreliableMessage (qsocket_t *sock, sizebuf_t *data)
 
 	if (sock->disconnected)
 	{
-		Con_Printf("NET_SendMessage: disconnected socket\n");
+		Com_Printf("NET_SendMessage: disconnected socket\n");
 		return -1;
 	}
 
@@ -796,11 +796,11 @@ void NET_Init (void)
 
 	if (*my_ipx_address)
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "IPX address %s\n", my_ipx_address);
+		Com_DPrintf(DEVELOPER_MSG_NET, "IPX address %s\n", my_ipx_address);
 	}
 	if (*my_tcpip_address)
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "TCP/IP address %s\n", my_tcpip_address);
+		Com_DPrintf(DEVELOPER_MSG_NET, "TCP/IP address %s\n", my_tcpip_address);
 	}
 }
 

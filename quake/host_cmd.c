@@ -151,20 +151,20 @@ void Host_Game_f (void)
 
 		if (!registered->value) //disable command for shareware quake
 		{
-			Con_Printf("You must have the registered version to use modified games\n");
+			Com_Printf("You must have the registered version to use modified games\n");
 			return;
 		}
 
 		if (strstr(Cmd_Argv(1), ".."))
 		{
-			Con_Printf ("Relative pathnames are not allowed.\n");
+			Com_Printf ("Relative pathnames are not allowed.\n");
 			return;
 		}
 
 		strcpy (pakfile, va("%s/%s", host_parms.basedir, Cmd_Argv(1)));
 		if (!stricmp(pakfile, com_gamedir)) //no change
 		{
-			Con_Printf("\"game\" is already \"%s\"\n", COM_SkipPath(com_gamedir));
+			Com_Printf("\"game\" is already \"%s\"\n", COM_SkipPath(com_gamedir));
 			return;
 		}
 
@@ -210,10 +210,10 @@ void Host_Game_f (void)
 		ExtraMaps_NewGame ();
 		//Cbuf_InsertText ("exec quake.rc\n");
 
-		Con_Printf("\"game\" changed to \"%s\"\n", COM_SkipPath(com_gamedir));
+		Com_Printf("\"game\" changed to \"%s\"\n", COM_SkipPath(com_gamedir));
 	}
 	else //Diplay the current gamedir
-		Con_Printf("\"game\" is \"%s\"\n", COM_SkipPath(com_gamedir));
+		Com_Printf("\"game\" is \"%s\"\n", COM_SkipPath(com_gamedir));
 }
 
 //==============================================================================
@@ -333,12 +333,12 @@ void Host_Maps_f (void)
 	extralevel_t	*level;
 
 	for (level=extralevels, i=0; level; level=level->next, i++)
-		Con_SafePrintf ("   %s\n", level->name);
+		Com_SafePrintf ("   %s\n", level->name);
 
 	if (i)
-		Con_SafePrintf ("%i map(s)\n", i);
+		Com_SafePrintf ("%i map(s)\n", i);
 	else
-		Con_SafePrintf ("no maps found\n");
+		Com_SafePrintf ("no maps found\n");
 }
 
 //==============================================================================
@@ -432,12 +432,12 @@ void Host_Mods_f (void)
 	mod_t	*mod;
 
 	for (mod = modlist, i=0; mod; mod = mod->next, i++)
-		Con_SafePrintf ("   %s\n", mod->name);
+		Com_SafePrintf ("   %s\n", mod->name);
 
 	if (i)
-		Con_SafePrintf ("%i mod(s)\n", i);
+		Com_SafePrintf ("%i mod(s)\n", i);
 	else
-		Con_SafePrintf ("no mods found\n");
+		Com_SafePrintf ("no mods found\n");
 }
 
 //==============================================================================
@@ -454,18 +454,18 @@ void Host_Mapname_f (void)
 	if (sv.active)
 	{
 		COM_StripExtension (sv.worldmodel->name + 5, name);
-		Con_Printf ("\"mapname\" is \"%s\"\n", name);
+		Com_Printf ("\"mapname\" is \"%s\"\n", name);
 		return;
 	}
 
 	if (cls.state == ca_connected)
 	{
 		COM_StripExtension (cl.worldmodel->name + 5, name);
-		Con_Printf ("\"mapname\" is \"%s\"\n", name);
+		Com_Printf ("\"mapname\" is \"%s\"\n", name);
 		return;
 	}
 
-	Con_Printf ("no map loaded\n");
+	Com_Printf ("no map loaded\n");
 }
 
 
@@ -490,7 +490,7 @@ void Host_Status_f (void)
 			Cmd_ForwardToServer ();
 			return;
 		}
-		print = Con_Printf;
+		print = Com_Printf;
 	}
 	else
 		print = SV_ClientPrintf;
@@ -565,7 +565,7 @@ void Host_God_f (void)
 		}
 		break;
 	default:
-		Con_Printf("god [value] : toggle god mode. values: 0 = off, 1 = on\n");
+		Com_Printf("god [value] : toggle god mode. values: 0 = off, 1 = on\n");
 		break;
 	}
 	//johnfitz
@@ -610,7 +610,7 @@ void Host_Notarget_f (void)
 		}
 		break;
 	default:
-		Con_Printf("notarget [value] : toggle notarget mode. values: 0 = off, 1 = on\n");
+		Com_Printf("notarget [value] : toggle notarget mode. values: 0 = off, 1 = on\n");
 		break;
 	}
 	//johnfitz
@@ -666,7 +666,7 @@ void Host_Noclip_f (void)
 		}
 		break;
 	default:
-		Con_Printf("noclip [value] : toggle noclip mode. values: 0 = off, 1 = on\n");
+		Com_Printf("noclip [value] : toggle noclip mode. values: 0 = off, 1 = on\n");
 		break;
 	}
 	//johnfitz
@@ -718,7 +718,7 @@ void Host_Fly_f (void)
 		}
 		break;
 	default:
-		Con_Printf("fly [value] : toggle fly mode. values: 0 = off, 1 = on\n");
+		Com_Printf("fly [value] : toggle fly mode. values: 0 = off, 1 = on\n");
 		break;
 	}
 	//johnfitz
@@ -788,7 +788,7 @@ void Host_Map_f (void)
 
 	if (COM_OpenFile (level, &i) == -1)
 	{
-		Con_Printf ("cannot find map %s", level);
+		Com_Printf ("cannot find map %s", level);
 		return;
 	}
 
@@ -845,12 +845,12 @@ void Host_Changelevel_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Con_Printf ("changelevel <levelname> : continue game on a new level\n");
+		Com_Printf ("changelevel <levelname> : continue game on a new level\n");
 		return;
 	}
 	if (!sv.active || cls.demoplayback)
 	{
-		Con_Printf ("Only the server may changelevel\n");
+		Com_Printf ("Only the server may changelevel\n");
 		return;
 	}
 
@@ -931,13 +931,13 @@ void Host_Connect_f (void)
 
 	Q_strlcpy(port, Cmd_Argv(3), sizeof(port)); /* FS: Port parsing */
 
-	Con_DPrintf(DEVELOPER_MSG_NET, "Port: %s\n", port);
-	Con_DPrintf(DEVELOPER_MSG_NET, "Net_hostport: %i\n", net_hostport);
-	Con_DPrintf(DEVELOPER_MSG_NET, "DefaultNet: %i\n", DEFAULTnet_hostport);
+	Com_DPrintf(DEVELOPER_MSG_NET, "Port: %s\n", port);
+	Com_DPrintf(DEVELOPER_MSG_NET, "Net_hostport: %i\n", net_hostport);
+	Com_DPrintf(DEVELOPER_MSG_NET, "DefaultNet: %i\n", DEFAULTnet_hostport);
 
 	if(port[0] == 0)
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "No port argv passed.  Defaulting to %i.\n", DEFAULTnet_hostport); /* FS */
+		Com_DPrintf(DEVELOPER_MSG_NET, "No port argv passed.  Defaulting to %i.\n", DEFAULTnet_hostport); /* FS */
 		net_hostport = DEFAULTnet_hostport;        
 	}
 	else
@@ -1007,31 +1007,31 @@ void Host_Savegame_f (void)
 
 	if (!sv.active)
 	{
-		Con_Printf ("Not playing a local game.\n");
+		Com_Printf ("Not playing a local game.\n");
 		return;
 	}
 
 	if (cl.intermission)
 	{
-		Con_Printf ("Can't save in intermission.\n");
+		Com_Printf ("Can't save in intermission.\n");
 		return;
 	}
 
 	if (svs.maxclients != 1)
 	{
-		Con_Printf ("Can't save multiplayer games.\n");
+		Com_Printf ("Can't save multiplayer games.\n");
 		return;
 	}
 
 	if (Cmd_Argc() != 2)
 	{
-		Con_Printf ("save <savename> : save a game\n");
+		Com_Printf ("save <savename> : save a game\n");
 		return;
 	}
 
 	if (strstr(Cmd_Argv(1), ".."))
 	{
-		Con_Printf ("Relative pathnames are not allowed.\n");
+		Com_Printf ("Relative pathnames are not allowed.\n");
 		return;
 	}
 		
@@ -1039,7 +1039,7 @@ void Host_Savegame_f (void)
 	{
 		if (svs.clients[i].active && (svs.clients[i].edict->v.health <= 0) )
 		{
-			Con_Printf ("Can't savegame with a dead player\n");
+			Com_Printf ("Can't savegame with a dead player\n");
 			return;
 		}
 	}
@@ -1047,11 +1047,11 @@ void Host_Savegame_f (void)
 	Com_sprintf (name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
 	COM_DefaultExtension (name, ".sav");
 	
-	Con_Printf ("Saving game to %s...\n", name);
+	Com_Printf ("Saving game to %s...\n", name);
 	f = fopen (name, "w");
 	if (!f)
 	{
-		Con_Printf ("ERROR: couldn't open.\n");
+		Com_Printf ("ERROR: couldn't open.\n");
 		return;
 	}
 	
@@ -1082,7 +1082,7 @@ void Host_Savegame_f (void)
 		fflush (f);
 	}
 	fclose (f);
-	Con_Printf ("done.\n");
+	Com_Printf ("done.\n");
 }
 
 
@@ -1109,7 +1109,7 @@ void Host_Loadgame_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Con_Printf ("load <savename> : load a game\n");
+		Com_Printf ("load <savename> : load a game\n");
 		return;
 	}
 
@@ -1122,11 +1122,11 @@ void Host_Loadgame_f (void)
 // been used.  The menu calls it before stuffing loadgame command
 //	SCR_BeginLoadingPlaque ();
 
-	Con_Printf ("Loading game from %s...\n", name);
+	Com_Printf ("Loading game from %s...\n", name);
 	f = fopen (name, "r");
 	if (!f)
 	{
-		Con_Printf ("ERROR: couldn't open.\n");
+		Com_Printf ("ERROR: couldn't open.\n");
 		return;
 	}
 
@@ -1134,7 +1134,7 @@ void Host_Loadgame_f (void)
 	if (version != SAVEGAME_VERSION)
 	{
 		fclose (f);
-		Con_Printf ("Savegame is version %i, not %i\n", version, SAVEGAME_VERSION);
+		Com_Printf ("Savegame is version %i, not %i\n", version, SAVEGAME_VERSION);
 		return;
 	}
 	fscanf (f, "%s\n", str);
@@ -1155,7 +1155,7 @@ void Host_Loadgame_f (void)
 	if (!sv.active)
 	{
 		fclose (f);
-		Con_Printf ("Couldn't load map\n");
+		Com_Printf ("Couldn't load map\n");
 		return;
 	}
 	sv.paused = true;		// pause until all clients connect
@@ -1249,7 +1249,7 @@ void Host_Name_f (void)
 
 	if (Cmd_Argc () == 1)
 	{
-		Con_Printf ("\"name\" is \"%s\"\n", cl_name->string);
+		Com_Printf ("\"name\" is \"%s\"\n", cl_name->string);
 		return;
 	}
 	if (Cmd_Argc () == 2)
@@ -1270,7 +1270,7 @@ void Host_Name_f (void)
 
 	if (host_client->name[0] && strcmp(host_client->name, "unconnected") )
 		if (Q_strcmp(host_client->name, newName) != 0)
-			Con_Printf ("%s renamed to %s\n", host_client->name, newName);
+			Com_Printf ("%s renamed to %s\n", host_client->name, newName);
 	Q_strcpy (host_client->name, newName);
 	host_client->edict->v.netname = host_client->name - pr_strings;
 	
@@ -1284,10 +1284,10 @@ void Host_Name_f (void)
 	
 void Host_Version_f (void)
 {
-	Con_Printf ("Version %4.2f\n", VERSION);
-	Con_Printf ("Exe: "__TIME__" "__DATE__"\n");
+	Com_Printf ("Version %4.2f\n", VERSION);
+	Com_Printf ("Exe: "__TIME__" "__DATE__"\n");
 #ifdef SSE_AWARE
-	Con_Printf ("SSE-aware compile.\n");
+	Com_Printf ("SSE-aware compile.\n");
 #endif /* SSE_AWARE */
 }
 
@@ -1431,8 +1431,8 @@ void Host_Color_f(void)
 	
 	if (Cmd_Argc() == 1)
 	{
-		Con_Printf ("\"color\" is \"%i %i\"\n", ((int)cl_color->value) >> 4, ((int)cl_color->value) & 0x0f);
-		Con_Printf ("color <0-13> [0-13]\n");
+		Com_Printf ("\"color\" is \"%i %i\"\n", ((int)cl_color->value) >> 4, ((int)cl_color->value) & 0x0f);
+		Com_Printf ("color <0-13> [0-13]\n");
 		return;
 	}
 
@@ -1541,13 +1541,13 @@ void Host_PreSpawn_f (void)
 {
 	if (cmd_source == src_command)
 	{
-		Con_Printf ("prespawn is not valid from the console\n");
+		Com_Printf ("prespawn is not valid from the console\n");
 		return;
 	}
 
 	if (host_client->spawned)
 	{
-		Con_Printf ("prespawn not valid -- allready spawned\n");
+		Com_Printf ("prespawn not valid -- allready spawned\n");
 		return;
 	}
 	
@@ -1570,13 +1570,13 @@ void Host_Spawn_f (void)
 
 	if (cmd_source == src_command)
 	{
-		Con_Printf ("spawn is not valid from the console\n");
+		Com_Printf ("spawn is not valid from the console\n");
 		return;
 	}
 
 	if (host_client->spawned)
 	{
-		Con_Printf ("Spawn not valid -- allready spawned\n");
+		Com_Printf ("Spawn not valid -- allready spawned\n");
 		return;
 	}
 
@@ -1690,7 +1690,7 @@ void Host_Begin_f (void)
 {
 	if (cmd_source == src_command)
 	{
-		Con_Printf ("begin is not valid from the console\n");
+		Com_Printf ("begin is not valid from the console\n");
 		return;
 	}
 
@@ -2039,7 +2039,7 @@ edict_t	*FindViewthing (void)
 		if ( !strcmp (pr_strings + e->v.classname, "viewthing") )
 			return e;
 	}
-	Con_Printf ("No viewthing on map\n");
+	Com_Printf ("No viewthing on map\n");
 	return NULL;
 }
 
@@ -2060,7 +2060,7 @@ void Host_Viewmodel_f (void)
 	m = Mod_ForName (Cmd_Argv(1), false);
 	if (!m)
 	{
-		Con_Printf ("Can't load %s\n", Cmd_Argv(1));
+		Com_Printf ("Can't load %s\n", Cmd_Argv(1));
 		return;
 	}
 	
@@ -2104,7 +2104,7 @@ void PrintFrameName (model_t *m, int frame)
 
 	pframedesc = &hdr->frames[frame];
 	
-	Con_Printf ("frame %i: %s\n", frame, pframedesc->name);
+	Com_Printf ("frame %i: %s\n", frame, pframedesc->name);
 }
 
 /*
@@ -2173,7 +2173,7 @@ void Host_Startdemos_f (void)
 
 	if (COM_CheckParm("-nodemo") || !cl_demos->intValue) /* FS: Disable startup demos */
 	{
-		Con_Printf("Startup demos disabled.\n");
+		Com_Printf("Startup demos disabled.\n");
 		c = 0;
 		i = 0;
 		cls.demonum = -1;
@@ -2191,10 +2191,10 @@ void Host_Startdemos_f (void)
 	c = Cmd_Argc() - 1;
 	if (c > MAX_DEMOS)
 	{
-		Con_Printf ("Max %i demos in demoloop\n", MAX_DEMOS);
+		Com_Printf ("Max %i demos in demoloop\n", MAX_DEMOS);
 		c = MAX_DEMOS;
 	}
-	Con_Printf ("%i demo(s) in loop\n", c);
+	Com_Printf ("%i demo(s) in loop\n", c);
 
 	for (i=1 ; i<c+1 ; i++)
 		Q_strlcpy (cls.demos[i-1], Cmd_Argv(i), sizeof(cls.demos[0]));

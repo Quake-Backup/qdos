@@ -180,7 +180,7 @@ void S_PaintChannels(int endtime)
 	// clear the paint buffer
 		if (s_rawend < paintedtime)
 		{
-//			Con_Printf ("clear\n");
+//			Com_Printf ("clear\n");
 			memset(paintbuffer, 0, (end - paintedtime) * sizeof(portable_samplepair_t));
 		}
 		else
@@ -196,9 +196,9 @@ void S_PaintChannels(int endtime)
 				paintbuffer[i-paintedtime] = s_rawsamples[s];
 			}
 		//	if (i != end)
-		//		Con_Printf ("partial stream\n");
+		//		Com_Printf ("partial stream\n");
 		//	else
-		//		Con_Printf ("full stream\n");
+		//		Com_Printf ("full stream\n");
 			for ( ; i<end ; i++)
 			{
 				paintbuffer[i-paintedtime].left =

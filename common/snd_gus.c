@@ -701,7 +701,7 @@ static qboolean GUS_GetIWData(void)
 		return(false);
 
 	HaveCodec=1;
-	Con_Printf("\x02Sound Card is UltraSound PnP\nIf you experience garbage sound run\nULTRAMID.EXE\n");
+	Com_Printf("\x02Sound Card is UltraSound PnP\nIf you experience garbage sound run\nULTRAMID.EXE\n");
 	return(true);
 }
 
@@ -770,7 +770,7 @@ static qboolean GUS_GetMAXData(void)
 		return(false);
 
 	HaveCodec=1;
-	Con_Printf("\x02Sound Card is UltraSound MAX\nIf you experience garbage sound run\nULTRAMID.EXE\n");
+	Com_Printf("\x02Sound Card is UltraSound MAX\nIf you experience garbage sound run\nULTRAMID.EXE\n");
 	return(true);
 }
 
@@ -853,7 +853,7 @@ static qboolean GUS_GetGUSData(void)
 	dos_outportb(GusBase,0x08);
 
 	HaveCodec=0;
-	Con_Printf("\x02Sound Card is UltraSound\nIf you experience garbage sound run\nULTRAMID.EXE\n");
+	Com_Printf("\x02Sound Card is UltraSound\nIf you experience garbage sound run\nULTRAMID.EXE\n");
 	return(true);
 }
 
@@ -1139,7 +1139,7 @@ qboolean GUS_Init(void)
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
 		if (dma_dosadr==NULL)  // sezero
 		{
-			Con_Printf("Couldn't allocate sound dma buffer");
+			Com_Printf("Couldn't allocate sound dma buffer");
 			return false;
 		}
 
@@ -1213,7 +1213,7 @@ qboolean GUS_Init(void)
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
 		if (dma_dosadr==NULL)
 		{
-			Con_Printf("Couldn't allocate sound dma buffer");
+			Com_Printf("Couldn't allocate sound dma buffer");
 			return false;
 		}
 
@@ -1382,6 +1382,6 @@ void GUS_ClearDMA (void) /* FS: This stops the constant clicking sound during ma
 		GUS_StartGf1(SND_BUFFER_SIZE,extVoices);
 	}
 
-	Con_DPrintf(DEVELOPER_MSG_SOUND, "Cleared GUS DMA Buffer!\n");
+	Com_DPrintf(DEVELOPER_MSG_SOUND, "Cleared GUS DMA Buffer!\n");
 }
 

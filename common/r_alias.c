@@ -112,7 +112,7 @@ qboolean R_AliasCheckBBox (void)
 // TODO: don't repeat this check when drawing?
 	if ((frame >= pmdl->numframes) || (frame < 0))
 	{
-		Con_DPrintf (DEVELOPER_MSG_VIDEO, "No such frame %d %s\n", frame,  /* FS: Don't output this garbage to the client console. */
+		Com_DPrintf (DEVELOPER_MSG_VIDEO, "No such frame %d %s\n", frame,  /* FS: Don't output this garbage to the client console. */
 					pmodel->name);
 		frame = 0;
 	}
@@ -569,7 +569,7 @@ void R_AliasSetupSkin (void)
 	skinnum = currententity->skinnum;
 	if ((skinnum >= pmdl->numskins) || (skinnum < 0))
 	{
-		Con_DPrintf (DEVELOPER_MSG_VERBOSE, "R_AliasSetupSkin: no such skin # %d\n", skinnum);
+		Com_DPrintf (DEVELOPER_MSG_VERBOSE, "R_AliasSetupSkin: no such skin # %d\n", skinnum);
 		skinnum = 0;
 	}
 
@@ -676,7 +676,7 @@ void R_AliasSetupFrame (void)
 	frame = currententity->frame;
 	if ((frame >= pmdl->numframes) || (frame < 0))
 	{
-		Con_DPrintf (DEVELOPER_MSG_VERBOSE, "R_AliasSetupFrame: no such frame %d\n", frame);
+		Com_DPrintf (DEVELOPER_MSG_VERBOSE, "R_AliasSetupFrame: no such frame %d\n", frame);
 		frame = 0;
 	}
 

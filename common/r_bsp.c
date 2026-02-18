@@ -205,7 +205,7 @@ void R_RecursiveClipBPoly (bedge_t *pedges, mnode_t *pnode, msurface_t *psurf)
 		// clipped
 			if (numbverts >= MAX_BMODEL_VERTS)
 			{
-				Con_Printf("Out of vertices for bmodel\n"); /* FS: Added */
+				Com_Printf("Out of vertices for bmodel\n"); /* FS: Added */
 				return;
 			}
 
@@ -227,7 +227,7 @@ void R_RecursiveClipBPoly (bedge_t *pedges, mnode_t *pnode, msurface_t *psurf)
 		// FIXME: share the clip edge by having a winding direction flag?
 			if (numbedges >= (r_maxbmodeledges->intValue - 1)) /* FS: Was MAX_BMODEL_EDGES */
 			{
-				Con_Printf ("Out of edges for bmodel\n");
+				Com_Printf ("Out of edges for bmodel\n");
 				return;
 			}
 
@@ -271,7 +271,7 @@ void R_RecursiveClipBPoly (bedge_t *pedges, mnode_t *pnode, msurface_t *psurf)
 	{
 		if (numbedges >= (r_maxbmodeledges->value - 2)) /* FS: Was MAX_BMODEL_EDGES */
 		{
-			Con_Printf ("Out of edges for bmodel\n");
+			Com_Printf ("Out of edges for bmodel\n");
 			return;
 		}
 

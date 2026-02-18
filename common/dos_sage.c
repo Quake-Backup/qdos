@@ -71,7 +71,7 @@ static int SAGE_InitCtx (int *width, int *height, int *bpp)
 		return -1;
 
 	if (hwbpp < *bpp) {
-		Con_SafePrintf("%d bpp not supported. Falling back to 16 bpp.\n", *bpp);
+		Com_SafePrintf("%d bpp not supported. Falling back to 16 bpp.\n", *bpp);
 		*bpp = 16;
 	}
 

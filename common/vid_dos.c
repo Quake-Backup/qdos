@@ -209,7 +209,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 		Cvar_SetValue ("vid_mode", (float)vid_modenum);
 
 		nomodecheck = true;
-		Con_Printf ("No such video mode: %d\n", modenum);
+		Com_Printf ("No such video mode: %d\n", modenum);
 		nomodecheck = false;
 
 		if (pcurrentmode == NULL)
@@ -247,7 +247,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 			if (!VID_SetMode (vid_modenum, palette))	// restore prior mode
 				Sys_Error ("VID_SetMode: Unable to set any mode, probably "
 						   "because there's not enough memory available");
-			Con_Printf ("Failed to set mode %d\n", modenum);
+			Com_Printf ("Failed to set mode %d\n", modenum);
 			return 0;
 		}
 		else if (stat == -1)
@@ -272,7 +272,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 	Cvar_SetValue ("vid_mode", (float)vid_modenum);
 
 	nomodecheck = true;
-	Con_Printf ("%s\n", VID_ModeInfo (vid_modenum, NULL));
+	Com_Printf ("%s\n", VID_ModeInfo (vid_modenum, NULL));
 	nomodecheck = false;
 
 	vid.recalc_refdef = 1;
@@ -376,9 +376,9 @@ void VID_NumModes_f (void)
 
 	nummodes = VID_NumModes ();
 	if (nummodes == 1)
-		Con_Printf ("%d video mode is available\n", VID_NumModes ());
+		Com_Printf ("%d video mode is available\n", VID_NumModes ());
 	else
-		Con_Printf ("%d video modes are available\n", VID_NumModes ());
+		Com_Printf ("%d video modes are available\n", VID_NumModes ());
 }
 
 
@@ -389,7 +389,7 @@ VID_DescribeCurrentMode_f
 */
 void VID_DescribeCurrentMode_f (void)
 {
-	Con_Printf ("%s\n", VID_ModeInfo (vid_modenum, NULL));
+	Com_Printf ("%s\n", VID_ModeInfo (vid_modenum, NULL));
 }
 
 
@@ -404,7 +404,7 @@ void VID_DescribeMode_f (void)
 	
 	modenum = Q_atoi (Cmd_Argv(1));
 
-	Con_Printf ("%s\n", VID_ModeInfo (modenum, NULL));
+	Com_Printf ("%s\n", VID_ModeInfo (modenum, NULL));
 }
 
 
@@ -428,23 +428,23 @@ void VID_DescribeModes_f (void)
 		pv = VID_GetModePtr (i);
 		pinfo = VID_ModeInfo (i, &pheader);
 		if (pheader)
-			Con_Printf ("\n%s\n", pheader);
+			Com_Printf ("\n%s\n", pheader);
 
 		if (VGA_CheckAdequateMem (pv->width, pv->height, pv->rowbytes,
 			(pv->numpages == 1) || vid_nopageflip->value))
 		{
-			Con_Printf ("%2d: %s\n", i, pinfo);
+			Com_Printf ("%2d: %s\n", i, pinfo);
 		}
 		else
 		{
-			Con_Printf ("**: %s\n", pinfo);
+			Com_Printf ("**: %s\n", pinfo);
 			na = true;
 		}
 	}
 
 	if (na)
 	{
-		Con_Printf ("\n[**: not enough system RAM for mode]\n");
+		Com_Printf ("\n[**: not enough system RAM for mode]\n");
 	}
 }
 

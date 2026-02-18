@@ -133,7 +133,7 @@ static int FXMESA_InitCtx (int *width, int *height, int *bpp)
 	attribs[5] = FXMESA_NONE;
 
 	if (*bpp != 16) {
-		Con_SafePrintf("ignoring %d bpp request, using 16 bpp.\n", *bpp);
+		Com_SafePrintf("ignoring %d bpp request, using 16 bpp.\n", *bpp);
 		*bpp = 16;
 	}
 

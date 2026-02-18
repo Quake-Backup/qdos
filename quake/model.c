@@ -1032,7 +1032,7 @@ void Mod_LoadNodes_S (lump_t *l)
 					out->children[j] = (mnode_t *)(loadmodel->leafs + p);
 				else
 				{
-					Con_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
+					Com_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
 					out->children[j] = (mnode_t *)(loadmodel->leafs); //map it to the solid leaf
 				}
 			}
@@ -1084,7 +1084,7 @@ void Mod_LoadNodes_L1 (lump_t *l)
 					out->children[j] = (mnode_t *)(loadmodel->leafs + p);
 				else
 				{
-					Con_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
+					Com_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
 					out->children[j] = (mnode_t *)(loadmodel->leafs); //map it to the solid leaf
 				}
 			}
@@ -1136,7 +1136,7 @@ void Mod_LoadNodes_L2 (lump_t *l)
 					out->children[j] = (mnode_t *)(loadmodel->leafs + p);
 				else
 				{
-					Con_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
+					Com_Printf("Mod_LoadNodes: invalid leaf index %i (file has only %i leafs)\n", p, loadmodel->numleafs);
 					out->children[j] = (mnode_t *)(loadmodel->leafs); //map it to the solid leaf
 				}
 			}
@@ -1868,7 +1868,7 @@ void * Mod_LoadAliasGroup (void * pin, int *pframeindex, int numv,
 		if (*poutintervals <= 0.0)
 		{
 			*poutintervals = 0.1; /* FS: Spoike hack */
-			Con_DPrintf(DEVELOPER_MSG_VIDEO, "Mod_LoadAliasGroup: interval<=0 from %s\n", name);
+			Com_DPrintf(DEVELOPER_MSG_VIDEO, "Mod_LoadAliasGroup: interval<=0 from %s\n", name);
 			//Sys_Error ("Mod_LoadAliasGroup: interval<=0");
 			//JASON
 		}
@@ -2343,7 +2343,7 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 	version = LittleLong (pin->version);
 	if (version != SPRITE_VERSION)
 		//Sys_Error 
-		Con_Printf("%s has wrong version number "
+		Com_Printf("%s has wrong version number "
 				 "(%i should be %i)", mod->name, version, SPRITE_VERSION);
 
 	numframes = LittleLong (pin->numframes);
@@ -2413,17 +2413,17 @@ void Mod_Print (void)
 	int		i;
 	model_t	*mod;
 
-	Con_Printf ("Cached models:\n");
+	Com_Printf ("Cached models:\n");
 	for (i=0, mod=mod_known ; i < mod_numknown ; i++, mod++)
 	{
-		Con_Printf ("%8p : %s",mod->cache.data, mod->name);
+		Com_Printf ("%8p : %s",mod->cache.data, mod->name);
 		if (mod->needload & NL_UNREFERENCED)
-			Con_Printf (" (!R)");
+			Com_Printf (" (!R)");
 		if (mod->needload & NL_NEEDS_LOADED)
-			Con_Printf (" (!P)");
-		Con_Printf ("\n");
+			Com_Printf (" (!P)");
+		Com_Printf ("\n");
 	}
-	Con_Printf ("%i models\n",mod_numknown); //johnfitz -- print the total too
+	Com_Printf ("%i models\n",mod_numknown); //johnfitz -- print the total too
 }
 
 

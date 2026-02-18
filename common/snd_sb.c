@@ -60,18 +60,18 @@ static void PrintBits (byte b)
 		str[i] = '0' + ((b & (1<<(7-i))) > 0);
 		
 	str[8] = 0;
-	Con_Printf ("%s (%i)", str, b);
+	Com_Printf ("%s (%i)", str, b);
 }
 #endif
 
 static void SB_Info_f(void)
 {
-	Con_Printf ("BLASTER=%s\n", getenv("BLASTER"));
-	Con_Printf("dsp version=%d.%d\n", dsp_version, dsp_minor_version);
-	Con_Printf("dma=%d\n", dma_card);
+	Com_Printf ("BLASTER=%s\n", getenv("BLASTER"));
+	Com_Printf("dsp version=%d.%d\n", dsp_version, dsp_minor_version);
+	Com_Printf("dma=%d\n", dma_card);
 	if (timeconstant != -1)
-		Con_Printf("timeconstant=%d\n", timeconstant);
-	Con_Printf("dma position:%i\n", BLASTER_GetDMAPos ());
+		Com_Printf("timeconstant=%d\n", timeconstant);
+	Com_Printf("dma position:%i\n", BLASTER_GetDMAPos ());
 }
 
 // =======================================================================
@@ -191,7 +191,7 @@ static void StartSB(void)
 // version 4.xx startup code
 	if (dsp_version >= 4)
 	{
-		Con_Printf("Version 4 SB startup\n");
+		Com_Printf("Version 4 SB startup\n");
 		WriteDSP(0xd1); // turn on speaker
 
 		WriteDSP(0x41);
@@ -207,7 +207,7 @@ static void StartSB(void)
 // version 3.xx startup code
 	else if (dsp_version == 3)
 	{
-		Con_Printf("Version 3 SB startup\n");
+		Com_Printf("Version 3 SB startup\n");
 		WriteDSP(0xd1); // turn on speaker
 
 		oldmixervalue = ReadMixer (0xe);
@@ -235,7 +235,7 @@ static void StartSB(void)
 // normal speed mono
 	else
 	{
-		Con_Printf("Version 2 SB startup\n");
+		Com_Printf("Version 2 SB startup\n");
 		WriteDSP(0xd1); // turn on speaker
 
 		timeconstant = 65536-(256000000/(dma.channels*dma.speed));
@@ -278,7 +278,7 @@ static void StartDMA(void)
 	else
 		dma_card = low_dma;
 
-	Con_Printf ("Using DMA channel %i\n", dma_card);
+	Com_Printf ("Using DMA channel %i\n", dma_card);
 
 	if (dma_card > 3)
 	{
@@ -358,14 +358,14 @@ qboolean BLASTER_Init(void)
 //
 	if (!GetBLASTER())
 	{
-		Con_Printf ("The BLASTER environment variable is not set,\n"
+		Com_Printf ("The BLASTER environment variable is not set,\n"
 				"Sound Blaster support is disabled.\n");
 		return 0;
 	}
 
 	if (ResetDSP())
 	{
-		Con_Printf("Could not reset SB\n");
+		Com_Printf("Could not reset SB\n");
 		return 0;
 	}
 
@@ -379,7 +379,7 @@ qboolean BLASTER_Init(void)
 // we need at least v2 for auto-init dma
 	if (dsp_version < 2)
 	{
-		Con_Printf ("Sound blaster must be at least v2.0\n");
+		Com_Printf ("Sound blaster must be at least v2.0\n");
 		return 0;
 	}
 
@@ -389,9 +389,9 @@ qboolean BLASTER_Init(void)
 	{
 		p = Q_atoi (com_argv[p+1]);
 		if (p < 2 || p > 4)
-			Con_Printf ("-dsp parameter can only be 2, 3, or 4\n");
+			Com_Printf ("-dsp parameter can only be 2, 3, or 4\n");
 		else if (p > dsp_version)
-			Con_Printf ("Can't -dsp %i on v%i hardware\n", p, dsp_version);
+			Com_Printf ("Can't -dsp %i on v%i hardware\n", p, dsp_version);
 		else
 			dsp_version = p;
 	}		 
@@ -441,7 +441,7 @@ qboolean BLASTER_Init(void)
 	dma_dosadr = dos_getmemory(size*2); // sezero
 	if (!dma_dosadr)
 	{
-		Con_Printf("Couldn't allocate sound dma buffer");
+		Com_Printf("Couldn't allocate sound dma buffer");
 		return false;
 	}
 
@@ -504,7 +504,7 @@ int BLASTER_GetDMAPos(void)
 		count = dma.samples - (count+1);
 	}
 
-//		Con_Printf("DMA pos = 0x%x\n", count);
+//		Com_Printf("DMA pos = 0x%x\n", count);
 
 	dma.samplepos = count & (dma.samples-1);
 	return dma.samplepos;

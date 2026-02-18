@@ -208,7 +208,7 @@ void VID_SetVESAPalette (viddef_t *lvid, vmode_t *pcurrentmode,
 	{
 		//Sys_Error ("Unable to load VESA palette\n");
 		//QEMU's SVGA BIOS kind of screws this up so as a fallback...
-		Con_DPrintf (DEVELOPER_MSG_VIDEO, "Unable to load VESA palette. Using fallback.\n");
+		Com_DPrintf (DEVELOPER_MSG_VIDEO, "Unable to load VESA palette. Using fallback.\n");
 		VGA_SetPalette(lvid, pcurrentmode, jpal);
 	}
 }
@@ -304,7 +304,7 @@ void VID_InitExtra (void)
 
 	pinfoblock = (vbeinfoblock_t *) dos_getmemory(sizeof(vbeinfoblock_t));
 	if (!pinfoblock) {
-		Con_Printf("VID_InitExtra: Unable to allocate low memory.\n");
+		Com_Printf("VID_InitExtra: Unable to allocate low memory.\n");
 		return;
 	}
 
@@ -335,12 +335,12 @@ void VID_InitExtra (void)
 		 (pinfoblock->OemStringPtr[1] <<  8) |
 		 (pinfoblock->OemStringPtr[2] << 16) |
 		 (pinfoblock->OemStringPtr[3] << 24));
-	Con_Printf ("VESA 2.0 compliant adapter:\n%s\n",
+	Com_Printf ("VESA 2.0 compliant adapter:\n%s\n",
 			(char *) VID_ExtraFarToLinear(addr));
 
 	totalvidmem  = ( (pinfoblock->TotalMemory[0]     ) |
 			 (pinfoblock->TotalMemory[1] << 8) ) << 16;
-//	Con_Printf ("%dk video memory\n", totalvidmem >> 10);
+//	Com_Printf ("%dk video memory\n", totalvidmem >> 10);
 
 	addr = ( (pinfoblock->VideoModePtr[0]      ) |
 		 (pinfoblock->VideoModePtr[1] <<  8) |

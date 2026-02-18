@@ -163,7 +163,7 @@ void CL_ParseBeam (model_t *m)
 		}
 	}
 
-	Con_DPrintf (DEVELOPER_MSG_VERBOSE, "beam list overflow!\n");
+	Com_DPrintf (DEVELOPER_MSG_VERBOSE, "beam list overflow!\n");
 }
 
 /*
@@ -354,7 +354,7 @@ void CL_ParseTEnt (void)
 		dl->die = cl.time + 0.5;
 		dl->decay = 300;
 		S_StartSound (-1, 0, cl_sfx_r_exp3, pos, 1, 1);
-		Con_DPrintf(DEVELOPER_MSG_VERBOSE, "TE_EXPLOSION3 Not fully implemented!\n"); /* FS: FIXME: For Nehahra */
+		Com_DPrintf(DEVELOPER_MSG_VERBOSE, "TE_EXPLOSION3 Not fully implemented!\n"); /* FS: FIXME: For Nehahra */
 		break;
 
 	case TE_LIGHTNING4NEH:

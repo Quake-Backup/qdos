@@ -563,7 +563,7 @@ nextmsg:
 				if (ret == 1)
 					Cmd_ExecuteString (s, src_client);
 				else
-					Con_DPrintf(DEVELOPER_MSG_SERVER, "%s tried to %s\n", host_client->name, s);
+					Com_DPrintf(DEVELOPER_MSG_SERVER, "%s tried to %s\n", host_client->name, s);
 				break;
 				
 			case clc_disconnect:

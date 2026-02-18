@@ -961,7 +961,7 @@ void Draw_Fill (int x, int y, int w, int h, int c)
 
 	if (x < 0 || x + w > vid.width ||
 		y < 0 || y + h > vid.height) {
-		Con_Printf("Bad Draw_Fill(%d, %d, %d, %d, %c)\n",
+		Com_Printf("Bad Draw_Fill(%d, %d, %d, %d, %c)\n",
 			x, y, w, h, c);
 		return;
 	}
