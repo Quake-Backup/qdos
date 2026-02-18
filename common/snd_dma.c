@@ -45,7 +45,6 @@ void S_StopAllSounds(void);
 channel_t	channels[MAX_CHANNELS];
 int			total_channels;
 
-int			snd_blocked = 0;
 static qboolean		snd_ambient = 1;
 qboolean		snd_initialized = false;
 
@@ -265,7 +264,6 @@ void S_Init (void)
 		return;
 	}
 
-	Com_Printf ("Sound sampling rate: %d\n", dma.speed);
 	Com_Printf("Channels: %d, Bits: %d, Rate: %d\nPaint Buffer Size: %d\nRaw Samples Buffer Size: %d\n", dma.channels, dma.samplebits, dma.speed, (int)s_paintbuffer_size, (int)s_rawsamples_size);
 
 //	if (dma.buffer)
@@ -282,6 +280,8 @@ void S_Init (void)
 		S_WAV_Init(); /* FS: Added */
 
 	S_StopAllSounds ();
+
+	Com_Printf("------------------------------------\n");
 }
 
 
@@ -302,7 +302,6 @@ void S_Shutdown(void)
 	SNDDMA_Shutdown();
 
 	dma.buffer = NULL;
-
 	sound_started = 0;
 }
 
@@ -741,7 +740,7 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	channel_t	*ch;
 	channel_t	*combine;
 
-	if (!sound_started || (snd_blocked > 0))
+	if (!sound_started)
 		return;
 
 	/* FS: Don't allow dumb values. */
@@ -1087,20 +1086,6 @@ void S_GamespySound (char *sound) /* FS: Added */
 }
 #endif
 
-void S_ClearPrecache (void)
-{
-}
-
-
-void S_BeginPrecaching (void)
-{
-}
-
-
-void S_EndPrecaching (void)
-{
-}
-
 /*
 ============
 S_RawSamples
@@ -1193,7 +1178,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 	}
 }
 
-/* FS: So we can suport both */
+/* FS: So we can support both */
 void S_StopBackgroundTrack(void)
 {
 	S_StopWAVBackgroundTrack();
