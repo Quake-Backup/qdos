@@ -65,7 +65,7 @@ portable_samplepair_t	*s_rawsamples;
 size_t	s_rawsamples_size;
 
 #define MAX_SFX		512
-sfx_t		*known_sfx;	// hunk allocated [MAX_SFX]
+sfx_t		known_sfx[MAX_SFX];
 int		num_sfx;
 
 sfx_t		*ambient_sfx[NUM_AMBIENTS];
@@ -231,7 +231,7 @@ void S_Init (void)
 	S_InitScaletable ();
 
 	sound_started = 1;
-	known_sfx = Hunk_AllocName (MAX_SFX*sizeof(sfx_t), "sfx_t");
+	memset(known_sfx, 0, sizeof(sfx_t) * MAX_SFX);
 	num_sfx = 0;
 
 	soundtime = 0;
@@ -365,7 +365,8 @@ void S_TouchSound (char *name)
 		return;
 
 	sfx = S_FindName (name);
-	Cache_Check (&sfx->cache);
+	if (!sfx)
+		S_LoadSound(sfx);
 }
 
 /*
@@ -1045,7 +1046,7 @@ void S_SoundList(void)
 	total = 0;
 	for (sfx=known_sfx, i=0 ; i<num_sfx ; i++, sfx++)
 	{
-		sc = Cache_Check (&sfx->cache);
+		sc = (sfxcache_t *)sfx->cache;
 		if (!sc)
 			continue;
 		size = sc->length*sc->width*(sc->stereo+1);

@@ -205,7 +205,8 @@ void Host_Game_f (void)
 		}
 
 		//clear out and reload appropriate data
-		Cache_Flush ();
+		/* FS: FIXME */
+		//Cache_Flush ();
 
 		ExtraMaps_NewGame ();
 		//Cbuf_InsertText ("exec quake.rc\n");
@@ -2098,7 +2099,7 @@ void PrintFrameName (model_t *m, int frame)
 	aliashdr_t 			*hdr;
 	maliasframedesc_t	*pframedesc;
 
-	hdr = (aliashdr_t *)Mod_Extradata (m);
+	hdr = (aliashdr_t *)m->extradata;
 	if (!hdr)
 		return;
 

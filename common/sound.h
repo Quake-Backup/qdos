@@ -46,12 +46,6 @@ typedef struct
 extern portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];
 extern int s_paintbuffer_size;
 
-typedef struct sfx_s
-{
-	char			name[MAX_QPATH];
-	cache_user_t	cache;
-} sfx_t;
-
 // !!! if this is changed, it much be changed in asm_i386.h too !!!
 typedef struct
 {
@@ -63,6 +57,12 @@ typedef struct
 	byte	data[1];		// variable sized
 	int		music;			// Knightmare added
 } sfxcache_t;
+
+typedef struct sfx_s
+{
+	char			name[MAX_QPATH];
+	sfxcache_t		*cache;
+} sfx_t;
 
 // Knightmare - added from Q2E
 typedef struct {

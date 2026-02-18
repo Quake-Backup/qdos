@@ -223,7 +223,7 @@ void  Host_FindMaxClients (void)
 	svs.maxclientslimit = svs.maxclients;
 	if (svs.maxclientslimit < 4)
 		svs.maxclientslimit = 4;
-	svs.clients = Hunk_AllocName (svs.maxclientslimit*sizeof(client_t), "clients");
+	svs.clients = Z_Malloc (svs.maxclientslimit*sizeof(client_t));
 
 	if (svs.maxclients > 1)
 		Cvar_SetValue ("deathmatch", 1.0);
@@ -559,8 +559,9 @@ void Host_ClearMemory (void)
 	R_ClearDynamic(); /* FS */
 #endif
 
-	if (host_hunklevel)
-		Hunk_FreeToLowMark (host_hunklevel);
+	/* FS: FIXME */
+	//if (host_hunklevel)
+	//	Hunk_Free (host_hunklevel);
 
 	cls.signon = 0;
 	memset (&sv, 0, sizeof(sv));
@@ -890,10 +891,11 @@ void Host_Init (quakeparms_t *parms)
 	if (parms->memsize < minimum_memory)
 		Sys_Error ("Only %4.1f megs of memory available, can't execute game", parms->memsize / (float)0x100000);
 
+	z_chain.next = z_chain.prev = &z_chain;
+
 	com_argc = parms->argc;
 	com_argv = parms->argv;
 
-	Memory_Init (parms->membase, parms->memsize);
 	Cbuf_Init ();
 	Cmd_Init ();
 	Cvar_Init();
@@ -968,8 +970,9 @@ void Host_Init (quakeparms_t *parms)
 	Cbuf_Execute();
 	quakerc_init = false;
 
-	Hunk_AllocName (0, "-HOST_HUNKLEVEL-");
-	host_hunklevel = Hunk_LowMark ();
+	/* FS: FIXME */
+	Hunk_Alloc (0);
+	host_hunklevel = Hunk_End ();
 
 	host_initialized = true;
 

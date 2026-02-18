@@ -148,7 +148,7 @@ entity_t	*CL_EntityNum (int num)
 
 	if (num >= cl.num_entities)
 	{
-		if (num >= cl_max_edicts) //johnfitz -- no more MAX_EDICTS
+		if (num >= MAX_EDICTS)
 			Host_Error ("CL_EntityNum: %i is an invalid number",num);
 		while (cl.num_entities<=num)
 		{
@@ -212,7 +212,7 @@ void CL_ParseStartSoundPacket(void)
 		Host_Error ("CL_ParseStartSoundPacket: %i > MAX_SOUNDS", sound_num);
 	//johnfitz
 
-	if (ent > cl_max_edicts) //johnfitz -- no more MAX_EDICTS
+	if (ent > MAX_EDICTS)
 		Host_Error ("CL_ParseStartSoundPacket: ent = %i", ent);
 	
 	for (i=0 ; i<3 ; i++)
@@ -326,7 +326,7 @@ void CL_ParseServerInfo (void)
 	{
 		Host_Error ("Bad maxclients (%u) from server", cl.maxclients);
 	}
-	cl.scores = Hunk_AllocName (cl.maxclients*sizeof(*cl.scores), "scores");
+	cl.scores = Hunk_Alloc (cl.maxclients*sizeof(*cl.scores));
 
 // parse gametype
 	cl.gametype = MSG_ReadByte ();
@@ -359,7 +359,7 @@ void CL_ParseServerInfo (void)
 			Host_Error ("Server sent too many model precaches");
 		}
 		strcpy (model_precache[nummodels], str);
-		Mod_TouchModel (str);
+		Mod_ForName(str, false);
 	}
 
 // johnfitz -- check for excessive models
@@ -416,8 +416,6 @@ void CL_ParseServerInfo (void)
 	//messages to be duplicates if the map has changed in between
 	con_lastcenterstring[0] = 0;
 	//johnfitz
-
-	Hunk_Check ();		// make sure nothing is hurt
 
 	noclip_anglehack = false;		// noclip is turned off at start
 

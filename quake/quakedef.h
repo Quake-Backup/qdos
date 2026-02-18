@@ -378,4 +378,9 @@ char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave);
 char *Sys_FindNext (unsigned musthave, unsigned canthave);
 void Sys_FindClose (void);
 
+/* FS: FIXME: Move. */
+#define	TAG_GAME	765		// clear when unloading the dll
+#define	TAG_LEVEL	766		// clear when loading a new level
+#define TAG_TEMP	767
+
 #endif // __QUAKEDEF_H

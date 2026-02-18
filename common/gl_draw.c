@@ -398,7 +398,6 @@ void Draw_Init (void)
 #endif
 	char	ver[40];
 	glpic_t	*gl;
-	int start;
 	byte    *ncdata;
 
 	gl_nobind = Cvar_Get("gl_nobind", "0", 0);
@@ -430,8 +429,6 @@ void Draw_Init (void)
 	char_texture = GL_LoadTexture ("charset", 128, 128, draw_chars, false, true);
 //	Draw_CrosshairAdjust();
 	cs_texture = GL_LoadTexture ("crosshair", 8, 8, cs_data, false, true);
-
-	start = Hunk_LowMark();
 
 #ifdef QUAKE1
 	cb = (qpic_t *)COM_LoadTempFile ("gfx/conback.lmp");
@@ -477,7 +474,7 @@ void Draw_Init (void)
 	conback->height = vid.conheight;
 
 	// free loaded console
-	Hunk_FreeToLowMark (start);
+	/* FS: FIXME */
 
 	// save a texture slot for translated picture
 	translate_texture = texture_extension_number++;

@@ -428,11 +428,8 @@ typedef struct model_s
 	byte		*lightdata;
 	char		*entities;
 
-//
-// additional model data
-//
-	cache_user_t	cache;		// only access through Mod_Extradata
-
+	void		*extradata;
+	int			extradatasize;
 } model_t;
 
 //============================================================================
@@ -440,8 +437,6 @@ typedef struct model_s
 void	Mod_Init (void);
 void	Mod_ClearAll (void);
 model_t *Mod_ForName (char *name, qboolean crash);
-void	*Mod_Extradata (model_t *mod);	// handles caching
-void	Mod_TouchModel (char *name);
 
 mleaf_t *Mod_PointInLeaf (float *p, model_t *model);
 byte	*Mod_LeafPVS (mleaf_t *leaf, model_t *model);

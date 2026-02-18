@@ -310,7 +310,7 @@
 				PreprocessorDefinitions="QUAKE1;WIN32;_DEBUG;_WINDOWS;GLQUAKE;BSP2_SUPPORT;GAMESPY"
 				RuntimeLibrary="1"
 				FloatingPointModel="2"
-				BrowseInformation="1"
+				BrowseInformation="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>

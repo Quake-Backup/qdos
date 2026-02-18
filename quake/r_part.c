@@ -61,7 +61,7 @@ void R_InitParticles (void)
 	}
 
 	particles = (particle_t *)
-			Hunk_AllocName (r_numparticles * sizeof(particle_t), "particles");
+			Z_Malloc(r_numparticles * sizeof(particle_t));
 }
 
 /*
