@@ -971,13 +971,6 @@ void R_EdgeDrawing (void)
 		se_time1 = db_time2;
 	}
 
-	if (!r_dspeeds->value)
-	{
-		VID_UnlockBuffer ();
-		S_ExtraUpdate ();	// don't let sound get messed up if going slow
-		VID_LockBuffer ();
-	}
-	
 	if (!(r_drawpolys | r_drawculledpolys))
 		R_ScanEdges ();
 }
@@ -1026,22 +1019,8 @@ void R_RenderView_ (void)
 	if (!r_worldentity.model || !cl.worldmodel)
 		Sys_Error ("R_RenderView: NULL worldmodel");
 		
-	if (!r_dspeeds->value)
-	{
-		VID_UnlockBuffer ();
-		S_ExtraUpdate ();	// don't let sound get messed up if going slow
-		VID_LockBuffer ();
-	}
-	
 	R_EdgeDrawing ();
 
-	if (!r_dspeeds->value)
-	{
-		VID_UnlockBuffer ();
-		S_ExtraUpdate ();	// don't let sound get messed up if going slow
-		VID_LockBuffer ();
-	}
-	
 	if (r_dspeeds->value)
 	{
 		se_time2 = Sys_DoubleTime();
@@ -1093,10 +1072,10 @@ void R_RenderView_ (void)
 		R_PrintDSpeeds ();
 
 	if (r_reportsurfout->value && r_outofsurfaces)
-		Con_Printf ("Short %d surfaces\n", r_outofsurfaces);
+		Com_Printf ("Short %d surfaces\n", r_outofsurfaces);
 
 	if (r_reportedgeout->value && r_outofedges)
-		Con_Printf ("Short roughly %d edges\n", r_outofedges * 2 / 3);
+		Com_Printf ("Short roughly %d edges\n", r_outofedges * 2 / 3);
 
 // back to high floating-point precision
 	Sys_HighFPPrecision ();

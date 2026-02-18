@@ -254,7 +254,7 @@ int IPX_Init(void)
 	__dpmi_simulate_real_mode_interrupt (0x2f, (__dpmi_regs *)&regs);
 	if (regs.h.al != 0xff)
 	{
-		Con_Printf("IPX not detected\n");
+		Com_Printf("IPX not detected\n");
 		return -1;
 	}
 	ipx_cs = regs.x.es;
@@ -264,7 +264,7 @@ int IPX_Init(void)
 	lowmem_buffer = dos_getmemory(LOWMEMSIZE);
 	if (!lowmem_buffer)
 	{
-		Con_Printf("IPX_Init: Not enough low memory\n");
+		Com_Printf("IPX_Init: Not enough low memory\n");
 		return -1;
 	}
 	lowmem_bufoff = ptr2real(lowmem_buffer) & 0xf;
@@ -294,7 +294,7 @@ int IPX_Init(void)
 	if ((net_controlsocket = IPX_OpenSocket (0)) == -1)
 	{
 		dos_freememory(lowmem_buffer);
-		Con_DPrintf (DEVELOPER_MSG_NET, "IPX_Init: Unable to open control socket\n");
+		Com_DPrintf (DEVELOPER_MSG_NET, "IPX_Init: Unable to open control socket\n");
 		return -1;
 	}
 
@@ -306,7 +306,7 @@ int IPX_Init(void)
 	if (colon)
 		*colon = 0;
 
-	Con_Printf("IPX initialized\n");
+	Com_Printf("IPX initialized\n");
 	ipxAvailable = true;
 	return net_controlsocket;
 }
@@ -361,17 +361,17 @@ int IPX_OpenSocket(int port)
 	__dpmi_simulate_real_mode_procedure_retf((__dpmi_regs *)&regs);
 	if (regs.h.al == 0xfe)
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "IPX_OpenSocket: all sockets in use\n");
+		Com_DPrintf(DEVELOPER_MSG_NET, "IPX_OpenSocket: all sockets in use\n");
 		return -1;
 	}
 	if (regs.h.al == 0xff)
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "IPX_OpenSocket: socket already open\n");
+		Com_DPrintf(DEVELOPER_MSG_NET, "IPX_OpenSocket: socket already open\n");
 		return -1;
 	}
 	if (regs.h.al != 0)
 	{
-		Con_DPrintf(DEVELOPER_MSG_NET, "IPX_OpenSocket: error %02x\n", regs.h.al);
+		Com_DPrintf(DEVELOPER_MSG_NET, "IPX_OpenSocket: error %02x\n", regs.h.al);
 		return -1;
 	}
 	socket = regs.x.dx;
@@ -431,7 +431,7 @@ int IPX_Connect (int handle, struct qsockaddr *addr)
 	Q_memcpy(&ipxaddr, &((struct sockaddr_ipx *)addr)->sipx_addr, sizeof(IPXaddr));
 	if (IPX_GetLocalTarget(&ipxaddr, lma->socketbuffer[handle][0].ecb.immediateAddress) != 0)
 	{
-		Con_Printf("Get Local Target failed\n");
+		Com_Printf("Get Local Target failed\n");
 		return -1;
 	}
 
@@ -470,7 +470,7 @@ tryagain:
 
 	if (ecb->completionCode != 0)
 	{
-		Con_Printf("Warning: IPX_Read error %02x\n", ecb->completionCode);	
+		Com_Printf("Warning: IPX_Read error %02x\n", ecb->completionCode);	
 		ecb->fragSize = sizeof(IPXheader) + sizeof(int) + NET_DATAGRAMSIZE;
 		IPX_ListenForPacket(ecb);
 		goto tryagain;
@@ -533,12 +533,12 @@ int IPX_Write (int handle, byte *buf, int len, struct qsockaddr *addr)
 
 		case 0xfd: // malformed packet
 		default:
-			Con_Printf("IPX driver send failure: %02x\n", lma->socketbuffer[handle][0].ecb.completionCode);
+			Com_Printf("IPX driver send failure: %02x\n", lma->socketbuffer[handle][0].ecb.completionCode);
 			break;
 
 		case 0xfe: // packet undeliverable
 		case 0xff: // unable to send packet
-			Con_Printf("IPX lost route, trying to re-establish\n");
+			Com_Printf("IPX lost route, trying to re-establish\n");
 
 			// look for a new route
 			if (IPX_GetLocalTarget (&lma->socketbuffer[handle][0].header.destination, lma->socketbuffer[handle][0].ecb.immediateAddress) != 0)

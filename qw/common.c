@@ -885,7 +885,7 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 		if (length > buf->maxsize)
 			Sys_Error ("SZ_GetSpace: %i is > full buffer size", length);
 			
-		Sys_Printf ("SZ_GetSpace: overflow\n");	// because Con_Printf may be redirected
+		Sys_Printf ("SZ_GetSpace: overflow\n");	// because Com_Printf may be redirected
 		SZ_Clear (buf); 
 		buf->overflowed = true;
 	}
@@ -1198,7 +1198,7 @@ void COM_CheckRegistered (void)
 
 	if (!h)
 	{
-		Con_Printf ("Playing shareware version.\n");
+		Com_Printf ("Playing shareware version.\n");
 #ifndef SERVERONLY
 // FIXME DEBUG -- only temporary
 		if (com_modified)
@@ -1216,7 +1216,7 @@ void COM_CheckRegistered (void)
 	
 	Cvar_ForceSet("registered", "1");
 	static_registered = 1;
-	Con_Printf ("Playing registered version.\n");
+	Com_Printf ("Playing registered version.\n");
 }
 
 
@@ -1466,15 +1466,15 @@ void COM_Path_f (void)
 {
 	searchpath_t	*s;
 	
-	Con_Printf ("Current search path:\n");
+	Com_Printf ("Current search path:\n");
 	for (s=com_searchpaths ; s ; s=s->next)
 	{
 		if (s == com_base_searchpaths)
-			Con_Printf ("----------\n");
+			Com_Printf ("----------\n");
 		if (s->pack)
-			Con_Printf ("%s (%i files)\n", s->pack->filename, s->pack->numfiles);
+			Com_Printf ("%s (%i files)\n", s->pack->filename, s->pack->numfiles);
 		else
-			Con_Printf ("%s\n", s->filename);
+			Com_Printf ("%s\n", s->filename);
 	}
 }
 
@@ -1999,7 +1999,7 @@ pack_t *COM_LoadPackFile (char *packfile)
 	}
 	if (!numpackfiles)
 	{
-		Con_Printf ("WARNING: %s has no files, ignored\n", packfile);
+		Com_Printf ("WARNING: %s has no files, ignored\n", packfile);
 		fclose (packhandle);
 		return NULL;
 	}
@@ -2037,7 +2037,7 @@ pack_t *COM_LoadPackFile (char *packfile)
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
 	
-	Con_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
+	Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
 	return pack;
 }
 
@@ -2067,8 +2067,8 @@ void COM_Dir_f (void)
 				*tmp = '/';
 			tmp++;
 		}
-		Con_Printf( "Directory of %s\n", findname );
-		Con_Printf( "----\n" );
+		Com_Printf( "Directory of %s\n", findname );
+		Com_Printf( "----\n" );
 
 		if ( ( dirnames = COM_ListFiles( findname, &ndirs, 0, 0 ) ) != 0 )
 		{
@@ -2077,15 +2077,15 @@ void COM_Dir_f (void)
 			for ( i = 0; i < ndirs-1; i++ )
 			{
 				if ( strrchr( dirnames[i], '/' ) )
-					Con_Printf( "%s\n", strrchr( dirnames[i], '/' ) + 1 );
+					Com_Printf( "%s\n", strrchr( dirnames[i], '/' ) + 1 );
 				else
-					Con_Printf( "%s\n", dirnames[i] );
+					Com_Printf( "%s\n", dirnames[i] );
 
 				free( dirnames[i] );
 			}
 			free( dirnames );
 		}
-		Con_Printf( "\n" );
+		Com_Printf( "\n" );
 	};
 }
 
@@ -2155,7 +2155,7 @@ void COM_Gamedir (char *dir)
 	if (strstr(dir, "..") || strstr(dir, "/")
 		|| strstr(dir, "\\") || strstr(dir, ":") )
 	{
-		Con_Printf ("Gamedir should be a single filename, not a path\n");
+		Com_Printf ("Gamedir should be a single filename, not a path\n");
 		return;
 	}
 
@@ -2319,7 +2319,7 @@ void Info_RemoveKey (char *s, char *key)
 
 	if (strstr (key, "\\"))
 	{
-		Con_Printf ("Can't use a key with a \\\n");
+		Com_Printf ("Can't use a key with a \\\n");
 		return;
 	}
 
@@ -2414,19 +2414,19 @@ void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize
 
 	if (strstr (key, "\\") || strstr (value, "\\") )
 	{
-		Con_Printf ("Can't use keys or values with a \\\n");
+		Com_Printf ("Can't use keys or values with a \\\n");
 		return;
 	}
 
 	if (strstr (key, "\"") || strstr (value, "\"") )
 	{
-		Con_Printf ("Can't use keys or values with a \"\n");
+		Com_Printf ("Can't use keys or values with a \"\n");
 		return;
 	}
 
 	if (strlen(key) > 63 || strlen(value) > 63)
 	{
-		Con_Printf ("Keys and values must be < 64 characters.\n");
+		Com_Printf ("Keys and values must be < 64 characters.\n");
 		return;
 	}
 
@@ -2435,7 +2435,7 @@ void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize
 		// key exists, make sure we have enough room for new value, if we don't,
 		// don't change it!
 		if (strlen(value) - strlen(v) + strlen(s) > maxsize) {
-			Con_Printf ("Info string length exceeded\n");
+			Com_Printf ("Info string length exceeded\n");
 			return;
 		}
 	}
@@ -2447,7 +2447,7 @@ void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize
 
 	if ((int)(strlen(new) + strlen(s)) > maxsize)
 	{
-		Con_Printf ("Info string length exceeded\n");
+		Com_Printf ("Info string length exceeded\n");
 		return;
 	}
 
@@ -2485,7 +2485,7 @@ void Info_SetValueForKey (char *s, char *key, char *value, int maxsize)
 {
 	if (key[0] == '*')
 	{
-		Con_Printf ("Can't set * keys\n");
+		Com_Printf ("Can't set * keys\n");
 		return;
 	}
 
@@ -2515,11 +2515,11 @@ void Info_Print (char *s)
 		}
 		else
 			*o = 0;
-		Con_Printf ("%s", key);
+		Com_Printf ("%s", key);
 
 		if (!*s)
 		{
-			Con_Printf ("MISSING VALUE\n");
+			Com_Printf ("MISSING VALUE\n");
 			return;
 		}
 
@@ -2531,7 +2531,7 @@ void Info_Print (char *s)
 
 		if (*s)
 			s++;
-		Con_Printf ("%s\n", value);
+		Com_Printf ("%s\n", value);
 	}
 }
 
@@ -2746,7 +2746,7 @@ void Com_sprintf (char *dest, int size, char *fmt, ...)
 	va_end (argptr);
 	if (size > 0) dest[size - 1] = 0;
 	if (len < 0 || len >= size) {
-		Con_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
+		Com_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
 	}
 }
 
@@ -2754,15 +2754,15 @@ void Com_sprintf (char *dest, int size, char *fmt, ...)
 void Com_strcpy (char *dest, int destSize, const char *src)
 {
 	if (!dest) {
-		Con_Printf ("Com_strcpy: NULL dst\n");
+		Com_Printf ("Com_strcpy: NULL dst\n");
 		return;
 	}
 	if (!src) {
-		Con_Printf ("Com_strcpy: NULL src\n");
+		Com_Printf ("Com_strcpy: NULL src\n");
 		return;
 	}
 	if (destSize < 1) {
-		Con_Printf ("Com_strcpy: dstSize < 1\n");
+		Com_Printf ("Com_strcpy: dstSize < 1\n");
 		return;
 	}
 

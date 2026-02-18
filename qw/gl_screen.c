@@ -53,7 +53,7 @@ draw
 CenterPrint ()
 SlowPrint ()
 Screen_Update ();
-Con_Printf ();
+Com_Printf ();
 
 net 
 turn off messages option
@@ -754,7 +754,7 @@ void SCR_ScreenShot_f (void)
 	} 
 	if (i==100) 
 	{
-		Con_Printf ("SCR_ScreenShot_f: Couldn't create a PCX file\n"); 
+		Com_Printf ("SCR_ScreenShot_f: Couldn't create a PCX file\n"); 
 		return;
  	}
 
@@ -781,7 +781,7 @@ void SCR_ScreenShot_f (void)
 	COM_WriteFile (pcxname, buffer, glwidth*glheight*3 + 18 );
 
 	free (buffer);
-	Con_Printf ("Wrote %s\n", pcxname);
+	Com_Printf ("Wrote %s\n", pcxname);
 } 
 
 /* 
@@ -799,7 +799,7 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx = Hunk_TempAlloc (width*height*2+1000);
 	if (pcx == NULL)
 	{
-		Con_Printf("SCR_ScreenShot_f: not enough memory\n");
+		Com_Printf("SCR_ScreenShot_f: not enough memory\n");
 		return;
 	} 
  
@@ -959,7 +959,7 @@ void SCR_RSShot_f (void)
 	if (cls.state < ca_onserver)
 		return; // gotta be connected
 
-	Con_Printf("Remote screen shot requested.\n");
+	Com_Printf("Remote screen shot requested.\n");
 
 // 
 // save the pcx file 
@@ -1034,7 +1034,7 @@ void SCR_RSShot_f (void)
 
 	free(newbuf);
 
-	Con_Printf ("Wrote %s\n", pcxname);
+	Com_Printf ("Wrote %s\n", pcxname);
 } 
 
 
@@ -1187,7 +1187,7 @@ void SCR_UpdateScreen (void)
 		if (realtime - scr_disabled_time > 60)
 		{
 			scr_disabled_for_loading = false;
-			Con_Printf ("load failed.\n");
+			Com_Printf ("load failed.\n");
 		}
 		else
 			return;

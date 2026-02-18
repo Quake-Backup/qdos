@@ -439,7 +439,7 @@ void Cam_FinishMove(usercmd_t *cmd)
 		Cam_Lock(i);
 		return;
 	}
-	Con_Printf("No target found ...\n");
+	Com_Printf("No target found ...\n");
 	autocam = locked = false;
 }
 

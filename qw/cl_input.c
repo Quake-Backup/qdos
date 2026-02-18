@@ -78,7 +78,7 @@ void KeyDown (kbutton_t *b)
 		b->down[1] = k;
 	else
 	{
-		Con_Printf ("Three keys down for a button!\n");
+		Com_Printf ("Three keys down for a button!\n");
 		return;
 	}
 	
@@ -439,7 +439,7 @@ void CL_SendCmd (void)
 	SZ_Write (&buf, cls.cmdmsg.data, cls.cmdmsg.cursize); /* FS: From EZQ */
 
 	if (cls.cmdmsg.overflowed)
-		Con_DPrintf(DEVELOPER_MSG_NET, "cls.cmdmsg overflowed\n");
+		Com_DPrintf(DEVELOPER_MSG_NET, "cls.cmdmsg overflowed\n");
 
 	SZ_Clear (&cls.cmdmsg);
 

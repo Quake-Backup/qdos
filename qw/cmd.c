@@ -84,7 +84,7 @@ void Cbuf_AddText (char *text)
 
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
 	{
-		Con_Printf ("Cbuf_AddText: overflow\n");
+		Com_Printf ("Cbuf_AddText: overflow\n");
 		return;
 	}
 	SZ_Write (&cmd_text, text, Q_strlen (text));
@@ -280,7 +280,7 @@ void Cmd_Exec_f (void)
 
 	if (Cmd_Argc () != 2)
 	{
-		Con_Printf ("exec <filename> : execute a script file\n");
+		Com_Printf ("exec <filename> : execute a script file\n");
 		return;
 	}
 
@@ -289,7 +289,7 @@ void Cmd_Exec_f (void)
 
 	if(!strncmp(s,"default.cfg",11)) /* FS: unbindall protection hack */
 	{
-		Con_DPrintf (DEVELOPER_MSG_VERBOSE, "default.cfg unbindall protection hack\n");
+		Com_DPrintf (DEVELOPER_MSG_VERBOSE, "default.cfg unbindall protection hack\n");
 		Cvar_SetValue("cl_unbindall_protection", 0); /* FS: disable the warning if it's default.cfg */
 	}
 
@@ -300,12 +300,12 @@ void Cmd_Exec_f (void)
 	f = (char *)COM_LoadHunkFile (s);
 	if (!f)
 	{
-		Con_Printf ("couldn't exec %s\n",s);
+		Com_Printf ("couldn't exec %s\n",s);
 		return;
 	}
 
 	if (!Cvar_Command () && (cl_warncmd->value || developer->value))
-		Con_Printf ("execing %s\n",s);
+		Com_Printf ("execing %s\n",s);
 	
 	Cbuf_InsertText (f);
 	Hunk_FreeToLowMark (mark);
@@ -324,8 +324,8 @@ void Cmd_Echo_f (void)
 	int		i;
 	
 	for (i=1 ; i<Cmd_Argc() ; i++)
-		Con_Printf ("%s ",Cmd_Argv(i));
-	Con_Printf ("\n");
+		Com_Printf ("%s ",Cmd_Argv(i));
+	Com_Printf ("\n");
 }
 
 /*
@@ -354,16 +354,16 @@ void Cmd_Alias_f (void)
 
 	if (Cmd_Argc() == 1)
 	{
-		Con_Printf ("Current alias commands:\n");
+		Com_Printf ("Current alias commands:\n");
 		for (a = cmd_alias ; a ; a=a->next)
-			Con_Printf ("%s : %s\n", a->name, a->value);
+			Com_Printf ("%s : %s\n", a->name, a->value);
 		return;
 	}
 
 	s = Cmd_Argv(1);
 	if (strlen(s) >= MAX_ALIAS_NAME)
 	{
-		Con_Printf ("Alias name is too long\n");
+		Com_Printf ("Alias name is too long\n");
 		return;
 	}
 
@@ -523,7 +523,7 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 // fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
 	{
-		Con_Printf ("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
+		Com_Printf ("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
 	}
 	
@@ -532,7 +532,7 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	{
 		if (!Q_strcmp (cmd_name, cmd->name))
 		{
-			Con_Printf ("Cmd_AddCommand: %s already defined\n", cmd_name);
+			Com_Printf ("Cmd_AddCommand: %s already defined\n", cmd_name);
 			return;
 		}
 	}
@@ -613,7 +613,7 @@ void Cmd_ForwardToServer (void)
 {
 	if (cls.state == ca_disconnected)
 	{
-		Con_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
+		Com_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
 		return;
 	}
 	
@@ -634,7 +634,7 @@ void Cmd_ForwardToServer_f (void)
 {
 	if (cls.state == ca_disconnected)
 	{
-		Con_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
+		Com_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
 		return;
 	}
 
@@ -702,7 +702,7 @@ void	Cmd_ExecuteString (char *text)
 	
 // check cvars
 	if (!Cvar_Command () && (cl_warncmd->value || developer->value))
-		Con_Printf ("Unknown command \"%s\"\n", Cmd_Argv(0));
+		Com_Printf ("Unknown command \"%s\"\n", Cmd_Argv(0));
 	
 }
 

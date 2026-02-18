@@ -72,9 +72,9 @@ void CL_HTTP_RemoveTemp(void)
 		fclose(cls.download);
 
 	Com_sprintf(removeFile, sizeof(removeFile), "%s/%s", com_gamedir, cls.downloadtempname->str);
-	Con_DPrintf(DEVELOPER_MSG_NET, "Removing temp file: %s\n", cls.downloadtempname->str);
+	Com_DPrintf(DEVELOPER_MSG_NET, "Removing temp file: %s\n", cls.downloadtempname->str);
 	if(remove(removeFile) != 0)
-		Con_Printf("Error removing file: %s\n", cls.downloadtempname->str);
+		Com_Printf("Error removing file: %s\n", cls.downloadtempname->str);
 }
 
 static int http_progress (void *clientp, double dltotal, double dlnow,
@@ -97,7 +97,7 @@ static size_t http_write (void *ptr, size_t size, size_t nmemb, void *stream)
 	{
 		/* FS: If this fails here delete the temp file, don't make it go to response code 200! */
 		httpDlAborted = true;
-		Con_DPrintf (DEVELOPER_MSG_NET, "http_write: unexpected call, likely transfer manually aborted\n");
+		Com_DPrintf (DEVELOPER_MSG_NET, "http_write: unexpected call, likely transfer manually aborted\n");
 		return -1;
 	}
 	return fwrite (ptr, 1, size *nmemb, cls.download);
@@ -120,7 +120,7 @@ void CL_HTTP_Shutdown (void)
 
 void CL_HTTP_StartDownload (void)
 {
-	Con_DPrintf(DEVELOPER_MSG_NET, "In CL_HTTP_StartDownload\n");
+	Com_DPrintf(DEVELOPER_MSG_NET, "In CL_HTTP_StartDownload\n");
 	CL_HTTP_Reset_KBps_Counter();
 
 	easy_handle = curl_easy_init ();
@@ -132,7 +132,7 @@ void CL_HTTP_StartDownload (void)
 	curl_easy_setopt (easy_handle, CURLOPT_URL, cls.downloadurl->str);
 	curl_multi_add_handle (multi_handle, easy_handle);
 
-	Con_DPrintf(DEVELOPER_MSG_NET, "HTTP Download URL: %s\n", cls.downloadurl->str);
+	Com_DPrintf(DEVELOPER_MSG_NET, "HTTP Download URL: %s\n", cls.downloadurl->str);
 }
 
 void CL_HTTP_Update (void)
@@ -149,16 +149,16 @@ void CL_HTTP_Update (void)
 			long        response_code;
 
 			curl_easy_getinfo (msg->easy_handle, CURLINFO_RESPONSE_CODE, &response_code);
-			Con_DPrintf(DEVELOPER_MSG_NET, "HTTP URL response code: %li\n", response_code);
+			Com_DPrintf(DEVELOPER_MSG_NET, "HTTP URL response code: %li\n", response_code);
 			if ( (response_code == HTTP_OK || response_code == HTTP_REST) && !(httpDlAborted)) /* FS: Have to check for the abort boolean, very rarely a ctrl+c to stop the transfer ends up here instead and thinks it's a good file to load fucking everything up */
 			{
-				Con_Printf ("HTTP Download of %s completed\n", cls.downloadname->str); /* FS: Tell me when it's done */
+				Com_Printf ("HTTP Download of %s completed\n", cls.downloadname->str); /* FS: Tell me when it's done */
 
 				CL_FinishDownload (true); /* FS: Temp file renames are handled here if successful */
 			}
 			else
 			{
-				Con_Printf ("HTTP download failed: %ld\n", response_code);
+				Com_Printf ("HTTP download failed: %ld\n", response_code);
 
 				CL_HTTP_RemoveTemp(); /* FS: Remove stray temp files so the server doesn't think we're resuming 0 length files or files that now have just header information */
 

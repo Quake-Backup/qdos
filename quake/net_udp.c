@@ -60,7 +60,7 @@ int UDP_Init (void)
 #if defined(__DJGPP__)
 	if (ipxAvailable) /* IPX + PktDrvr don't get along */
 	{
-		Con_Printf("Skipping WATTCP (IPX present)\n");
+		Com_Printf("Skipping WATTCP (IPX present)\n");
 		return -1;
 	}
 #endif	/* __DJGPP__ */
@@ -68,7 +68,7 @@ int UDP_Init (void)
 	// determine my name & address
 	if (gethostname(buff, MAXHOSTNAMELEN) != 0)
 	{
-		Con_SafePrintf("UDP_Init: WARNING: gethostname failed (%s)\n",
+		Com_SafePrintf("UDP_Init: WARNING: gethostname failed (%s)\n",
 				strerror(errno));
 	}
 	else
@@ -77,7 +77,7 @@ int UDP_Init (void)
 		local = gethostbyname(buff);
 		if (local == NULL)
 		{
-			Con_SafePrintf("UDP_Init: WARNING: gethostbyname failed (%s)\n",
+			Com_SafePrintf("UDP_Init: WARNING: gethostbyname failed (%s)\n",
 					hstrerror(h_errno));
 		}
 		else
@@ -104,14 +104,14 @@ int UDP_Init (void)
 
 	if (err != 0)
 	{
-		Con_SafePrintf("WATTCP initialization failed (%s)", sock_init_err(err));
+		Com_SafePrintf("WATTCP initialization failed (%s)", sock_init_err(err));
 		return -1;
 	}
 
 	if ((net_controlsocket = UDP_OpenSocket (0)) == -1)
 	{
 	//	Sys_Error("UDP_Init: Unable to open control socket\n");
-		Con_SafePrintf("UDP_Init: Unable to open control socket, UDP disabled\n");
+		Com_SafePrintf("UDP_Init: Unable to open control socket, UDP disabled\n");
 		return -1;
 	}
 
@@ -125,7 +125,7 @@ int UDP_Init (void)
 	if (colon)
 		*colon = 0;
 
-	Con_SafePrintf("WATTCP Initialized\n");
+	Com_SafePrintf("WATTCP Initialized\n");
 	tcpipAvailable = true;
 
 	return net_controlsocket;
@@ -170,14 +170,14 @@ int UDP_OpenSocket (int port)
 
 	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
 	{
-		Con_Printf ("ERROR: UDP_OpenSocket: socket: %s", NET_ErrorString());
+		Com_Printf ("ERROR: UDP_OpenSocket: socket: %s", NET_ErrorString());
 		return -1;
 	}
 
 	// make it non-blocking
 	if (ioctlsocket (newsocket, FIONBIO, (char *) &_true) == SOCKET_ERROR)
 	{
-		Con_Printf ("ERROR: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
+		Com_Printf ("ERROR: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString());
 		return -1;
 	}
 
@@ -329,7 +329,7 @@ int UDP_Broadcast (int socket, byte *buf, int len)
 		ret = UDP_MakeSocketBroadcastCapable (socket);
 		if (ret == -1)
 		{
-			Con_Printf("Unable to make socket broadcast capable\n");
+			Com_Printf("Unable to make socket broadcast capable\n");
 			return ret;
 		}
 	}

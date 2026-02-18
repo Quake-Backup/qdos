@@ -245,10 +245,10 @@ CL_Version_f
 */
 void CL_Version_f (void)
 {
-	Con_Printf ("Version %4.2f\n", VERSION);
-	Con_Printf ("Exe: "__TIME__" "__DATE__"\n");
+	Com_Printf ("Version %4.2f\n", VERSION);
+	Com_Printf ("Exe: "__TIME__" "__DATE__"\n");
 #ifdef SSE_AWARE
-	Con_Printf ("SSE-aware compile.\n");
+	Com_Printf ("SSE-aware compile.\n");
 #endif /* SSE_AWARE */
 }
 
@@ -327,14 +327,14 @@ void CL_SendConnectPacket (
 
 	if (!NET_StringToAdr (cls.servername->str, &adr))
 	{
-		Con_Printf ("Bad server address\n");
+		Com_Printf ("Bad server address\n");
 		connect_time = -1;
 		return;
 	}
 
 	if (!NET_IsClientLegal(&adr))
 	{
-		Con_Printf ("Illegal server address\n");
+		Com_Printf ("Illegal server address\n");
 		connect_time = -1;
 		return;
 	}
@@ -349,7 +349,7 @@ void CL_SendConnectPacket (
 
 	Info_SetValueForStarKey (cls.userinfo, "*ip", NET_AdrToString(adr), MAX_INFO_STRING);
 
-	Con_Printf ("Connecting to %s...\n", cls.servername->str);
+	Com_Printf ("Connecting to %s...\n", cls.servername->str);
 
 	data = dstring_new();
 	dsprintf(data, "%c%c%c%cconnect %i %i %i \"%s\"\n",
@@ -359,7 +359,7 @@ void CL_SendConnectPacket (
 	{
 		char tmp[128];
 		Com_sprintf(tmp, sizeof(tmp), "0x%x 0x%x\n", PROTOCOL_VERSION_FTE, cls.fteprotocolextensions);
-		Con_DPrintf(DEVELOPER_MSG_NET, "0x%x is fte protocol ver and 0x%x is fteprotocolextensions\n", PROTOCOL_VERSION_FTE, cls.fteprotocolextensions);
+		Com_DPrintf(DEVELOPER_MSG_NET, "0x%x is fte protocol ver and 0x%x is fteprotocolextensions\n", PROTOCOL_VERSION_FTE, cls.fteprotocolextensions);
 		strcat(data->str, tmp);
 	}
 #endif // PROTOCOL_VERSION_FTE 
@@ -392,14 +392,14 @@ void CL_CheckForResend (void)
 
 	if (!NET_StringToAdr (cls.servername->str, &adr))
 	{
-		Con_Printf ("Bad server address\n");
+		Com_Printf ("Bad server address\n");
 		connect_time = -1;
 		return;
 	}
 
 	if (!NET_IsClientLegal(&adr))
 	{
-		Con_Printf ("Illegal server address\n");
+		Com_Printf ("Illegal server address\n");
 		connect_time = -1;
 		return;
 	}
@@ -411,7 +411,7 @@ void CL_CheckForResend (void)
 
 	connect_time = realtime+t2-t1;   // for retransmit requests
 
-	Con_Printf ("Connecting to %s...\n", cls.servername->str);
+	Com_Printf ("Connecting to %s...\n", cls.servername->str);
 
 	data = dstring_new();
 
@@ -439,7 +439,7 @@ void CL_Connect_f (void)
 
 	if (Cmd_Argc() != 2)
 	{
-		Con_Printf ("usage: connect <server>\n");
+		Com_Printf ("usage: connect <server>\n");
 		return;  
 	}
    
@@ -468,7 +468,7 @@ void CL_Rcon_f (void)
 
    if (!rcon_password->string)
    {
-      Con_Printf ("You must set 'rcon_password' before\n"
+      Com_Printf ("You must set 'rcon_password' before\n"
                "issuing an rcon command.\n");
       return;
    }
@@ -496,7 +496,7 @@ void CL_Rcon_f (void)
    {
       if (!strlen(rcon_address->string))
       {
-         Con_Printf ("You must either be connected,\n"
+         Com_Printf ("You must either be connected,\n"
                   "or set the 'rcon_address' cvar\n"
                   "to issue rcon commands\n");
 
@@ -520,9 +520,9 @@ void CL_ClearState (void)
 {
 	int i;
 
-	S_StopAllSounds (true);
+	S_StopAllSounds ();
 
-	Con_DPrintf (DEVELOPER_MSG_MEM, "Clearing memory\n");
+	Com_DPrintf (DEVELOPER_MSG_MEM, "Clearing memory\n");
 	D_FlushCaches ();
 	Mod_ClearAll ();
 	R_ClearDynamic(); /* FS */
@@ -570,7 +570,7 @@ void CL_Disconnect (void)
 #endif
 
 // stop sounds (especially looping!)
-	S_StopAllSounds (true);
+	S_StopAllSounds ();
    
 // if running a local server, shut it down
 	if (cls.demoplayback)
@@ -634,7 +634,7 @@ void CL_User_f (void)
 
    if (Cmd_Argc() != 2)
    {
-      Con_Printf ("Usage: user <username / userid>\n");
+      Com_Printf ("Usage: user <username / userid>\n");
       return;
    }
 
@@ -651,7 +651,7 @@ void CL_User_f (void)
          return;
       }
    }
-   Con_Printf ("User not in server.\n");
+   Com_Printf ("User not in server.\n");
 }
 
 /*
@@ -667,18 +667,18 @@ void CL_Users_f (void)
    int      c;
 
    c = 0;
-   Con_Printf ("userid frags name\n");
-   Con_Printf ("------ ----- ----\n");
+   Com_Printf ("userid frags name\n");
+   Com_Printf ("------ ----- ----\n");
    for (i=0 ; i<MAX_CLIENTS ; i++)
    {
       if (cl.players[i].name[0])
       {
-         Con_Printf ("%6i %4i %s\n", cl.players[i].userid, cl.players[i].frags, cl.players[i].name);
+         Com_Printf ("%6i %4i %s\n", cl.players[i].userid, cl.players[i].frags, cl.players[i].name);
          c++;
       }
    }
 
-   Con_Printf ("%i total users\n", c);
+   Com_Printf ("%i total users\n", c);
 }
 
 void CL_Color_f (void)
@@ -689,10 +689,10 @@ void CL_Color_f (void)
 
 	if (Cmd_Argc() == 1)
 	{
-		Con_Printf ("\"color\" is \"%s %s\"\n",
+		Com_Printf ("\"color\" is \"%s %s\"\n",
 			Info_ValueForKey (cls.userinfo, "topcolor"),
 			Info_ValueForKey (cls.userinfo, "bottomcolor") );
-		Con_Printf ("color <0-13> [0-13]\n");
+		Com_Printf ("color <0-13> [0-13]\n");
 		return;
 	}
 
@@ -732,7 +732,7 @@ void CL_FullServerinfo_f (void)
 
    if (Cmd_Argc() != 2)
    {
-      Con_Printf ("usage: fullserverinfo <complete info string>\n");
+      Com_Printf ("usage: fullserverinfo <complete info string>\n");
       return;
    }
 
@@ -742,7 +742,7 @@ void CL_FullServerinfo_f (void)
       v = Q_atof(p);
       if (v) {
          if (!server_version)
-            Con_Printf("Version %1.2f Server\n", v);
+            Com_Printf("Version %1.2f Server\n", v);
          server_version = v;
       }
    }
@@ -765,7 +765,7 @@ void CL_FullInfo_f (void)
 
    if (Cmd_Argc() != 2)
    {
-      Con_Printf ("fullinfo <complete info string>\n");
+      Com_Printf ("fullinfo <complete info string>\n");
       return;
    }
 
@@ -781,7 +781,7 @@ void CL_FullInfo_f (void)
 
       if (!*s)
       {
-         Con_Printf ("MISSING VALUE\n");
+         Com_Printf ("MISSING VALUE\n");
          return;
       }
 
@@ -817,7 +817,7 @@ void CL_SetInfo_f (void)
    }
    if (Cmd_Argc() != 3)
    {
-      Con_Printf ("usage: setinfo [ <key> <value> ]\n");
+      Com_Printf ("usage: setinfo [ <key> <value> ]\n");
       return;
    }
    if (!stricmp(Cmd_Argv(1), pmodel_name) || !strcmp(Cmd_Argv(1), emodel_name))
@@ -846,13 +846,13 @@ void CL_Packet_f (void)
 
    if (Cmd_Argc() != 3)
    {
-      Con_Printf ("packet <destination> <contents>\n");
+      Com_Printf ("packet <destination> <contents>\n");
       return;
    }
 
    if (!NET_StringToAdr (Cmd_Argv(1), &adr))
    {
-      Con_Printf ("Bad address\n");
+      Com_Printf ("Bad address\n");
       return;
    }
 
@@ -896,7 +896,7 @@ void CL_NextDemo (void)
 		cls.demonum = 0;
 		if (!cls.demos[cls.demonum][0])
 		{
-//			Con_Printf ("No demos listed with startdemos\n");
+//			Com_Printf ("No demos listed with startdemos\n");
 			cls.demonum = -1;
 			return;
 		}
@@ -921,10 +921,10 @@ void CL_Changing_f (void)
    if (cls.download)  // don't change when downloading
       return;
 
-   S_StopAllSounds (true);
+   S_StopAllSounds ();
    cl.intermission = 0;
    cls.state = ca_connected;  // not active anymore, but not disconnected
-   Con_Printf ("\nChanging map...\n");
+   Com_Printf ("\nChanging map...\n");
 }
 
 
@@ -940,17 +940,17 @@ void CL_Reconnect_f (void)
    if (cls.download)  // don't change when downloading
       return;
 
-   S_StopAllSounds (true);
+   S_StopAllSounds ();
 
    if (cls.state == ca_connected) {
-      Con_Printf ("reconnecting...\n");
+      Com_Printf ("reconnecting...\n");
       MSG_WriteChar (&cls.netchan.message, clc_stringcmd);
       MSG_WriteString (&cls.netchan.message, "new");
       return;
    }
 
         if (!*cls.servername->str) {
-      Con_Printf("No server to reconnect to...\n");
+      Com_Printf("No server to reconnect to...\n");
       return;
    }
 
@@ -979,22 +979,22 @@ void CL_ConnectionlessPacket (void)
 
 	c = MSG_ReadByte ();
 //	if (!cls.demoplayback)
-//		Con_Printf ("%s: ", NET_AdrToString (net_from));
-//	Con_DPrintf (DEVELOPER_MSG_NET, "%s", net_message.data + 5);
+//		Com_Printf ("%s: ", NET_AdrToString (net_from));
+//	Com_DPrintf (DEVELOPER_MSG_NET, "%s", net_message.data + 5);
 	if (c == S2C_CONNECTION)
 	{
-		Con_Printf ("%s: connection\n", NET_AdrToString (net_from));
+		Com_Printf ("%s: connection\n", NET_AdrToString (net_from));
 		if (cls.state >= ca_connected)
 		{
 			if (!cls.demoplayback)
-				Con_Printf ("Dup connect received.  Ignored.\n");
+				Com_Printf ("Dup connect received.  Ignored.\n");
 			return;
 		}
 		Netchan_Setup (&cls.netchan, net_from, cls.qport);
 		MSG_WriteChar (&cls.netchan.message, clc_stringcmd);
 		MSG_WriteString (&cls.netchan.message, "new");  
 		cls.state = ca_connected;
-		Con_Printf ("Connected.\n");
+		Com_Printf ("Connected.\n");
 		allowremotecmd = false; // localid required now for remote cmds
 		return;
 	}
@@ -1003,12 +1003,12 @@ void CL_ConnectionlessPacket (void)
 	{
 		char  cmdtext[2048];
 
-		Con_Printf ("%s: client command\n", NET_AdrToString (net_from));
+		Com_Printf ("%s: client command\n", NET_AdrToString (net_from));
 
 		if ((*(unsigned *)net_from.ip != *(unsigned *)net_local_adr.ip
 		&& *(unsigned *)net_from.ip != htonl(INADDR_LOOPBACK)) )
 		{
-			Con_Printf ("Command packet from remote host.  Ignored.\n");
+			Com_Printf ("Command packet from remote host.  Ignored.\n");
 			return;
 		}
 #ifdef _WIN32
@@ -1031,18 +1031,18 @@ void CL_ConnectionlessPacket (void)
 		{
 			if (!*localid->string)
 			{
-				Con_Printf("===========================\n");
-			    Con_Printf("Command packet received from local host, but no "
+				Com_Printf("===========================\n");
+			    Com_Printf("Command packet received from local host, but no "
 							"localid has been set.  You may need to upgrade your server "
 							"browser.\n");
-				Con_Printf("===========================\n");
+				Com_Printf("===========================\n");
 				return;
 			}
-			Con_Printf("===========================\n");
-			Con_Printf("Invalid localid on command packet received from local host. "
+			Com_Printf("===========================\n");
+			Com_Printf("Invalid localid on command packet received from local host. "
 						"\n|%s| != |%s|\n"
 						"You may need to reload your server browser and QuakeWorld.\n", s, localid->string);
-			Con_Printf("===========================\n");
+			Com_Printf("===========================\n");
 			Cvar_Set("localid", "");
 			return;
 		}
@@ -1062,8 +1062,8 @@ void CL_ConnectionlessPacket (void)
 			return;
 		}
 #endif // FTE_PEXT_CHUNKEDDOWNLOADS
-//		Con_Printf ("print\n");
-		Con_Printf("%s: print\n", NET_AdrToString(net_from));
+//		Com_Printf ("print\n");
+		Com_Printf("%s: print\n", NET_AdrToString(net_from));
 
 		s = MSG_ReadString ();
 		Con_Print (s);
@@ -1075,7 +1075,7 @@ void CL_ConnectionlessPacket (void)
 	{
 		char  data[6];
 
-		Con_Printf ("%s: ping\n", NET_AdrToString (net_from));
+		Com_Printf ("%s: ping\n", NET_AdrToString (net_from));
 
 		data[0] = 0xff;
 		data[1] = 0xff;
@@ -1090,7 +1090,7 @@ void CL_ConnectionlessPacket (void)
 
 	if (c == S2C_CHALLENGE)
 	{
-		Con_Printf ("%s: challenge\n", NET_AdrToString (net_from));
+		Com_Printf ("%s: challenge\n", NET_AdrToString (net_from));
 
 		s = MSG_ReadString ();
 		cls.challenge = atoi(s);
@@ -1126,10 +1126,10 @@ void CL_ConnectionlessPacket (void)
 		if(cls.demoplayback)
 			Host_EndGame ("End of demo");
 		else
-			Con_Printf ("svc_disconnect\n");
+			Com_Printf ("svc_disconnect\n");
 		return;
 	}
-	Con_Printf ("%s: unknown: %c\n", NET_AdrToString (net_from), c);
+	Com_Printf ("%s: unknown: %c\n", NET_AdrToString (net_from), c);
 }
 
 
@@ -1154,7 +1154,7 @@ void CL_ReadPackets (void)
 
 		if (net_message.cursize < 8)
 		{
-			Con_Printf ("%s: Runt packet\n",NET_AdrToString(net_from));
+			Com_Printf ("%s: Runt packet\n",NET_AdrToString(net_from));
 			continue;
 		}
 
@@ -1163,7 +1163,7 @@ void CL_ReadPackets (void)
 		//
 		if (!cls.demoplayback && !NET_CompareAdr (net_from, cls.netchan.remote_address))
 		{
-			Con_DPrintf (DEVELOPER_MSG_NET, "%s:sequenced packet without connection\n" ,NET_AdrToString(net_from));
+			Com_DPrintf (DEVELOPER_MSG_NET, "%s:sequenced packet without connection\n" ,NET_AdrToString(net_from));
 			continue;
 		}
 		if (!Netchan_Process(&cls.netchan))
@@ -1180,7 +1180,7 @@ void CL_ReadPackets (void)
 	if (cls.state >= ca_connected
 	&& realtime - cls.netchan.last_received > cl_timeout->value)
 	{
-		Con_Printf ("\nServer connection timed out.\n");
+		Com_Printf ("\nServer connection timed out.\n");
 		CL_Disconnect ();
 		return;
 	}
@@ -1201,13 +1201,13 @@ void CL_Download_f (void)
 
 	if (cls.state == ca_disconnected)
 	{
-		Con_Printf ("Must be connected.\n");
+		Com_Printf ("Must be connected.\n");
 		return;
 	}
 
 	if (Cmd_Argc() != 2)
 	{
-		Con_Printf ("Usage: download <datafile>\n");
+		Com_Printf ("Usage: download <datafile>\n");
 		return;
 	}
 
@@ -1252,6 +1252,20 @@ void CL_Windows_f (void)
 		SendMessage(mainwindow, WM_SYSKEYUP, VK_TAB, 1 | (0x0F << 16) | (1<<29));
 }
 #endif
+
+void CL_Snd_Shutdown_f (void)
+{
+	S_StopAllSounds();
+	S_Shutdown();
+}
+
+void CL_Snd_Restart_f (void)
+{
+	S_StopAllSounds();
+	S_Shutdown();
+	//Cache_Flush();
+	S_Init();
+}
 
 /*
 =================
@@ -1467,6 +1481,9 @@ void CL_Init (void)
 
 	dstring_delete(version);
 
+	Cmd_AddCommand ("snd_shutdown", CL_Snd_Shutdown_f);
+	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
+
 #ifdef USE_CURL
 	if (allow_download_http->intValue)
 		Info_SetValueForStarKey (cls.userinfo, "*cap", "h", MAX_INFO_STRING); /* FS: HTTP downloading from QuakeForge */
@@ -1494,9 +1511,9 @@ void Host_EndGame (const char *message, ...)
 	dvsprintf (string, message, argptr);
 	va_end (argptr);
 
-	Con_Printf ("\n===========================\n");
-	Con_Printf ("Host_EndGame: %s\n",string->str);
-	Con_Printf ("===========================\n\n");
+	Com_Printf ("\n===========================\n");
+	Com_Printf ("Host_EndGame: %s\n",string->str);
+	Com_Printf ("===========================\n\n");
    
 	CL_Disconnect ();
 
@@ -1527,7 +1544,7 @@ void Host_Error (const char *error, ...)
 	va_start (argptr,error);
 	dvsprintf (string,error,argptr);
 	va_end (argptr);
-	Con_Printf ("Host_Error: %s\n",string->str);
+	Com_Printf ("Host_Error: %s\n",string->str);
    
 	CL_Disconnect ();
 	cls.demonum = -1;
@@ -1568,7 +1585,7 @@ void Host_WriteConfiguration (const char *cfgName)
 		f = fopen (path, "w");
 		if (!f)
 		{
-			Con_Printf ("Couldn't write %s.cfg.\n", cfgName);
+			Com_Printf ("Couldn't write %s.cfg.\n", cfgName);
 			return;
 		}
 
@@ -1599,10 +1616,10 @@ void CL_WriteConfig_f (void)
 			Q_strlcpy (cfgName, Cmd_Argv(1), sizeof(cfgName));
 
 		Host_WriteConfiguration (cfgName);
-		Con_Printf ("Wrote config file %s/%s.cfg.\n", com_gamedir, cfgName);
+		Com_Printf ("Wrote config file %s/%s.cfg.\n", com_gamedir, cfgName);
 	}
 	else
-		Con_Printf ("Usage: writeconfig <name>\n");
+		Com_Printf ("Usage: writeconfig <name>\n");
 }
 
 //============================================================================
@@ -1738,7 +1755,7 @@ void Host_Frame (float time)
 		pass2 = (time2 - time1)*1000;
 		pass3 = (time3 - time2)*1000;
 
-		Con_Printf ("%3i tot %3i server %3i gfx %3i snd\n",
+		Com_Printf ("%3i tot %3i server %3i gfx %3i snd\n",
 					pass1+pass2+pass3, pass1, pass2, pass3);
 	}
 
@@ -1830,7 +1847,7 @@ void Host_Init (quakeparms_t *parms)
 	M_Init ();  
 	Mod_Init ();
    
-	Con_Printf ("%4.1f megs RAM used.\n",parms->memsize/ (1024*1024.0));
+	Com_Printf ("%4.1f megs RAM used.\n",parms->memsize/ (1024*1024.0));
    
 	R_InitTextures ();
  
@@ -1863,7 +1880,7 @@ void Host_Init (quakeparms_t *parms)
 
 	if(COM_CheckParm("-safevga")) /* FS: Safe VGA Mode */
 	{
-		Con_Printf("Safe VGA mode enabled\n");
+		Com_Printf("Safe VGA mode enabled\n");
 		Cbuf_AddText("vid_mode 0");
 	}
 
@@ -1879,9 +1896,9 @@ void Host_Init (quakeparms_t *parms)
 
 	host_initialized = true;
 
-	Con_Printf ("\nClient Version %4.2f (Build %04d)\n\n", VERSION, build_number());
+	Com_Printf ("\nClient Version %4.2f (Build %04d)\n\n", VERSION, build_number());
 
-	Con_Printf ("€ QuakeWorld Initialized ‚\n"); 
+	Com_Printf ("€ QuakeWorld Initialized ‚\n"); 
 }
 
 
@@ -1932,8 +1949,8 @@ static void CL_Gamespy_Check_Error(GServerList lst, int error)
 {
 	if (error != GE_NOERROR) /* FS: Grab the error code */
 	{
-		Con_Printf("\x02GameSpy Error: ");
-		Con_Printf("%s.\n", ServerListErrorDesc(lst, error));
+		Com_Printf("\x02GameSpy Error: ");
+		Com_Printf("%s.\n", ServerListErrorDesc(lst, error));
 	}
 }
 
@@ -1948,7 +1965,7 @@ static void GameSpy_Async_Think(void)
 	{
 		if (key_dest != key_menu) /* FS: Only print this from an slist2 command, not the server browser. */
 		{
-			Con_Printf("Found %i active servers out of %i in %i seconds.\n", gspyCur, cls.gamespytotalservers, (((int)Sys_DoubleTime()-cls.gamespystarttime)) );
+			Com_Printf("Found %i active servers out of %i in %i seconds.\n", gspyCur, cls.gamespytotalservers, (((int)Sys_DoubleTime()-cls.gamespystarttime)) );
 		}
 		else
 		{
@@ -1971,7 +1988,7 @@ static void CL_Gspystop_f (void)
 {
 	if(serverlist != NULL && cls.gamespyupdate) /* FS: Immediately abort gspy scans */
 	{
-		Con_Printf("\x02Server scan aborted!\n");
+		Com_Printf("\x02Server scan aborted!\n");
 		S_GamespySound ("gamespy/abort.wav");
 		ServerListHalt(serverlist);
 	}
@@ -1994,9 +2011,9 @@ static void CL_PrintBrowserList_f (void)
 		{
 			if (browserList[i].curPlayers > 0)
 			{
-				Con_Printf("%02d:  %s:%d [%d] %s ", num_active_servers+1, browserList[i].ip, browserList[i].port, browserList[i].ping, browserList[i].hostname);
-				Con_Printf("\x02%d", browserList[i].curPlayers); /* FS: Show the current players number in the green font */
-				Con_Printf("/%d %s\n", browserList[i].maxPlayers, browserList[i].mapname);
+				Com_Printf("%02d:  %s:%d [%d] %s ", num_active_servers+1, browserList[i].ip, browserList[i].port, browserList[i].ping, browserList[i].hostname);
+				Com_Printf("\x02%d", browserList[i].curPlayers); /* FS: Show the current players number in the green font */
+				Com_Printf("/%d %s\n", browserList[i].maxPlayers, browserList[i].mapname);
 				num_active_servers++;
 			}
 		}
@@ -2014,7 +2031,7 @@ static void CL_PrintBrowserList_f (void)
 		{
 			if(browserListAll[i].hostname[0] != 0)
 			{
-				Con_Printf("%02d:  %s:%d [%d] %s %d/%d %s\n", (i+num_active_servers+1)-(skip), browserListAll[i].ip, browserListAll[i].port, browserListAll[i].ping, browserListAll[i].hostname, browserListAll[i].curPlayers, browserListAll[i].maxPlayers, browserListAll[i].mapname);
+				Com_Printf("%02d:  %s:%d [%d] %s %d/%d %s\n", (i+num_active_servers+1)-(skip), browserListAll[i].ip, browserListAll[i].port, browserListAll[i].ping, browserListAll[i].hostname, browserListAll[i].curPlayers, browserListAll[i].maxPlayers, browserListAll[i].mapname);
 			}
 			else /* FS: The next one could be 0 if we skipped over it previously in GameSpy_Sort_By_Ping.  So increment the number of skips counter so the server number shows sequentially */
 			{
@@ -2098,16 +2115,16 @@ static void ListCallBack(GServerList lst, int msg, void *instance, void *param1,
 		{
 			if (key_dest != key_menu) /* FS: Only print this from an slist2 command, not the server browser. */
 			{
-				Con_Printf("%s:%d [%d] %s ", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"));
-				Con_Printf("\x02%d", numplayers); /* FS: Show the current players number in the green font */
-				Con_Printf("/%d %s\n", ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
+				Com_Printf("%s:%d [%d] %s ", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"));
+				Com_Printf("\x02%d", numplayers); /* FS: Show the current players number in the green font */
+				Com_Printf("/%d %s\n", ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
 			}
 		}
 		else if (cls.gamespyupdate == SHOW_ALL_SERVERS)
 		{
 			if (key_dest != key_menu) /* FS: Only print this from an slist2 command, not the server browser. */
 			{
-				Con_Printf("%s:%d [%d] %s %d/%d %s\n", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"), ServerGetIntValue(server,"numplayers",0), ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
+				Com_Printf("%s:%d [%d] %s %d/%d %s\n", ServerGetAddress(server), ServerGetQueryPort(server), ServerGetPing(server), ServerGetStringValue(server, "hostname","(NONE)"), ServerGetIntValue(server,"numplayers",0), ServerGetIntValue(server,"maxclients",0), ServerGetStringValue(server,"map","(NO MAP)"));
 			}
 		}
 
@@ -2139,7 +2156,7 @@ void CL_PingNetServers_f (void)
 
 	if(cls.gamespyupdate)
 	{
-		Con_Printf("Error: Already querying the GameSpy Master!\n");
+		Com_Printf("Error: Already querying the GameSpy Master!\n");
 		return;
 	}
 
@@ -2158,12 +2175,12 @@ void CL_PingNetServers_f (void)
 	if ((Cmd_Argc() == 1) || (key_dest == key_menu))
 	{
 		cls.gamespyupdate = SHOW_POPULATED_SERVERS;;
-		Con_Printf("\x02Grabbing populated server list from GameSpy master. . .\n");
+		Com_Printf("\x02Grabbing populated server list from GameSpy master. . .\n");
 	}
 	else
 	{
 		cls.gamespyupdate = SHOW_ALL_SERVERS;
-		Con_Printf("\x02Grabbing all servers from GameSpy master. . .\n");
+		Com_Printf("\x02Grabbing all servers from GameSpy master. . .\n");
 	}
 
 	cls.gamespypercent = 0;
@@ -2222,14 +2239,14 @@ void CL_Download_Calculate_KBps (int byteDistance, int totalSize)
 	dlSpeedInfo.byteCount += byteDistance;
 	dlSpeedInfo.bytesRead += byteDistance;
 
-//	Con_DPrintf(DEVELOPER_MSG_NET, "Time distance: %fs\n", timeDistance);
-//	Con_DPrintf(DEVELOPER_MSG_NET, "Byte distance: %i\nByteCount: %i\nTotal: %i\n", byteDistance, dlSpeedInfo.byteCount, totalSize);
-//	Con_DPrintf(DEVELOPER_MSG_NET, "Total time counted: %3.2fs\n", totalTime);
+//	Com_DPrintf(DEVELOPER_MSG_NET, "Time distance: %fs\n", timeDistance);
+//	Com_DPrintf(DEVELOPER_MSG_NET, "Byte distance: %i\nByteCount: %i\nTotal: %i\n", byteDistance, dlSpeedInfo.byteCount, totalSize);
+//	Com_DPrintf(DEVELOPER_MSG_NET, "Total time counted: %3.2fs\n", totalTime);
 
 	if (totalTime >= 1.0f)
 	{
 		cls.downloadrate = (float)dlSpeedInfo.byteCount / 1024.0f;
-		Con_DPrintf (DEVELOPER_MSG_NET, "Rate: %4.2fKB/s, Downloaded %4.2fKB of %4.2fKB\n", cls.downloadrate, (float)dlSpeedInfo.bytesRead/1024.0, (float)totalSize/1024.0);
+		Com_DPrintf (DEVELOPER_MSG_NET, "Rate: %4.2fKB/s, Downloaded %4.2fKB of %4.2fKB\n", cls.downloadrate, (float)dlSpeedInfo.bytesRead/1024.0, (float)totalSize/1024.0);
 		dlSpeedInfo.byteCount = 0;
 		dlSpeedInfo.startTime = (float)Sys_DoubleTime()*1000.0f;
 	}

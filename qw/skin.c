@@ -138,12 +138,12 @@ byte	*Skin_Cache (skin_t *skin)
 //
 	dsprintf (name, "skins/%s.pcx", skin->name);
 
-	Con_DPrintf (DEVELOPER_MSG_IO, "Loading skin: %s\n", name->str); /* FS */
+	Com_DPrintf (DEVELOPER_MSG_IO, "Loading skin: %s\n", name->str); /* FS */
 
 	raw = COM_LoadTempFile (name->str);
 	if (!raw)
 	{
-		Con_Printf ("Couldn't load skin %s\n", name->str);
+		Com_Printf ("Couldn't load skin %s\n", name->str);
 		dsprintf (name, "skins/%s.pcx", baseskin->string);
 		raw = COM_LoadTempFile (name->str);
 		if (!raw)
@@ -168,7 +168,7 @@ byte	*Skin_Cache (skin_t *skin)
 		|| pcx->ymax >= MAX_LBM_HEIGHT) /* FS: Was >= 200 */
 	{
 		skin->failedload = true;
-		Con_Printf ("Bad skin %s\n", name->str);
+		Com_Printf ("Bad skin %s\n", name->str);
 		dstring_delete(name);
 		return NULL;
 	}
@@ -188,7 +188,7 @@ byte	*Skin_Cache (skin_t *skin)
 			{
 				Cache_Free (&skin->cache);
 				skin->failedload = true;
-				Con_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
+				Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
 				dstring_delete(name);
 				return NULL;
 			}
@@ -201,7 +201,7 @@ byte	*Skin_Cache (skin_t *skin)
 				{
 					Cache_Free (&skin->cache);
 					skin->failedload = true;
-					Con_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
+					Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
 					dstring_delete(name);
 					return NULL;
 				}
@@ -214,7 +214,7 @@ byte	*Skin_Cache (skin_t *skin)
 			if (runLength + x > pcx->xmax + 2) {
 				Cache_Free (&skin->cache);
 				skin->failedload = true;
-				Con_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
+				Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
 				dstring_delete(name);
 				return NULL;
 			}
@@ -224,13 +224,13 @@ byte	*Skin_Cache (skin_t *skin)
 
 	}
 
-	Con_DPrintf(DEVELOPER_MSG_IO, "Skin: %s, Size: %d, Width: %d\n", name->str, com_filesize, x); /* FS */
+	Com_DPrintf(DEVELOPER_MSG_IO, "Skin: %s, Size: %d, Width: %d\n", name->str, com_filesize, x); /* FS */
 	
 	if ( raw - (byte *)pcx > com_filesize)
 	{
 		Cache_Free (&skin->cache);
 		skin->failedload = true;
-		Con_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
+		Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
 		dstring_delete(name);
 		return NULL;
 	}
@@ -278,7 +278,7 @@ void Skin_NextDownload (qboolean queue)
 
 	if (queue && cls.downloadnumber == 0)
 	{
-		Con_Printf ("Checking skins...\n");
+		Com_Printf ("Checking skins...\n");
 		cls.download_queue = cls.download_queue_total = 0;
 
 		queued_skins = (skinqueue_t *)calloc(MAX_CACHED_SKINS, sizeof(skinqueue_t)); /* FS: FIXME: Should this be MAX_CLIENTS? */

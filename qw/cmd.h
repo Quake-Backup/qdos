@@ -132,4 +132,6 @@ void Cmd_ChatInfo (int val);
 char *CopyString (char *in);
 void Cbuf_AddEarlyCommands (qboolean clear);
 
+void Cmd_RemoveAutoComplete (void); /* FS */
+
 #endif // _CMD_H
