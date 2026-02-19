@@ -1489,7 +1489,7 @@ void BuildSurfaceDisplayList (msurface_t *fa)
 	//
 	// draw texture
 	//
-	poly = Z_Malloc (sizeof(glpoly_t) + (lnumverts-4) * VERTEXSIZE*sizeof(float)); /* FS: FIXME */
+	poly = Z_TagMalloc (sizeof(glpoly_t) + (lnumverts-4) * VERTEXSIZE*sizeof(float), TAG_LEVEL);
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;

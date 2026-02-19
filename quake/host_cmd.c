@@ -204,10 +204,6 @@ void Host_Game_f (void)
 			}
 		}
 
-		//clear out and reload appropriate data
-		/* FS: FIXME */
-		//Cache_Flush ();
-
 		ExtraMaps_NewGame ();
 		//Cbuf_InsertText ("exec quake.rc\n");
 

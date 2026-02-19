@@ -741,8 +741,6 @@ void CL_Snd_Restart_f (void)
 {
 	S_StopAllSounds();
 	S_Shutdown();
-	/* FS: FIXME */
-	//Cache_Flush();
 	S_Init();
 }
 
