@@ -1009,9 +1009,17 @@ void PR_LoadProgs (void)
 
 	CRC_Init (&pr_crc);
 
-	progs = (dprograms_t *)COM_LoadHunkFile ("progs.dat");
+	if (progs)
+	{
+		Z_Free(progs);
+	}
+
+	progs = (dprograms_t *)COM_LoadFile("progs.dat", 0);//COM_LoadHunkFile ("progs.dat");
 	if (!progs)
+	{
 		Sys_Error ("PR_LoadProgs: couldn't load progs.dat");
+		return;
+	}
 	Com_DPrintf(DEVELOPER_MSG_PROGS, "Programs occupy %iK.\n", com_filesize/1024);
 
 	for (i=0 ; i<com_filesize ; i++)
@@ -1022,9 +1030,16 @@ void PR_LoadProgs (void)
 		((int *)progs)[i] = LittleLong ( ((int *)progs)[i] );		
 
 	if (progs->version != PROG_VERSION)
+	{
 		Sys_Error ("progs.dat has wrong version number (%i should be %i)", progs->version, PROG_VERSION);
+		return;
+	}
+
 	if (progs->crc != PROGHEADER_CRC)
+	{
 		Sys_Error ("progs.dat system vars have been modified, progdefs.h is out of date");
+		return;
+	}
 
 	pr_functions = (dfunction_t *)((byte *)progs + progs->ofs_functions);
 	pr_strings = (char *)progs + progs->ofs_strings;

@@ -762,10 +762,10 @@ void CL_Init (void)
 // register our commands
 //
 	cl_name = Cvar_Get("_cl_name", "player", CVAR_ARCHIVE);
-	cl_name->description = "Internal CVAR for setting player name.  Use cvar \"name\" to set.";
+	Cvar_Set_Description("cl_name", "Internal CVAR for setting player name.  Use cvar \"name\" to set.");
 
 	cl_color = Cvar_Get("_cl_color", "0", CVAR_ARCHIVE);
-	cl_color->description = "Internal CVAR for setting player colour.  Use cvar \"color\" to set.";
+	Cvar_Set_Description("cl_color", "Internal CVAR for setting player colour.  Use cvar \"color\" to set.");
 
 	cl_upspeed = Cvar_Get("cl_upspeed","200", 0);
 	cl_forwardspeed = Cvar_Get("cl_forwardspeed","400", CVAR_ARCHIVE);
@@ -779,7 +779,7 @@ void CL_Init (void)
 
 	cl_shownet = Cvar_Get("cl_shownet", "0", 0); // can be 0, 1, or 2
 	cl_nolerp = Cvar_Get("cl_nolerp", "0", 0); 
-	cl_nolerp->description = "Disable animation lerping.";
+	Cvar_Set_Description("cl_nolerp", "Disable animation lerping.");
 	lookspring = Cvar_Get("lookspring", "0", CVAR_ARCHIVE);
 	lookstrafe = Cvar_Get("lookstrafe", "0", CVAR_ARCHIVE);
 	sensitivity = Cvar_Get("sensitivity", "3", CVAR_ARCHIVE);
@@ -791,32 +791,32 @@ void CL_Init (void)
 
 #ifdef GAMESPY /* FS: GameSpy CVARs */
 	cl_master_server_ip = Cvar_Get("cl_master_server_ip", CL_MASTER_ADDR, CVAR_ARCHIVE);
-	cl_master_server_ip->description = "GameSpy Master Server IP.";
+	Cvar_Set_Description("cl_master_server_ip", "GameSpy Master Server IP.");
 	cl_master_server_port = Cvar_Get("cl_master_server_port", CL_MASTER_PORT, CVAR_ARCHIVE); 
-	cl_master_server_port->description = "GameSpy Master Server Port.";
+	Cvar_Set_Description("cl_master_server_port", "GameSpy Master Server Port.");
 	cl_master_server_queries = Cvar_Get("cl_master_server_queries", "10", CVAR_ARCHIVE);
-	cl_master_server_queries->description = "Number of sockets to allocate for GameSpy.";
+	Cvar_Set_Description("cl_master_server_queries", "Number of sockets to allocate for GameSpy.");
 	cl_master_server_timeout = Cvar_Get("cl_master_server_timeout", "3000", CVAR_ARCHIVE);
-	cl_master_server_timeout->description = "Timeout (in milliseconds) to give up on pinging a server.";
+	Cvar_Set_Description("cl_master_server_timeout", "Timeout (in milliseconds) to give up on pinging a server.");
 	cl_master_server_retries = Cvar_Get("cl_master_server_retries", "20", CVAR_ARCHIVE);
-	cl_master_server_retries->description = "Number of retries to attempt for receiving the server list.  Formula is 50ms + 10ms for each retry.";
+	Cvar_Set_Description("cl_master_server_retries", "Number of retries to attempt for receiving the server list.  Formula is 50ms + 10ms for each retry.");
 	cl_master_server_optout = Cvar_Get("cl_master_server_optout", "0", CVAR_ARCHIVE);
-	cl_master_server_optout->description = "Opt-out of sending your Quake Username in GameSpy list requests.";
+	Cvar_Set_Description("cl_master_server_optout", "Opt-out of sending your Quake Username in GameSpy list requests.");
 	snd_gamespy_sounds = Cvar_Get("snd_gamespy_sounds", "0", CVAR_ARCHIVE);
-	snd_gamespy_sounds->description = "Play the complete.wav and abort.wav from GameSpy3D if it exists in sounds/gamespy.";
+	Cvar_Set_Description("snd_gamespy_sounds", "Play the complete.wav and abort.wav from GameSpy3D if it exists in sounds/gamespy.");
 #endif
 
 	/* FS: New stuff */
 	console_old_complete = Cvar_Get("console_old_complete", "0", CVAR_ARCHIVE);
-	console_old_complete->description = "Use the legacy style console tab completion.";
+	Cvar_Set_Description("console_old_complete", "Use the legacy style console tab completion.");
 	cl_ogg_music = Cvar_Get("cl_ogg_music", "1", CVAR_ARCHIVE);
-	cl_ogg_music->description = "Play OGG tracks in the format of id1/music/trackXX.ogg if they exist.";
+	Cvar_Set_Description("cl_ogg_music", "Play OGG tracks in the format of id1/music/trackXX.ogg if they exist.");
 	cl_wav_music = Cvar_Get("cl_wav_music", "1", CVAR_ARCHIVE);
-	cl_wav_music->description = "Play WAV tracks in the format of id1/music/trackXX.wav if they exist.";
+	Cvar_Set_Description("cl_wav_music", "Play WAV tracks in the format of id1/music/trackXX.wav if they exist.");
 	cl_autorepeat_allkeys = Cvar_Get("cl_autorepeat_allkeys", "0", CVAR_ARCHIVE);
-	cl_autorepeat_allkeys->description = "Allow to autorepeat any key, not just Backspace, Pause, PgUp, and PgDn keys.";
+	Cvar_Set_Description("cl_autorepeat_allkeys", "Allow to autorepeat any key, not just Backspace, Pause, PgUp, and PgDn keys.");
 	cl_sleep = Cvar_Get("cl_sleep", "0", CVAR_ARCHIVE);
-	cl_sleep->description = "Reduce CPU usage by issuing sleep commands between extra frames.";
+	Cvar_Set_Description("cl_sleep", "Reduce CPU usage by issuing sleep commands between extra frames.");
 
 	Cmd_AddCommand ("entities", CL_PrintEntities_f);
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f);

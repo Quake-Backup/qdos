@@ -112,21 +112,18 @@ Host_EndGame
 void Host_EndGame (const char *message, ...)
 {
 	va_list	  argptr;
-	static dstring_t *string;
-
-	if (!string)
-		string = dstring_new();
+	char	string[MAXPRINTMSG];
 
 	va_start (argptr,message);
-	dvsprintf (string,message,argptr);
+	Q_vsnprintf (string, sizeof(string), message,argptr);
 	va_end (argptr);
-	Com_DPrintf (DEVELOPER_MSG_NET, "Host_EndGame: %s\n",string->str);
+	Com_DPrintf (DEVELOPER_MSG_NET, "Host_EndGame: %s\n",string);
 
 	if (sv.active)
 		Host_ShutdownServer (false);
 
 	if (cls.state == ca_dedicated)
-		Sys_Error ("Host_EndGame: %s\n",string->str);  // dedicated servers exit
+		Sys_Error ("Host_EndGame: %s\n",string);  // dedicated servers exit
 
 	if (cls.demonum != -1)
 		CL_NextDemo ();
@@ -146,11 +143,8 @@ This shuts down both the client and server
 void Host_Error (const char *error, ...)
 {
 	va_list	  argptr;
-	static dstring_t *string;
+	char	string[MAXPRINTMSG];
 	static	qboolean inerror = false;
-
-	if (!string)
-		string = dstring_new();
 
 	if (inerror)
 		Sys_Error ("Host_Error: recursively entered");
@@ -159,15 +153,15 @@ void Host_Error (const char *error, ...)
 	SCR_EndLoadingPlaque ();		// reenable screen updates
 
 	va_start (argptr,error);
-	dvsprintf (string,error,argptr);
+	Q_vsnprintf (string, sizeof(string), error,argptr);
 	va_end (argptr);
-	Com_Printf ("Host_Error: %s\n",string->str);
+	Com_Printf ("Host_Error: %s\n",string);
 
 	if (sv.active)
 		Host_ShutdownServer (false);
 
 	if (cls.state == ca_dedicated)
-		Sys_Error ("Host_Error: %s\n",string->str); // dedicated servers exit
+		Sys_Error ("Host_Error: %s\n",string); // dedicated servers exit
 
 	CL_Disconnect ();
 	cls.demonum = -1;
@@ -242,29 +236,29 @@ void Host_InitLocal (void)
 	host_framerate = Cvar_Get("host_framerate","0", 0); // set for slow motion
 	host_speeds = Cvar_Get("host_speeds","0", 0); // set for running times
 	cl_maxfps = Cvar_Get("cl_maxfps", "72.0", CVAR_ARCHIVE); /* FS: Technically it was host_maxfps, but cl_maxfps is standard in other Quake games */ //johnfitz
-	cl_maxfps->description = "Maximum frames pers second to render.";
+	Cvar_Set_Description("cl_maxfps", "Maximum frames pers second to render.");
 	host_timescale = Cvar_Get("host_timescale", "0", 0); //johnfitz
 	sys_ticrate = Cvar_Get("sys_ticrate","0.05", 0);
 	serverprofile = Cvar_Get("serverprofile","0", 0);
 
 	max_edicts = Cvar_Get("max_edicts", "2048", CVAR_LATCH); //johnfitz
-	max_edicts->description = "Maximum number of edicts allowed.";
+	Cvar_Set_Description("max_edicts", "Maximum number of edicts allowed.");
 	fraglimit = Cvar_Get("fraglimit","0", CVAR_LATCH|CVAR_SERVERINFO);
-	fraglimit->description = "Fraglimit in a deathmatch game.";
+	Cvar_Set_Description("fraglimit", "Fraglimit in a deathmatch game.");
 	timelimit = Cvar_Get("timelimit","0", CVAR_LATCH|CVAR_SERVERINFO);
-	timelimit->description = "Timelimit in a deathmatch game.";
+	Cvar_Set_Description("timelimit", "Timelimit in a deathmatch game.");
 	teamplay = Cvar_Get("teamplay","0", CVAR_LATCH|CVAR_SERVERINFO);
-	teamplay->description = "Enable team deathmatch.";
+	Cvar_Set_Description("teamplay", "Enable team deathmatch.");
 	samelevel = Cvar_Get("samelevel","0", 0);
-	samelevel->description = "Repeats the same level if an endlevel is triggered.";
+	Cvar_Set_Description("samelevel", "Repeats the same level if an endlevel is triggered.");
 	noexit = Cvar_Get("noexit","0", CVAR_SERVERINFO);
-	noexit->description = "Do not allow exiting in a game.";
+	Cvar_Set_Description("noexit", "Do not allow exiting in a game.");
 	skill = Cvar_Get("skill","1", 0); // 0 - 3
-	skill->description = "Sets the skill.  Valid values are 0 through 3.";
+	Cvar_Set_Description("skill", "Sets the skill.  Valid values are 0 through 3.");
 	deathmatch = Cvar_Get("deathmatch","0", CVAR_LATCH); // 0, 1, or 2
-	deathmatch->description = "Enable a deathmatch game.  Coop must be set to 0.";
+	Cvar_Set_Description("deathmatch", "Enable a deathmatch game.  Coop must be set to 0.");
 	coop = Cvar_Get("coop","0", CVAR_LATCH); // 0 or 1
-	coop->description = "Enable a coop game.  Deathmatch must be set to 0.";
+	Cvar_Set_Description("coop", "Enable a coop game.  Deathmatch must be set to 0.");
 
 	pausable = Cvar_Get("pausable","1", 0);
 
@@ -272,11 +266,11 @@ void Host_InitLocal (void)
 
 /* FS: New stuff */
 	con_show_description = Cvar_Get("con_show_description", "1", CVAR_ARCHIVE);
-	con_show_description->description = "Show descriptions for CVARs.";
+	Cvar_Set_Description("con_show_description", "Show descriptions for CVARs.");
 	con_show_dev_flags = Cvar_Get("con_show_dev_flags", "1", CVAR_ARCHIVE);
-	con_show_dev_flags->description = "Show developer flag options.";
+	Cvar_Set_Description("con_show_dev_flags", "Show developer flag options.");
 	timestamp = Cvar_Get("timestamp", "0", 0); /* FS: Timestamp */
-	timestamp->description = "Enables timestamps.  1 for military format.  2 for AM/PM format.";
+	Cvar_Set_Description("timestamp", "Enables timestamps.  1 for military format.  2 for AM/PM format.");
 
 	Host_FindMaxClients ();
 
@@ -306,7 +300,7 @@ void Host_WriteConfiguration (const char *cfgName)
 
 // dedicated servers initialize the host but don't parse and set the
 // config.cfg cvars
-	if (host_initialized & !isDedicated)
+	if (host_initialized && !isDedicated)
 	{
 		if(!(cfgName) || (cfgName[0] == 0)) /* FS: Sanity check */
 			Com_sprintf (path, sizeof(path),"%s/qdos.cfg", com_gamedir);
@@ -340,17 +334,14 @@ FIXME: make this just a stuffed echo?
 void SV_ClientPrintf (const char *fmt, ...)
 {
 	va_list	argptr;
-	static	dstring_t	*string;
-
-	if (!string)
-		string = dstring_new();
+	char	string[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (string, fmt,argptr);
+	Q_vsnprintf (string, sizeof(string), fmt,argptr);
 	va_end (argptr);
 
 	MSG_WriteByte (&host_client->message, svc_print);
-	MSG_WriteString (&host_client->message, string->str);
+	MSG_WriteString (&host_client->message, string);
 }
 
 /*
@@ -363,14 +354,11 @@ Sends text to all active clients
 void SV_BroadcastPrintf (const char *fmt, ...)
 {
 	va_list	argptr;
-	static	dstring_t *string;
+	char	string[MAXPRINTMSG];
 	int		i;
 
-	if(!string)
-		string = dstring_new();
-
 	va_start (argptr,fmt);
-	dvsprintf (string, fmt,argptr);
+	Q_vsnprintf (string, sizeof(string), fmt,argptr);
 	va_end (argptr);
 
 	for (i=0 ; i<svs.maxclients ; i++)
@@ -378,7 +366,7 @@ void SV_BroadcastPrintf (const char *fmt, ...)
 		if (svs.clients[i].active && svs.clients[i].spawned)
 		{
 			MSG_WriteByte (&svs.clients[i].message, svc_print);
-			MSG_WriteString (&svs.clients[i].message, string->str);
+			MSG_WriteString (&svs.clients[i].message, string);
 		}
 	}
 }
@@ -393,17 +381,14 @@ Send text over to the client to be executed
 void Host_ClientCommands (const char *fmt, ...)
 {
 	va_list	argptr;
-	static	dstring_t *string;
-
-	if(!string)
-		string = dstring_new();
+	char string[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (string, fmt,argptr);
+	Q_vsnprintf (string, sizeof(string), fmt,argptr);
 	va_end (argptr);
 
 	MSG_WriteByte (&host_client->message, svc_stufftext);
-	MSG_WriteString (&host_client->message, string->str);
+	MSG_WriteString (&host_client->message, string);
 }
 
 /*
@@ -929,11 +914,11 @@ void Host_Init (quakeparms_t *parms)
 
 	if (cls.state != ca_dedicated)
 	{
-		host_basepal = (byte *)COM_LoadHunkFile ("gfx/palette.lmp");
+		host_basepal = (byte *)COM_LoadFile ("gfx/palette.lmp", 0);
 		if (!host_basepal)
 			Sys_Error ("Couldn't load gfx/palette.lmp");
 
-		host_colormap = (byte *)COM_LoadHunkFile ("gfx/colormap.lmp");
+		host_colormap = (byte *)COM_LoadFile ("gfx/colormap.lmp", 0);
 		if (!host_colormap)
 			Sys_Error ("Couldn't load gfx/colormap.lmp");
 
@@ -941,13 +926,8 @@ void Host_Init (quakeparms_t *parms)
 		Draw_Init ();
 		SCR_Init ();
 		R_Init ();
-#ifndef _WIN32 /* FS: Tired of warnings about things already registered.  See vid_win.c */
 		S_Init ();
-#else
-#ifdef	GLQUAKE
 		S_Init ();
-#endif
-#endif	/* _WIN32 */
 		CDAudio_Init ();
 		Sbar_Init ();
 		CL_Init ();

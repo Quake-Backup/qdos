@@ -306,9 +306,9 @@ void Con_Init (void)
 // register our commands
 //
 	con_notifytime = Cvar_Get("con_notifytime", "3", 0); //seconds
-	con_notifytime->description = "Time (in seconds) a console notification message is displayed.";
+	Cvar_Set_Description("con_notifytime", "Time (in seconds) a console notification message is displayed.");
 	con_logcenterprint = Cvar_Get("con_logcenterprint", "1", 0);  //johnfitz
-	con_logcenterprint->description = "Log centerprints to console.";
+	Cvar_Set_Description("con_logcenterprint", "Log centerprints to console.");
 	timestamp = Cvar_Get("timestamp", "0", 0); /* FS: Timestamp logs */
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
@@ -429,16 +429,13 @@ Handles cursor positioning, line wrapping, etc
 void Com_Printf (const char *fmt, ...)
 {
 	va_list argptr;
-	static dstring_t *msg;
+	char		msg[MAXPRINTMSG];
 #if 0
 	static qboolean	inupdate;
 #endif
 
-	if (!msg)
-		msg = dstring_new ();
-
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	/* FS: Timestamp code */
@@ -468,11 +465,11 @@ void Com_Printf (const char *fmt, ...)
 	}
 
 	// also echo to debugging console
-	Sys_Printf("%s",msg->str); // also echo to debugging console
+	Sys_Printf("%s",msg); // also echo to debugging console
 
 	// log all messages to file
 	if (con_debuglog)
-		Sys_DebugLog(va("%s/qconsole.log",com_gamedir), "%s", msg->str);
+		Sys_DebugLog(va("%s/qconsole.log",com_gamedir), "%s", msg);
 
 	if (!con_initialized)
 		return;
@@ -483,7 +480,7 @@ void Com_Printf (const char *fmt, ...)
 #endif
 
 	// write it to the scrollable buffer
-	Con_Print (msg->str);
+	Con_Print (msg);
 
 	// update the screen immediately if the console is displayed
 #if 0 /* FS: This makes scrolling painfully slow, and Quake 2 doesn't even use something like this */
@@ -508,17 +505,14 @@ Con_Warning -- johnfitz -- prints a warning to the console
 void Con_Warning (const char *fmt, ...)
 {
 	va_list argptr;
-	static dstring_t *msg;
-
-	if (!msg)
-		msg = dstring_new();
+	char msg[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	Com_SafePrintf ("\x02Warning: ");
-	Com_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg);
 }
 
 /*
@@ -531,14 +525,11 @@ A Com_Printf that only shows up if the "developer" cvar is set
 void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 {
 	va_list argptr;
-	static dstring_t *msg;
+	char msg[MAXPRINTMSG];
 	unsigned long devValue = 0; /* FS: Developer Flags */
 
 	if (!developer->value)
 		return;			// don't confuse non-developers with techie stuff...
-
-	if (!msg)
-		msg = dstring_new();
 
 	devValue = (unsigned long)developer->value;
 	
@@ -549,10 +540,10 @@ void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 		return;
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 	
-	Com_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg);
 }
 
 /*
@@ -560,25 +551,21 @@ void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 Con_CenterPrintf -- johnfitz -- pad each line with spaces to make it appear centered
 ================
 */
-#define MAXPRINTMSG	8192
 void Con_CenterPrintf (int linewidth, char *fmt, ...)
 {
 	va_list	argptr;
-	static dstring_t *msg; //the original message
+	char msg[MAXPRINTMSG]; //the original message
 	char line[MAXPRINTMSG]; //one line from the message
 	char spaces[21]; //buffer for spaces
 	char *src, *dst;
 	int	 len, s;
 
-	if (!msg)
-		msg = dstring_new();
-
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	linewidth = MIN(linewidth, con_linewidth);
-	for (src = msg->str; *src; )
+	for (src = msg; *src; )
 	{
 		dst = line;
 		while (*src && *src != '\n')
@@ -968,19 +955,16 @@ void Com_SafePrintf (const char *fmt, ...)
 {
 	va_list				argptr;
 	int					temp;
-	static dstring_t	*msg;
-
-	if(!msg)
-		msg = dstring_new();
+	char msg[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
-	Com_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg);
 
 	scr_disabled_for_loading = temp;
 }
@@ -996,19 +980,16 @@ void Con_SafeDPrintf (unsigned long developerFlags, const char *fmt, ...)
 {
 	va_list				argptr;
 	int					temp;
-	static dstring_t	*msg;
-
-	if(!msg)
-		msg = dstring_new();
+	char	msg[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
-	Com_DPrintf (developerFlags, "%s", msg->str);
+	Com_DPrintf (developerFlags, "%s", msg);
 
 	scr_disabled_for_loading = temp;
 }

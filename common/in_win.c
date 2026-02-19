@@ -482,7 +482,7 @@ void IN_Init (void)
 {
 	// mouse variables
 	m_filter = Cvar_Get("m_filter","0", CVAR_ARCHIVE);
-	m_filter->description = "Smooths out mouse movement.  Can cause input lag.";
+	Cvar_Set_Description("m_filter", "Smooths out mouse movement.  Can cause input lag.");
 
 	// joystick variables
 	in_joystick = Cvar_Get("joystick","0", CVAR_ARCHIVE);

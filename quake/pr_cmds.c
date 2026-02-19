@@ -987,7 +987,10 @@ void PF_Find (void)
 	f = G_INT(OFS_PARM1);
 	s = G_STRING(OFS_PARM2);
 	if (!s)
+	{
 		PR_RunError ("PF_Find: bad search string");
+		return;
+	}
 		
 	for (e++ ; e < sv.num_edicts ; e++)
 	{

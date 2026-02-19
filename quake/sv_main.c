@@ -128,17 +128,17 @@ void SV_Init (void)
 
 	/* FS: New stuff */
 	sv_loadentfiles = Cvar_Get("sv_loadentfiles","1", CVAR_ARCHIVE); /* FS: Load external ent files */
-	sv_loadentfiles->description = "Attempt to load external *.ent files if they exist.";
+	Cvar_Set_Description("sv_loadentfiles", "Attempt to load external *.ent files if they exist.");
 	sv_altnoclip = Cvar_Get("sv_altnoclip","1", CVAR_ARCHIVE); //johnfitz
 	pq_fullpitch = Cvar_Get("pq_fullpitch", "0", 0); /* FS: ProQuake Shit */
 
 	/* FS: Gamespy Stuff */
 	sv_master_server_ip = Cvar_Get("sv_master_server_ip", SV_MASTER_ADDR, CVAR_ARCHIVE);
-	sv_master_server_ip->description = "GameSpy Master Server IP for dedicated servers.";
+	Cvar_Set_Description("sv_master_server_ip", "GameSpy Master Server IP for dedicated servers.");
 	sv_master_server_port = Cvar_Get("sv_master_server_port", SV_MASTER_PORT, CVAR_ARCHIVE);
-	sv_master_server_port->description = "GameSpy Master Server Port for dedicated servers."; 
+	Cvar_Set_Description("sv_master_server_port", "GameSpy Master Server Port for dedicated servers.");
 	public_server = Cvar_Get("public", "0", 0);
-	public_server->description = "Report server to a master server.";
+	Cvar_Set_Description("public", "Report server to a master server.");
 
 	Cmd_AddCommand ("sv_dumpentities", &SV_DumpEntities_f); /* FS: Added */
 	Cmd_AddCommand ("sv_protocol", &SV_Protocol_f); //johnfitz
@@ -321,7 +321,7 @@ void SV_SendServerinfo (client_t *client)
 	else
 		MSG_WriteByte (&client->message, GAME_COOP);
 
-	sprintf (message, pr_strings+sv.edicts->v.message);
+	sprintf (message, "%s", pr_strings + sv.edicts->v.message);
 
 	MSG_WriteString (&client->message,message);
 
@@ -1453,7 +1453,11 @@ void SV_SpawnServer (char *server)
 
 		Com_sprintf(filename, sizeof(filename), "maps/%s.ent", server);
 		Com_DPrintf(DEVELOPER_MSG_IO, "Attempting to load external ent file %s...\n", filename);
-		entitystring = (char *) COM_LoadHunkFile (filename);
+		if (entitystring)
+		{
+			Z_Free(entitystring);
+		}
+		entitystring = (char *)COM_LoadFile(filename, 0); //COM_LoadHunkFile (filename);
 
 		if (!entitystring)
 			Com_DPrintf(DEVELOPER_MSG_IO, "No external ent file found.\n");

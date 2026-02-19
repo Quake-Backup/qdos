@@ -26,19 +26,19 @@ typedef struct zhead_s
 	struct zhead_s	*prev, *next;
 	short	magic;
 	short	tag;			// for group free
-	int		size;
+	size_t	size;
 } zhead_t;
 
 extern zhead_t		z_chain;
 
 void Z_Free (void *ptr);
-void *Z_Malloc (int size);			// returns 0 filled memory
-void *Z_TagMalloc (int size, int tag);
+void *Z_Malloc (size_t size);			// returns 0 filled memory
+void *Z_TagMalloc (size_t size, int tag);
 void Z_FreeTags (int tag);
 
 // large block stack allocation routines
-void	*Hunk_Begin (int maxsize);
-void	*Hunk_Alloc (int size);
+void	*Hunk_Begin (size_t maxsize);
+void	*Hunk_Alloc (size_t size);
 void	Hunk_Free (void *buf);
 int		Hunk_End (void);
 

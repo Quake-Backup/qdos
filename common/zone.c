@@ -34,7 +34,7 @@ just cleared malloc with counters now...
 #define	Z_MAGIC		0x1d1d
 
 zhead_t		z_chain;
-int		z_count, z_bytes;
+size_t		z_count, z_bytes;
 
 /*
 ========================
@@ -91,7 +91,7 @@ void Z_FreeTags (int tag)
 Z_TagMalloc
 ========================
 */
-void *Z_TagMalloc (int size, int tag)
+void *Z_TagMalloc (size_t size, int tag)
 {
 	zhead_t	*z;
 	
@@ -122,7 +122,7 @@ void *Z_TagMalloc (int size, int tag)
 Z_Malloc
 ========================
 */
-void *Z_Malloc (int size)
+void *Z_Malloc (size_t size)
 {
 	return Z_TagMalloc (size, 0);
 }

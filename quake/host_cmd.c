@@ -2309,5 +2309,5 @@ void Host_InitCommands (void)
 
 	 /* FS: Disable startup demos */
 	cl_demos = Cvar_Get("cl_demos", "1", CVAR_ARCHIVE);
-	cl_demos->description = "Set to 0 to disable startup demos.";
+	Cvar_Set_Description("cl_demos", "Set to 0 to disable startup demos.");
 }

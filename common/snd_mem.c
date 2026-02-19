@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int			cache_full_cycle;
 
-byte *S_Alloc (int size);
+byte *S_Alloc (size_t size);
 
 /*
 ================

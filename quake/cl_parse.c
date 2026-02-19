@@ -1026,6 +1026,7 @@ void CL_ParseServerMessage (void)
 			
 			case svc_disconnect:
 				Host_EndGame ("Server disconnected\n");
+				break;
 
 			case svc_print:
 				str = MSG_ReadString();

@@ -67,17 +67,14 @@ void Sys_PushFPCW_SetHigh (void);
 void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
     va_list argptr;
-	static dstring_t *data;
+	char data[MAXPRINTMSG];
     int fd;
 
-	if(!data)
-		data = dstring_new();
-
     va_start(argptr, fmt);
-    dvsprintf(data, fmt, argptr);
+    Q_vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
     fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0666);
-    write(fd, data->str, strlen(data->str));
+    write(fd, data, strlen(data));
     close(fd);
 };
 
@@ -268,9 +265,10 @@ void Sys_Init (void)
 {
 	OSVERSIONINFO	vinfo;
 
+#if	id386
 	MaskExceptions ();
 	Sys_SetFPCW ();
-
+#endif
 
 	// make sure the timer is high precision, otherwise
 	// NT gets 18ms resolution
@@ -294,10 +292,10 @@ void Sys_Init (void)
 }
 
 #ifdef QUAKE1
+static		char errtext1[MAXPRINTMSG], errtext2[MAXPRINTMSG];
 void Sys_Error (const char *error, ...)
 {
 	va_list		argptr;
-	static		dstring_t	*errtext1, *errtext2;
 	char		*errtext3 = "Press Enter to exit\n";
 	char		*errtext4 = "***********************************\n";
 	char		*errtext5 = "\n";
@@ -308,11 +306,6 @@ void Sys_Error (const char *error, ...)
 	static int	in_sys_error2 = 0;
 	static int	in_sys_error3 = 0;
 
-	if(!errtext1)
-		errtext1 = dstring_new();
-	if (!errtext2)
-		errtext2 = dstring_new();
-
 	if (!in_sys_error3)
 	{
 		in_sys_error3 = 1;
@@ -320,19 +313,19 @@ void Sys_Error (const char *error, ...)
 	}
 
 	va_start (argptr, error);
-	dvsprintf (errtext1, error, argptr);
+	Q_vsnprintf (errtext1, sizeof(errtext1), error, argptr);
 	va_end (argptr);
 
 	if (isDedicated)
 	{
 		va_start (argptr, error);
-		dvsprintf (errtext1, error, argptr);
+		Q_vsnprintf (errtext1, sizeof(errtext1), error, argptr);
 		va_end (argptr);
 
-		dsprintf (errtext2, "ERROR: %s\n", errtext1);
+		Q_vsnprintf (errtext2, sizeof(errtext2), "ERROR: %s\n", errtext1);
 		WriteFile (houtput, errtext5, strlen (errtext5), &dummy, NULL);
 		WriteFile (houtput, errtext4, strlen (errtext4), &dummy, NULL);
-		WriteFile (houtput, errtext2->str, strlen (errtext2->str), &dummy, NULL);
+		WriteFile (houtput, errtext2, strlen (errtext2), &dummy, NULL);
 		WriteFile (houtput, errtext3, strlen (errtext3), &dummy, NULL);
 		WriteFile (houtput, errtext4, strlen (errtext4), &dummy, NULL);
 
@@ -353,12 +346,12 @@ void Sys_Error (const char *error, ...)
 		{
 			in_sys_error0 = 1;
 			VID_SetDefaultMode ();
-			MessageBox(NULL, errtext1->str, "Quake Error",
+			MessageBox(NULL, errtext1, "Quake Error",
 					   MB_OK | MB_SETFOREGROUND | MB_ICONSTOP);
 		}
 		else
 		{
-			MessageBox(NULL, errtext1->str, "Double Quake Error",
+			MessageBox(NULL, errtext1, "Double Quake Error",
 					   MB_OK | MB_SETFOREGROUND | MB_ICONSTOP);
 		}
 	}
@@ -403,13 +396,10 @@ void Sys_Error (const char *error, ...)
 void Sys_Printf (const char *fmt, ...)
 {
 	va_list		argptr;
-	static		dstring_t *text;
+	char	text[MAXPRINTMSG];
 	
-	if (!text)
-		text = dstring_new ();
-
 	va_start (argptr,fmt);
-	dvsprintf (text,fmt,argptr);
+	Q_vsnprintf (text, sizeof(text), fmt,argptr);
 	va_end (argptr);
 }
 
@@ -720,10 +710,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	if (t && t < com_argc-1)
 		parms.memsize = Q_atoi(com_argv[t+1]) * 1024;
 
-	parms.membase = malloc (parms.memsize);
+	//parms.membase = malloc (parms.memsize);
 
-	if (!parms.membase)
-		Sys_Error ("Not enough memory free; check disk space\n");
+	//if (!parms.membase)
+	//	Sys_Error ("Not enough memory free; check disk space\n");
 
 	tevent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -812,87 +802,3 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     /* return success of application */
     return TRUE;
 }
-
-#if 1
-//===============================================================================
-
-int		hunkcount;
-
-
-byte	*membase;
-int		hunkmaxsize;
-int		cursize;
-
-#define	VIRTUAL_ALLOC
-
-void *Hunk_Begin (int maxsize)
-{
-	// reserve a huge chunk of memory, but don't commit any yet
-	cursize = 0;
-
-	hunkmaxsize = maxsize;
-#ifdef VIRTUAL_ALLOC
-	membase = (byte *)VirtualAlloc (NULL, maxsize, MEM_RESERVE, PAGE_NOACCESS);
-#else
-	membase = (byte *)malloc (maxsize);
-	memset (membase, 0, maxsize);
-#endif
-	if (!membase)
-		Sys_Error ("VirtualAlloc reserve failed");
-	return (void *)membase;
-}
-
-void *Hunk_Alloc (int size)
-{
-	void	*buf;
-
-	// round to cacheline
-	size = (size+31)&~31;
-
-#ifdef VIRTUAL_ALLOC
-	// commit pages as needed
-//	buf = VirtualAlloc (membase+cursize, size, MEM_COMMIT, PAGE_READWRITE);
-	buf = VirtualAlloc (membase, cursize+size, MEM_COMMIT, PAGE_READWRITE);
-	if (!buf)
-	{
-		FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR) &buf, 0, NULL);
-		Sys_Error ("VirtualAlloc commit failed.\n%s", (char *)buf);
-	}
-#endif
-	cursize += size;
-	if (cursize > hunkmaxsize)
-		Sys_Error ("Hunk_Alloc overflow");
-
-	return (void *)(membase+cursize-size);
-}
-
-int Hunk_End (void)
-{
-
-	// free the remaining unused virtual memory
-#if 0
-	void	*buf;
-
-	// write protect it
-	buf = VirtualAlloc (membase, cursize, MEM_COMMIT, PAGE_READONLY);
-	if (!buf)
-		Sys_Error ("VirtualAlloc commit failed");
-#endif
-
-	hunkcount++;
-	//Com_Printf ("hunkcount: %i\n", hunkcount);
-	return cursize;
-}
-
-void Hunk_Free (void *base)
-{
-	if ( base )
-#ifdef VIRTUAL_ALLOC
-		VirtualFree (base, 0, MEM_RELEASE);
-#else
-		free (base);
-#endif
-
-	hunkcount--;
-}
-#endif

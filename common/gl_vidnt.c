@@ -374,7 +374,7 @@ qboolean VID_SetFullDIBMode (int modenum)
 int VID_SetMode (int modenum, unsigned char *palette)
 {
 	int				original_mode, temp;
-	qboolean		stat;
+	qboolean		stat = false;
     MSG				msg;
 
 	if ((windowed && (modenum != 0)) ||
@@ -638,20 +638,18 @@ GL_Init
 */
 void GL_Init (void)
 {
-	gl_vendor = glGetString (GL_VENDOR);
-	Com_Printf ("GL_VENDOR: %s\n", gl_vendor);
+	gl_vendor = (const char *)glGetString_fp (GL_VENDOR);
+	Com_SafePrintf ("GL_VENDOR: %s\n", gl_vendor);
 	gl_renderer = (const char *)glGetString_fp (GL_RENDERER);
-	Com_Printf ("GL_RENDERER: %s\n", gl_renderer);
+	Com_SafePrintf ("GL_RENDERER: %s\n", gl_renderer);
 
 	gl_version = (const char *)glGetString_fp (GL_VERSION);
-	Com_Printf ("GL_VERSION: %s\n", gl_version);
+	Com_SafePrintf ("GL_VERSION: %s\n", gl_version);
 	gl_extensions = (const char *)glGetString_fp (GL_EXTENSIONS);
 	Con_SafeDPrintf (DEVELOPER_MSG_VIDEO, "GL_EXTENSIONS: %s\n", gl_extensions);
 
-//	Com_Printf ("%s %s\n", gl_renderer, gl_version);
-
-    if (strnicmp(gl_renderer,"PowerVR",7)==0)
-         fullsbardraw = true;
+	if (strnicmp(gl_renderer,"PowerVR",7)==0)
+		fullsbardraw = true;
 
 	CheckTextureExtensions ();
 
@@ -813,32 +811,26 @@ void	VID_Shutdown (void)
 
 //==========================================================================
 
+static PIXELFORMATDESCRIPTOR pfd;
 
 BOOL bSetupPixelFormat(HDC hDC)
 {
-    static PIXELFORMATDESCRIPTOR pfd = {
-	sizeof(PIXELFORMATDESCRIPTOR),	// size of this pfd
-	1,				// version number
-	PFD_DRAW_TO_WINDOW 		// support window
-	|  PFD_SUPPORT_OPENGL 	// support OpenGL
-	|  PFD_DOUBLEBUFFER ,	// double buffered
-	PFD_TYPE_RGBA,			// RGBA type
-	24,				// 24-bit color depth
-	0, 0, 0, 0, 0, 0,		// color bits ignored
-	0,				// no alpha buffer
-	0,				// shift bit ignored
-	0,				// no accumulation buffer
-	0, 0, 0, 0, 			// accum bits ignored
-	32,				// 32-bit z-buffer	
-	0,				// no stencil buffer
-	0,				// no auxiliary buffer
-	PFD_MAIN_PLANE,			// main layer
-	0,				// reserved
-	0, 0, 0				// layer masks ignored
-    };
-    int pixelformat;
+	memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 
-    if ( (pixelformat = ChoosePixelFormat(hDC, &pfd)) == 0 )
+	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW |			// support window
+		PFD_SUPPORT_OPENGL |			// support OpenGL
+		PFD_DOUBLEBUFFER;				// double buffered
+
+	pfd.iPixelType = PFD_TYPE_RGBA;
+	pfd.cDepthBits = 24;	// Knightmare changed 2/22/13, was 32
+	pfd.cStencilBits = 8;	// Knightmare added 2/22/13
+	pfd.iLayerType = PFD_MAIN_PLANE;
+
+    int pixelformat;
+	pixelformat = ChoosePixelFormat(hDC, &pfd);
+    if ( pixelformat == 0 )
     {
         MessageBox(NULL, "ChoosePixelFormat failed", "Error", MB_OK);
         return FALSE;
@@ -1576,12 +1568,12 @@ void	VID_Init (unsigned char *palette)
 	vid_config_y = Cvar_Get("vid_config_y","600", CVAR_ARCHIVE);
 	vid_stretch_by_2 = Cvar_Get("vid_stretch_by_2","1", CVAR_ARCHIVE);
 	_windowed_mouse = Cvar_Get("_windowed_mouse","1", CVAR_ARCHIVE);
-	gl_ztrick = Cvar_Get("gl_ztrick", "1", 0);
-	gl_ztrick->description = "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.";
+	gl_ztrick = Cvar_Get("gl_ztrick", "1", CVAR_ARCHIVE);
+	Cvar_Set_Description("gl_ztrick", "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.");
 	gl_displayrefresh = Cvar_Get("gl_displayrefresh", "0", CVAR_ARCHIVE);
-	gl_displayrefresh->description = "Refresh rate for fullscreen modes.  Set to 0 to disable.";
+	Cvar_Set_Description("gl_displayrefresh", "Refresh rate for fullscreen modes.  Set to 0 to disable.");
 	gl_conscale = Cvar_Get("gl_conscale", "1", CVAR_ARCHIVE);
-	gl_conscale->description = "Set to 0 to make the console width and height equal to the current resolution.  Set to 1 to control it with conwidth and conheight cmdline.  Requires game restart.";
+	Cvar_Set_Description("gl_conscale", "Set to 0 to make the console width and height equal to the current resolution.Set to 1 to control it with conwidth and conheight cmdline.Requires game restart.");
 
 	Cmd_AddCommand ("vid_nummodes", VID_NumModes_f);
 	Cmd_AddCommand ("vid_describecurrentmode", VID_DescribeCurrentMode_f);

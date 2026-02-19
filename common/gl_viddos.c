@@ -512,12 +512,12 @@ void VID_Init(unsigned char *palette)
 	vid_wait = Cvar_Get("vid_wait", "0", 0);;
 	_vid_wait_override = Cvar_Get("_vid_wait_override", "0", 0);
 
-	gl_ztrick = Cvar_Get("gl_ztrick", "1", 0);
-	gl_ztrick->description = "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.";
+	gl_ztrick = Cvar_Get("gl_ztrick", "1", CVAR_ARCHIVE);
+	Cvar_Set_Description("gl_ztrick", "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.");
 	r_ignorehwgamma = Cvar_Get("r_ignorehwgamma", "0", CVAR_ARCHIVE);
-	r_ignorehwgamma->description = "Skip testing for 3DFX Hardware Gamma capabilities";
+	Cvar_Set_Description("r_ignorehwgamma", "Skip testing for 3DFX Hardware Gamma capabilities");
 	gl_conscale = Cvar_Get("gl_conscale", "1", CVAR_ARCHIVE);
-	gl_conscale->description = "Set to 0 to make the console width and height equal to the current resolution.  Set to 1 to control it with conwidth and conheight cmdline.  Requires game restart.";
+	Cvar_Set_Description("gl_conscale", "Set to 0 to make the console width and height equal to the current resolution.Set to 1 to control it with conwidth and conheight cmdline.Requires game restart.");
 
 	Cmd_AddCommand ("gl_strings", GL_Strings_f); /* FS: Added */
 

@@ -42,10 +42,31 @@ char *strtok_r(char *s, const char *delim, char **last);
 
 /* from Quake3 */
 #ifdef _WIN32
-#define Q_vsnprintf _vsnprintf
+__inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list Args)
+{
+	int ret = _vsnprintf(Dest, Count, Format, Args);
+	Dest[Count - 1] = 0;	// null terminate
+	return ret;
+}
 #else
 #define Q_vsnprintf  vsnprintf
 #endif
+
+// FIXME: DG: the following is a duplication from qcommon.h
+#ifdef __GNUC__ // gcc or clang
+
+// validate arguments for printf-like functions
+// STRIDX: index of format string in function arguments (first arg == 1)
+// FIRSTARGIDX: index of first argument for the format string (usually STRIDX+1)
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX) __attribute__ ((format (printf, STRIDX, FIRSTARGIDX)))
+
+#else // MSVC and other compilers
+
+// sorry, no printf-style-format validation for you :P
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX)
+#pragma warning (disable:4996)
+
+#endif // __GNUC__
 
 //============================================================================
 
@@ -189,9 +210,7 @@ void COM_FilePath (char *in, char *out);
 void COM_DefaultExtension (char *path, char *extension);
 
 // does a varargs printf into a temp buffer
-char	*va(const char *format, ...) __attribute__((format(printf,1,2)));
-// does a varargs printf into a malloced buffer
-char	*nva(const char *format, ...) __attribute__((format(printf,1,2)));
+char	*va(const char *format, ...) ATTRIBUTE_PRINTF(1, 2);
 
 //============================================================================
 
@@ -227,7 +246,7 @@ extern	qboolean	standard_quake, rogue, hipnotic;
 extern	qboolean	warpspasm, nehahra, extended_mod; /* FS: For Nehara */
 
 void CompleteCommand (void); /* FS: Autocomplete commands */
-void Com_sprintf (char *dest, int size, char *fmt, ...); /* FS: Added */
-void Com_strcpy (char *dest, int destSize, const char *src); /* FS: Added */
+void Com_sprintf (char *dest, size_t size, char *fmt, ...); /* FS: Added */
+void Com_strcpy (char *dest, size_t destSize, const char *src); /* FS: Added */
 
 #endif // __COMMON_H

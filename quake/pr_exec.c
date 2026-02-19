@@ -264,18 +264,15 @@ Aborts the currently executing function
 void PR_RunError (const char *error, ...)
 {
 	va_list	argptr;
-	static	dstring_t	*string;
-
-	if (!string)
-		string = dstring_new();
+	char string[MAXPRINTMSG];
 
 	va_start (argptr,error);
-	dvsprintf (string,error,argptr);
+	Q_vsnprintf (string, sizeof(string), error,argptr);
 	va_end (argptr);
 
 	PR_PrintStatement (pr_statements + pr_xstatement);
 	PR_StackTrace ();
-	Com_Printf ("%s\n", string->str);
+	Com_Printf ("%s\n", string);
 	
 	pr_depth = 0;	// dump the stack so host_error can shutdown functions
 

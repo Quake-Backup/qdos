@@ -509,7 +509,7 @@ void Cmd_Init (void)
 {
 	/* FS: New stuff */
 	cl_warncmd = Cvar_Get("cl_warncmd", "0", 0);
-	cl_warncmd->description = "Warn about unknown commands.";
+	Cvar_Set_Description("cl_warncmd", "Warn about unknown commands.");
 
 	Cmd_AddCommand ("cmdlist", Cmd_List_f); //johnfitz
 	Cmd_AddCommand ("unalias", Cmd_Unalias_f); //johnfitz

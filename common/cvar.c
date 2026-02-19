@@ -41,11 +41,11 @@ Cvar_InfoValidate
 */
 static qboolean Cvar_InfoValidate (char *s)
 {
-	if (strstr (s, "\\"))
+	if (strchr (s, '\\'))
 		return false;
-	if (strstr (s, "\""))
+	if (strchr (s, '\"'))
 		return false;
-	if (strstr (s, ";"))
+	if (strchr (s, ';'))
 		return false;
 	return true;
 }
@@ -278,8 +278,14 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 	{
 		var->flags |= flags;
 		// Knightmare- change default value if this is called again
-		Z_Free(var->defaultString);
-		var->defaultString = CopyString(var_value);
+		if (var->defaultString)
+		{
+			free(var->defaultString);
+		}
+		if (!var_value)
+			var->defaultString = strdup("0");
+		else
+			var->defaultString = strdup(var_value);
 		var->defaultFlags |= flags; /* FS: Ditto */
 
 		return var;
@@ -297,13 +303,19 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 		}
 	}
 
-	var = Z_Malloc (sizeof(*var));
-	var->name = CopyString (var_name);
-	var->string = CopyString (var_value);
+	var = malloc (sizeof(cvar_t));
+	if (var == NULL)
+	{
+		return NULL;
+	}
+
+	var->name = strdup (var_name);
+	var->string = strdup (var_value);
+	var->latched_string = NULL;
 	var->modified = true;
 	var->value = atof (var->string);
 	var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
-	var->defaultString = CopyString(var_value); /* FS: Find out what it was initially */
+	var->defaultString = strdup(var_value); /* FS: Find out what it was initially */
 	var->defaultFlags = flags; /* FS: Default flags for resetcvar */
 	var->description = NULL; /* FS: Init it first, d'oh */
 
@@ -354,7 +366,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 			{
 				if (strcmp(value, var->latched_string) == 0)
 					return var;
-				Z_Free (var->latched_string);
+				free (var->latched_string);
 			}
 			else
 			{
@@ -369,11 +381,11 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 #endif
 			{
 				Com_Printf ("%s will be changed for next map.\n", var_name);
-				var->latched_string = CopyString(value);
+				var->latched_string = strdup(value);
 			}
 			else
 			{
-				var->string = CopyString(value);
+				var->string = strdup(value);
 				var->value = atof (var->string);
 				var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
 			}
@@ -384,7 +396,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	{
 		if (var->latched_string)
 		{
-			Z_Free (var->latched_string);
+			free (var->latched_string);
 			var->latched_string = NULL;
 		}
 	}
@@ -414,9 +426,9 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 
 	var->modified = true; /* FS: Added */
 
-	Z_Free (var->string);	// free the old value string
+	free (var->string);	// free the old value string
 
-	var->string = CopyString(value);
+	var->string = strdup(value);
 	var->value = atof (var->string);
 	var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
 
@@ -468,9 +480,9 @@ cvar_t *Cvar_FullSet (char *var_name, char *value, int flags)
 
 	var->modified = true;
 
-	Z_Free (var->string);	// free the old value string
+	free (var->string);	// free the old value string
 
-	var->string = CopyString(value);
+	var->string = strdup(value);
 	var->value = atof (var->string);
 	var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
 	var->flags = flags;
@@ -485,17 +497,14 @@ Cvar_SetValue
 */
 void Cvar_SetValue (char *var_name, float value)
 {
-	dstring_t *val;
-
-	val = dstring_new ();
+	char	val[32];
 
 	if (value == (int)value) /* FS: Weird zeros fix from QIP */
-		dsprintf(val, "%d", (int)value);
+		Com_sprintf(val, sizeof(val), "%d", (int)value);
 	else
-		dsprintf(val, "%f",value); 
+		Com_sprintf(val, sizeof(val), "%f", value);
 
-	Cvar_Set (var_name, val->str);
-	dstring_delete (val);
+	Cvar_Set (var_name, val);
 }
 
 /*
@@ -513,7 +522,7 @@ void Cvar_GetLatchedVars (void)
 	{
 		if (!var->latched_string)
 			continue;
-		Z_Free (var->string);
+		free (var->string);
 		var->string = var->latched_string;
 		var->latched_string = NULL;
 		var->value = atof(var->string);
@@ -633,10 +642,10 @@ void Cvar_Init (void) /* FS: from fitzquake */
 {
 #ifdef QUAKE1
 	developer = Cvar_Get("developer","0", 0);
-	developer->description = "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Server msgs - 256\n  * Progs msgs - 512\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Save/Restore msgs - 32768\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n";
+	Cvar_Set_Description("developer", "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Server msgs - 256\n  * Progs msgs - 512\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Save/Restore msgs - 32768\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n");
 #else
 	developer = Cvar_Get("developer","0", 0);
-	developer->description = "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n";
+	Cvar_Set_Description("developer", "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n");
 #endif
 
 	Cmd_AddCommand ("set", Cvar_Set_f);
@@ -652,7 +661,12 @@ void Cvar_Set_Description (const char *var_name, const char *description) /* FS:
 		Com_DPrintf(DEVELOPER_MSG_STANDARD, "Error: Can't set description for %s!\n", var_name);
 		return;
 	}
-	var->description = description;
+
+	if (var->description)
+	{
+		free(var->description);
+	}
+	var->description = strdup(description);
 }
 
 void Cvar_ParseDeveloperFlags (void) /* FS: Special stuff for showing all the dev flags */

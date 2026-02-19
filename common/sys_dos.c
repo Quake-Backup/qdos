@@ -362,7 +362,7 @@ void Sys_Quit (void)
 	int                     i;
 	
 
-// load the sell screen before shuting everything down
+// load the sell screen before shutting everything down
 	if (registered->value)
 		d = COM_LoadHunkFile ("end2.bin"); 
 	else
@@ -699,51 +699,4 @@ int main (int c, char **v)
 
 		oldtime = newtime;
 	}
-}
-
-/* FS: FIXME: Move this. */
-static byte	*membase;
-static int	maxhunksize;
-static int	curhunksize;
-
-void	*Hunk_Begin (int maxsize)
-{
-	/* reserve a huge chunk of memory, but don't commit any yet */
-	maxhunksize = maxsize;
-	curhunksize = 0;
-	membase = (byte *)malloc (maxhunksize);
-	if (!membase)
-		Sys_Error ("VirtualAlloc reserve failed %d bytes",maxsize);
-
-	memset (membase, 0, maxsize);
-	return (void *)membase;
-}
-
-void	*Hunk_Alloc (int size)
-{
-	/* round to cacheline */
-	size = (size+31)&~31;
-
-	curhunksize += size;
-	if (curhunksize > maxhunksize)
-		Sys_Error ("Hunk_Alloc overflow");
-
-	return (void *)(membase+curhunksize-size);
-}
-
-void	Hunk_Free (void *buf)
-{
-	free (buf);
-}
-
-int	Hunk_End (void)
-{
-/* for realloc() to be useful here: you either need DJGPP-2.05 or newer,
- * or you need to replace malloc() & friends in any older DJGPP version
- * with nmalloc() as in DJGPP-2.05. */
-	byte *n = (byte *)realloc(membase, curhunksize);
-	if (n != membase)
-		Sys_Error("Hunk_End:  Could not remap virtual block (%d)", errno);
-
-	return curhunksize;
 }
