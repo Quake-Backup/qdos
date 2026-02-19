@@ -90,6 +90,10 @@ static void CL_Gspystop_f (void);
 static void CL_PrintBrowserList_f (void);
 #endif
 
+#ifdef __DJGPP__
+void Sys_Memory_Stats_f (void); /* FS: Added */
+#endif
+
 /*
 =====================
 CL_ClearState
@@ -839,6 +843,10 @@ void CL_Init (void)
 #endif
 	Cmd_AddCommand("snd_shutdown", CL_Snd_Shutdown_f); /* FS */
 	Cmd_AddCommand("snd_restart", CL_Snd_Restart_f); /* FS */
+
+#ifdef __DJGPP__
+	Cmd_AddCommand ("memstats", Sys_Memory_Stats_f); /* FS: Added to keep track of memory usage in DOS */
+#endif
 }
 
 #ifdef GAMESPY /* FS: Gamespy Stuff */

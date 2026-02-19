@@ -350,20 +350,19 @@ void Sys_AtExit (void)
 	Sys_Shutdown();
 }
 
-
 void Sys_Quit (void)
 {
-	byte    screen[80*25*2];
-	byte    *d;
+#ifndef GLQUAKE
+	byte    screen[80 * 25 * 2];
+	byte *d = NULL;
 	char                    ver[6];
 	int                     i;
-	
 
-// load the sell screen before shutting everything down
+	// load the sell screen before shutting everything down
 	if (registered->value)
-		d = COM_LoadHunkFile ("end2.bin"); 
+		d = COM_LoadFile ("end2.bin", 0);
 	else
-		d = COM_LoadHunkFile ("end1.bin"); 
+		d = COM_LoadFile ("end1.bin", 0);
 	if (d)
 		memcpy (screen, d, sizeof(screen));
 
@@ -371,9 +370,11 @@ void Sys_Quit (void)
 	Com_sprintf (ver, sizeof(ver), " v%4.2f", VERSION);
 	for (i=0 ; i<6 ; i++)
 		screen[0*80*2 + 72*2 + i*2] = ver[i];
+#endif
 
 	Host_Shutdown();
 
+#ifndef GLQUAKE
 // do the text mode sell screen
 	if (d)
 	{
@@ -384,10 +385,13 @@ void Sys_Quit (void)
 		regs.h.bh = 0; 
 		regs.h.dl = 0; 
 		regs.h.dh = 22;
-		dos_int86 (0x10); 
+		dos_int86 (0x10);
 	}
 	else
+	{
 		printf ("couldn't load endscreen.\n");
+	}
+#endif
 
 	__dpmi_free_physical_address_mapping(&info);
 	__djgpp_nearptr_disable(); /* FS: Everyone else is a master DOS DPMI programmer.  Pretty sure CWSDPMI is already taking care of this... */
@@ -572,6 +576,13 @@ static void Sys_PageInProgram(void)
 
 	printf("%d Mb available for QDOS.\n", physicalMemStart);
 	printf("%lu Virtual Mb available for QDOS.\n", virtualMemStart);
+}
+
+/* FS: For /memstats */
+void Sys_Memory_Stats_f (void)
+{
+	Com_Printf("%d Mb available for QDOS.  Started with %d.\n", (Sys_Get_Physical_Memory() / 0x100000), physicalMemStart);
+	Com_Printf("%lu Virtual Mb available for QDOS. Started with %lu.\n", (_go32_dpmi_remaining_virtual_memory() / 0x100000), virtualMemStart);
 }
 
 static void Sys_ParseEarlyArgs(int argc, char **argv) /* FS: Parse some very specific args before Qcommon_Init */
