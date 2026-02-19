@@ -34,6 +34,7 @@ extern zhead_t		z_chain;
 void Z_Free (void *ptr);
 void *Z_Malloc (int size);			// returns 0 filled memory
 void *Z_TagMalloc (int size, int tag);
+void Z_FreeTags (int tag);
 
 // large block stack allocation routines
 void	*Hunk_Begin (int maxsize);

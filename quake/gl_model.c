@@ -39,6 +39,12 @@ byte	mod_novis[MAX_MAP_LEAFS/8];
 model_t	mod_known[MAX_MOD_KNOWN];
 int		mod_numknown;
 
+/* FS: FIXME */
+// the inline * models from the current map are kept seperate
+//model_t	mod_inline[MAX_MOD_KNOWN];
+
+int		registration_sequence;
+
 cvar_t	*gl_subdivide_size;
 
 /*
@@ -136,21 +142,6 @@ byte *Mod_LeafPVS (mleaf_t *leaf, model_t *model)
 }
 
 /*
-===================
-Mod_ClearAll
-===================
-*/
-void Mod_ClearAll (void)
-{
-	int		i;
-	model_t	*mod;
-	
-	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++)
-		if (mod->type != mod_alias)
-			mod->needload = true;
-}
-
-/*
 ==================
 Mod_FindName
 
@@ -176,7 +167,7 @@ model_t *Mod_FindName (char *name)
 		if (mod_numknown == MAX_MOD_KNOWN)
 			Sys_Error ("mod_numknown == MAX_MOD_KNOWN");
 		strcpy (mod->name, name);
-		mod->needload = true;
+		mod->registration_sequence = 666; /* FS: FIXME */
 		mod_numknown++;
 	}
 
@@ -192,12 +183,25 @@ Loads in a model for the given name
 */
 model_t *Mod_ForName (char *name, qboolean crash)
 {
-	model_t	*mod;
+	model_t	*mod, *starmod;
 	unsigned *buf;
 	int		i;
 
 	if (!name[0])
 		Host_Error ("Mod_ForName: NULL name");
+
+#if 0 /* FS: FIXME */
+//
+// inline models are grabbed only from worldmodel
+//
+	if (name[0] == '*')
+	{
+		i = atoi(name+1);
+		if (i < 1 || !sv.worldmodel || i >= sv.worldmodel->numsubmodels)
+			Host_Error ("bad inline model number");
+		return &mod_inline[i];
+	}
+#endif
 
 //
 // search the currently loaded models
@@ -249,7 +253,6 @@ model_t *Mod_ForName (char *name, qboolean crash)
 //
 
 // call the apropriate loader
-	mod->needload = false;
 	
 	switch (LittleLong(*(unsigned *)buf))
 	{
@@ -265,13 +268,16 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	
 	default:
 		loadmodel->extradata = Hunk_Begin (0x1000000);
+		starmod = loadmodel; /* FS: FIXME.  This should get handled in Mod_LoadBrushModel but it isn't. */
 		Mod_LoadBrushModel (mod, buf);
+		loadmodel = starmod;
 		break;
 	}
 
 	loadmodel->extradatasize = Hunk_End ();
 
-	/* FS: FIXME: Close. */
+	Z_Free(buf);
+
 	return mod;
 }
 
@@ -1635,6 +1641,37 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 
 	mod->numframes = 2;		// regular and alternate animation
 
+#if 0 /* FS: FIXME: This doesn't actually work. */
+	for (i=0 ; i<mod->numsubmodels ; i++)
+	{
+		model_t	*starmod;
+
+		bm = &mod->submodels[i];
+		starmod = &mod_inline[i];
+
+		*starmod = *loadmodel;
+
+		starmod->firstmodelsurface = bm->firstface;
+		starmod->nummodelsurfaces = bm->numfaces;
+
+		VectorCopy (bm->maxs, starmod->maxs);
+		VectorCopy (bm->mins, starmod->mins);
+
+		if (i == 0)
+			*loadmodel = *starmod;
+
+		starmod->numleafs = bm->visleafs;
+
+		if (i < mod->numsubmodels-1)
+		{	// duplicate the basic information
+			char	name[10];
+
+			Com_sprintf (name, sizeof(name), "*%i", i+1);
+			strcpy(starmod->name, name);
+		}
+	}
+
+#else
 	// johnfitz -- okay, so that i stop getting confused every time i look at this loop, here's how it works:
 	// we're looping through the submodels starting at 0.  Submodel 0 is the main model, so we don't have to
 	// worry about clobbering data the first time through, since it's the same data.  At the end of the loop,
@@ -1688,6 +1725,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 			mod = loadmodel;
 		}
 	}
+#endif
 }
 
 /*
@@ -2285,4 +2323,86 @@ void Mod_Print (void)
 	}
 }
 
+/*
+================
+Mod_Free
+================
+*/
+void Mod_Free (model_t *mod)
+{
+	Hunk_Free (mod->extradata);
+	memset (mod, 0, sizeof(*mod));
+}
 
+/*
+================
+Mod_FreeAll
+================
+*/
+void Mod_FreeAll (void)
+{
+	int		i;
+
+	for (i=0 ; i<mod_numknown ; i++)
+	{
+		if (mod_known[i].extradatasize)
+			Mod_Free (&mod_known[i]);
+	}
+}
+
+//=============================================================================
+
+/* FS: FIXME.  Do something with this. */
+
+/*
+@@@@@@@@@@@@@@@@@@@@@
+R_BeginRegistration
+
+Specifies the model that will be used as the world
+@@@@@@@@@@@@@@@@@@@@@
+*/
+void R_BeginRegistration (char *model)
+{
+	char	fullname[MAX_QPATH];
+	cvar_t	*flushmap;
+
+	registration_sequence++;
+	//r_oldviewcluster = -1;		// force markleafs /* FS: FIXME */
+	Com_sprintf (fullname, sizeof(fullname), "maps/%s.bsp", model);
+
+	D_FlushCaches ();
+	// explicitly free the old map if different
+	// this guarantees that mod_known[0] is the world map
+	flushmap = Cvar_Get ("flushmap", "0", 0);
+	if ((strcmp(mod_known[0].name, fullname) != 0) || flushmap->intValue)
+		Mod_Free (&mod_known[0]);
+
+	sv.worldmodel = Mod_ForName (fullname, false);
+	R_NewMap ();
+}
+
+/*
+@@@@@@@@@@@@@@@@@@@@@
+R_EndRegistration
+
+@@@@@@@@@@@@@@@@@@@@@
+*/
+void R_EndRegistration (void)
+{
+	int		i;
+	model_t	*mod;
+
+	for (i=0, mod=mod_known ; i<mod_numknown ; i++, mod++)
+	{
+		if (!mod->name[0])
+			continue;
+		if (mod->registration_sequence != registration_sequence)
+		{	// don't need this model
+			Mod_Free (mod);
+		}
+	}
+
+	//GL_FreeUnusedImages (); /* FS: FIXME */
+
+	//registration_active = false;	/* Knightmare- map registration flag */
+}

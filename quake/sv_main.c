@@ -1366,7 +1366,7 @@ void SV_SpawnServer (char *server)
 
 	// allocate server memory
 	sv.max_edicts = CLAMP (MIN_EDICTS,(int)max_edicts->value,MAX_EDICTS); //johnfitz -- max_edicts cvar
-	sv.edicts = Z_Malloc (sv.max_edicts*pr_edict_size);
+	sv.edicts = Z_TagMalloc(sv.max_edicts * pr_edict_size, TAG_LEVEL);
 
 	sv.datagram.maxsize = sizeof(sv.datagram_buf);
 	sv.datagram.cursize = 0;
@@ -1396,6 +1396,7 @@ void SV_SpawnServer (char *server)
    
 	strcpy (sv.name, server);
 	sprintf (sv.modelname,"maps/%s.bsp", server);
+
 	sv.worldmodel = Mod_ForName (sv.modelname, false);
 
 	if (!sv.worldmodel)

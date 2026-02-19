@@ -182,4 +182,7 @@ void D_InitCaches (void *buffer, int size);
 void R_SetVrect (vrect_t *pvrect, vrect_t *pvrectin, int lineadj);
 void R_Restart_f (void);
 
+
+extern	int			r_viewcluster, r_oldviewcluster;
+
 #endif // __RENDER_H

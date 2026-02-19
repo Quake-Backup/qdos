@@ -357,7 +357,7 @@ typedef enum {mod_brush, mod_sprite, mod_alias} modtype_t;
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
-	qboolean	needload;		// bmodels and sprites don't cache normally
+	int			registration_sequence;
 
 	modtype_t	type;
 	int			numframes;
@@ -435,7 +435,7 @@ typedef struct model_s
 //============================================================================
 
 void	Mod_Init (void);
-void	Mod_ClearAll (void);
+void	Mod_FreeAll (void);
 model_t *Mod_ForName (char *name, qboolean crash);
 
 mleaf_t *Mod_PointInLeaf (float *p, model_t *model);

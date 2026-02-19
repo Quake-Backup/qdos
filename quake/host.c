@@ -46,8 +46,6 @@ double		oldrealtime;			// last frame run
 int			host_framecount;
 int			fps_count; /* FS: for show_fps */
 
-int			host_hunklevel;
-
 int			minimum_memory;
 
 client_t *host_client;		  // current client
@@ -554,14 +552,12 @@ void Host_ClearMemory (void)
 {
 	Com_DPrintf (DEVELOPER_MSG_MEM, "Clearing memory\n");
 	D_FlushCaches ();
-	Mod_ClearAll ();
+	Mod_FreeAll ();
 #ifndef GLQUAKE
 	R_ClearDynamic(); /* FS */
 #endif
 
-	/* FS: FIXME */
-	//if (host_hunklevel)
-	//	Hunk_Free (host_hunklevel);
+	Z_FreeTags(TAG_LEVEL);
 
 	cls.signon = 0;
 	memset (&sv, 0, sizeof(sv));
@@ -969,10 +965,6 @@ void Host_Init (quakeparms_t *parms)
 	Cbuf_AddText ("cl_warncmd 1\n"); /* FS: From QW */
 	Cbuf_Execute();
 	quakerc_init = false;
-
-	/* FS: FIXME */
-	Hunk_Alloc (0);
-	host_hunklevel = Hunk_End ();
 
 	host_initialized = true;
 

@@ -430,11 +430,7 @@ void Draw_Init (void)
 //	Draw_CrosshairAdjust();
 	cs_texture = GL_LoadTexture ("crosshair", 8, 8, cs_data, false, true);
 
-#ifdef QUAKE1
-	cb = (qpic_t *)COM_LoadTempFile ("gfx/conback.lmp");
-#else
-	cb = (qpic_t *)COM_LoadHunkFile ("gfx/conback.lmp");
-#endif
+	cb = (qpic_t *)COM_LoadFile ("gfx/conback.lmp", 0);
 	if (!cb)
 		Sys_Error ("Couldn't load gfx/conback.lmp");
 	SwapPic (cb);
@@ -474,7 +470,7 @@ void Draw_Init (void)
 	conback->height = vid.conheight;
 
 	// free loaded console
-	/* FS: FIXME */
+	Z_Free(cb);
 
 	// save a texture slot for translated picture
 	translate_texture = texture_extension_number++;
