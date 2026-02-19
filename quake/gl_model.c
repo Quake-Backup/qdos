@@ -47,6 +47,13 @@ int		registration_sequence;
 
 cvar_t	*gl_subdivide_size;
 
+static int HUNKPOLYHEADERSTOCK = 0x200000;
+static int HUNKPOLYHEADEREXTENDEDMOD = 0x200000 * 2;
+static int HUNKSPRITEHEADERSTOCK = 0x10000;
+static int HUNKSPRITEHEADEREXTENDEDMOD = 0x10000 * 2;
+static int HUNKBSPSTOCK = 0x1000000;
+static int HUNKBSPEXTENDEDMOD = 0x1000000 * 2; /* FS: For WARPC.BSP. */
+
 /*
 ===============
 Mod_Init
@@ -275,17 +282,17 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	switch (LittleLong(*(unsigned *)buf))
 	{
 	case IDPOLYHEADER:
-		loadmodel->extradata = Hunk_Begin (0x200000);
+		loadmodel->extradata = Hunk_Begin (extended_mod ? HUNKPOLYHEADEREXTENDEDMOD : HUNKPOLYHEADERSTOCK);
 		Mod_LoadAliasModel (mod, buf);
 		break;
 		
 	case IDSPRITEHEADER:
-		loadmodel->extradata = Hunk_Begin (0x10000);
+		loadmodel->extradata = Hunk_Begin (extended_mod ? HUNKSPRITEHEADEREXTENDEDMOD : HUNKSPRITEHEADERSTOCK);
 		Mod_LoadSpriteModel (mod, buf);
 		break;
 	
 	default:
-		loadmodel->extradata = Hunk_Begin (0x1000000);
+		loadmodel->extradata = Hunk_Begin (extended_mod ? HUNKBSPEXTENDEDMOD : HUNKBSPSTOCK);
 		starmod = loadmodel; /* FS: FIXME.  This should get handled in Mod_LoadBrushModel but it isn't. */
 		Mod_LoadBrushModel (mod, buf);
 		loadmodel = starmod;
