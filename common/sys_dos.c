@@ -334,13 +334,10 @@ Sys_Printf
 void Sys_Printf (const char *fmt, ...)
 {
 	va_list	argptr;
-	static	dstring_t *text;
-
-	if (!text)
-		text = dstring_new ();
+	char text[MAXPRINTMSG];
 
 	va_start (argptr, fmt);
-	dvsprintf (text,fmt,argptr);
+	Q_vsnprintf (text, sizeof(text), fmt,argptr);
 	va_end (argptr);
 }
 
@@ -401,17 +398,14 @@ void Sys_Quit (void)
 void Sys_Error (const char *error, ...)
 { 
     va_list     argptr;
-    static dstring_t    *string;
-
-    if (!string)
-        string = dstring_new();
+    char    string[MAXPRINTMSG];
 
     va_start (argptr,error);
-    dvsprintf (string,error,argptr);
+    Q_vsnprintf (string, sizeof(string), error,argptr);
     va_end (argptr);
 
 	Host_Shutdown();
-	fprintf(stderr, "Error: %s\n", string->str);
+	fprintf(stderr, "Error: %s\n", string);
 
 	__dpmi_free_physical_address_mapping(&info);
 	__djgpp_nearptr_disable(); /* FS: Everyone else is a master DOS DPMI programmer.  Pretty sure CWSDPMI is already taking care of this... */
@@ -615,18 +609,15 @@ static void Sys_DefaultExceptionHandler(int whatever)
 void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
 	va_list argptr;
-	static dstring_t *data;
+	char data[MAXPRINTMSG];
 	int fd;
 
-	if(!data)
-		data = dstring_new();
-
 	va_start(argptr, fmt);
-	dvsprintf(data, fmt, argptr);
+	Q_vsnprintf(data, sizeof(data), fmt, argptr);
 	va_end(argptr);
 
 	fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0666);
-	write(fd, data->str, data->size - 1);
+	write(fd, data, strlen(data) - 1);
 	close(fd);
 }
 

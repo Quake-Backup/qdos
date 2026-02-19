@@ -66,7 +66,7 @@ Z_Stats_f
 */
 void Z_Stats_f (void)
 {
-	Com_Printf ("%i bytes in %i blocks\n", z_bytes, z_count);
+	Com_Printf ("%zd bytes in %zd blocks\n", z_bytes, z_count);
 }
 
 /*
@@ -99,7 +99,7 @@ void *Z_TagMalloc (size_t size, int tag)
 	z = malloc(size);
 	if (!z)
 	{
-		Sys_Error ("Z_Malloc: failed on allocation of %i bytes", size);
+		Sys_Error ("Z_Malloc: failed on allocation of %zd bytes", size);
 		return NULL;
 	}
 	memset (z, 0, size);

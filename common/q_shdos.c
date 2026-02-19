@@ -41,7 +41,7 @@ void	*Hunk_Begin (size_t maxsize)
 	curhunksize = 0;
 	membase = (byte *)malloc (maxhunksize);
 	if (!membase)
-		Sys_Error ("VirtualAlloc reserve failed %d bytes",maxsize);
+		Sys_Error ("VirtualAlloc reserve failed %zd bytes",maxsize);
 
 	memset (membase, 0, maxsize);
 	return (void *)membase;

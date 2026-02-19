@@ -270,7 +270,7 @@ play [demoname]
 */
 void CL_PlayDemo_f (void)
 {
-	char name[MAX_PATH];
+	char name[MAX_OSPATH];
 	int i, c;
 	qboolean neg;
 
