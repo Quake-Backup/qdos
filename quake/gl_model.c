@@ -1670,7 +1670,6 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 			strcpy(starmod->name, name);
 		}
 	}
-
 #else
 	// johnfitz -- okay, so that i stop getting confused every time i look at this loop, here's how it works:
 	// we're looping through the submodels starting at 0.  Submodel 0 is the main model, so we don't have to

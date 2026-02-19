@@ -1147,7 +1147,7 @@ int TTY_Init(void)
 
 	for (n = 0; n < NUM_COM_PORTS; n++)
 	{
-		p = (ComPort *)Hunk_AllocName(sizeof(ComPort), "comport");
+		p = (ComPort *)Z_Malloc(sizeof(ComPort));
 		if (p == NULL)
 			Sys_Error("Hunk alloc failed for com port\n");
 		p->next = portList;
