@@ -259,9 +259,13 @@ qpic_t	*Draw_CachePic (char *path)
 //
 // load the pic from disk
 //
-	dat = (qpic_t *)COM_LoadTempFile (path);	
+	dat = (qpic_t *)COM_LoadFile (path);
 	if (!dat)
+	{
 		Sys_Error ("Draw_CachePic: failed to load %s", path);
+		return NULL;
+	}
+
 	SwapPic (dat);
 
 	// HACK HACK HACK --- we need to keep the bytes for
@@ -430,9 +434,13 @@ void Draw_Init (void)
 //	Draw_CrosshairAdjust();
 	cs_texture = GL_LoadTexture ("crosshair", 8, 8, cs_data, false, true);
 
-	cb = (qpic_t *)COM_LoadFile ("gfx/conback.lmp", 0);
+	cb = (qpic_t *)COM_LoadFile ("gfx/conback.lmp");
 	if (!cb)
+	{
 		Sys_Error ("Couldn't load gfx/conback.lmp");
+		return;
+	}
+
 	SwapPic (cb);
 
 #ifdef QUAKE1

@@ -238,6 +238,12 @@ texture_t *R_TextureAnimation (texture_t *base)
 	int		reletive;
 	int		count;
 
+	if (!base)
+	{
+		Sys_Error("R_TextureAnimation: base is NULL");
+		return NULL;
+	}
+
 	if (currententity->frame)
 	{
 		if (base->alternate_anims)
@@ -254,9 +260,15 @@ texture_t *R_TextureAnimation (texture_t *base)
 	{
 		base = base->anim_next;
 		if (!base)
+		{
 			Sys_Error ("R_TextureAnimation: broken cycle");
+			return NULL;
+		}
 		if (++count > 100)
+		{
 			Sys_Error ("R_TextureAnimation: infinite cycle");
+			return NULL;
+		}
 	}
 
 	return base;

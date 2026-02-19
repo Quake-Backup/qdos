@@ -937,12 +937,22 @@ void ED_LoadFromFile (char *data)
 		if (!data)
 			break;
 		if (com_token[0] != '{')
-			Sys_Error ("ED_LoadFromFile: found %s when expecting {",com_token);
+		{
+			Sys_Error ("ED_LoadFromFile: found %s when expecting {", com_token);
+			return;
+		}
 
 		if (!ent)
 			ent = EDICT_NUM(0);
 		else
 			ent = ED_Alloc ();
+
+		if (!ent)
+		{
+			Sys_Error("ED_LoadFromFile: no ent");
+			return;
+		}
+
 		data = ED_ParseEdict (data, ent);
 
 // remove things from different skill levels or deathmatch
@@ -1011,10 +1021,10 @@ void PR_LoadProgs (void)
 
 	if (progs)
 	{
-		Z_Free(progs);
+		Z_Free(progs); /* FS: FIXME: Free on disconnect/quit. */
 	}
 
-	progs = (dprograms_t *)COM_LoadFile("progs.dat", 0);//COM_LoadHunkFile ("progs.dat");
+	progs = (dprograms_t *)COM_LoadFile("progs.dat");
 	if (!progs)
 	{
 		Sys_Error ("PR_LoadProgs: couldn't load progs.dat");

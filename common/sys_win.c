@@ -597,7 +597,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 {
 	quakeparms_t	parms;
 	double			time, oldtime, newtime;
-	MEMORYSTATUS	lpBuffer;
+	MEMORYSTATUSEX	lpBuffer;
 	static	char	cwd[1024];
 	int				t;
 	RECT			rect;
@@ -610,7 +610,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	global_nCmdShow = nCmdShow;
 
 	lpBuffer.dwLength = sizeof(MEMORYSTATUS);
-	GlobalMemoryStatus (&lpBuffer);
+	GlobalMemoryStatusEx (&lpBuffer);
 
 	if (!GetCurrentDirectory (sizeof(cwd), cwd))
 		Sys_Error ("Couldn't determine current directory");

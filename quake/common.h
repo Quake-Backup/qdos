@@ -200,14 +200,14 @@ int COM_Argc (void);
 char *COM_Argv (int arg);
 void COM_ClearArgv (int arg);
 
-void COM_Init (char *path);
+void COM_Init (const char *basedir);
 void COM_InitArgv (int argc, char **argv);
 
 char *COM_SkipPath (char *pathname);
 void COM_StripExtension (char *in, char *out);
 void COM_FileBase (char *in, char *out);
 void COM_FilePath (char *in, char *out);
-void COM_DefaultExtension (char *path, char *extension);
+void COM_DefaultExtension (char *path, const char *extension);
 
 // does a varargs printf into a temp buffer
 char	*va(const char *format, ...) ATTRIBUTE_PRINTF(1, 2);
@@ -219,16 +219,13 @@ struct cache_user_s;
 
 extern	char	com_gamedir[MAX_OSPATH];
 
-void COM_WriteFile (char *filename, void *data, int len);
-int COM_OpenFile (char *filename, int *hndl);
-int COM_FOpenFile (char *filename, FILE **file);
+void COM_WriteFile (const char *filename, void *data, int len);
+int COM_OpenFile (const char *filename, int *hndl);
+int COM_FOpenFile (const char *filename, FILE **file);
 void COM_CloseFile (int h);
 
 void COM_FreeFile (void *buffer);
-byte *COM_LoadFile (char *path, int usehunk);
-byte *COM_LoadStackFile (char *path, void *buffer, int bufsize);
-byte *COM_LoadTempFile (char *path);
-byte *COM_LoadHunkFile (char *path);
+byte *COM_LoadFile (const char *path);
 
 /* FS: New stuff */
 int Q_tolower(int c);

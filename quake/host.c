@@ -914,13 +914,19 @@ void Host_Init (quakeparms_t *parms)
 
 	if (cls.state != ca_dedicated)
 	{
-		host_basepal = (byte *)COM_LoadFile ("gfx/palette.lmp", 0);
+		host_basepal = (byte *)COM_LoadFile ("gfx/palette.lmp");
 		if (!host_basepal)
+		{
 			Sys_Error ("Couldn't load gfx/palette.lmp");
+			return;
+		}
 
-		host_colormap = (byte *)COM_LoadFile ("gfx/colormap.lmp", 0);
+		host_colormap = (byte *)COM_LoadFile ("gfx/colormap.lmp");
 		if (!host_colormap)
+		{
 			Sys_Error ("Couldn't load gfx/colormap.lmp");
+			return;
+		}
 
 		VID_Init (host_basepal);
 		Draw_Init ();

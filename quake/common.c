@@ -1059,7 +1059,7 @@ void COM_FilePath (char *in, char *out)
 COM_DefaultExtension
 ==================
 */
-void COM_DefaultExtension (char *path, char *extension)
+void COM_DefaultExtension (char *path, const char *extension)
 {
 	char    *src;
 //
@@ -1340,7 +1340,7 @@ void COM_InitArgv (int argc, char **argv)
 COM_Init
 ================
 */
-void COM_Init (char *basedir)
+void COM_Init (const char *basedir)
 {
 	byte    swaptest[2] = {1,0};
 
@@ -1561,7 +1561,7 @@ COM_WriteFile
 The filename will be prefixed by the current game directory
 ============
 */
-void COM_WriteFile (char *filename, void *data, int len)
+void COM_WriteFile (const char *filename, void *data, int len)
 {
 	int		handle;
 	char	name[MAX_OSPATH];
@@ -1647,7 +1647,7 @@ Finds the file in the search path.
 Sets com_filesize and one of handle or file
 ===========
 */
-int COM_FindFile (char *filename, int *handle, FILE **file)
+int COM_FindFile (const char *filename, int *handle, FILE **file)
 {
 	searchpath_t    *search;
 	char            netpath[MAX_OSPATH];
@@ -1657,9 +1657,16 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 	int                     findtime, cachetime;
 
 	if (file && handle)
+	{
 		Sys_Error ("COM_FindFile: both handle and file set");
+		return -1;
+	}
+
 	if (!file && !handle)
+	{
 		Sys_Error ("COM_FindFile: neither handle or file set");
+		return -1;
+	}
 
 //
 // search through the path, one element at a time
@@ -1767,7 +1774,7 @@ returns a handle and a length
 it may actually be inside a pak file
 ===========
 */
-int COM_OpenFile (char *filename, int *handle)
+int COM_OpenFile (const char *filename, int *handle)
 {
 	return COM_FindFile (filename, handle, NULL);
 }
@@ -1780,7 +1787,7 @@ If the requested file is inside a packfile, a new FILE * will be opened
 into the file.
 ===========
 */
-int COM_FOpenFile (char *filename, FILE **file)
+int COM_FOpenFile (const char *filename, FILE **file)
 {
 	return COM_FindFile (filename, NULL, file);
 }
@@ -1819,7 +1826,7 @@ Allways appends a 0 byte.
 */
 byte    *loadbuf;
 int             loadsize;
-byte *COM_LoadFile (char *path, int usehunk)
+byte *COM_LoadFile (const char *path)
 {
 	int             h;
 	byte    *buf;
@@ -1832,27 +1839,7 @@ byte *COM_LoadFile (char *path, int usehunk)
 	if (h == -1)
 		return NULL;
 
-	if (usehunk == 1)
-	{
-		/* FS: FIXME. */
-		Hunk_Begin((len+31)&~31);
-		buf = Hunk_Alloc(len);
-		Hunk_End();
-	}
-	else if (usehunk == 2)
-	{
-		buf = Z_TagMalloc(len, TAG_TEMP); /* FS: FIXME. */
-	}
-	else if (usehunk == 0)
-	{
-		buf = Z_Malloc (len+1);
-	}
-	else
-	{
-		Sys_Error ("COM_LoadFile: bad usehunk");
-		return NULL;
-	}
-
+	buf = Z_Malloc (len+1);
 	if (!buf)
 	{
 		Sys_Error ("COM_LoadFile: not enough space for %s", path);
@@ -1867,17 +1854,6 @@ byte *COM_LoadFile (char *path, int usehunk)
 	Draw_EndDisc ();
 
 	return buf;
-}
-
-/* FS: FIXME: These two need to go away. */
-byte *COM_LoadHunkFile (char *path)
-{
-	return COM_LoadFile (path, 1);
-}
-
-byte *COM_LoadTempFile (char *path)
-{
-	return COM_LoadFile (path, 2);
 }
 
 /*
@@ -1985,6 +1961,12 @@ char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned
 	*numfiles = nfiles;
 
 	list = malloc( sizeof( char * ) * nfiles );
+	if (!list)
+	{
+		Sys_Error("COM_ListFiles(): Out of memory.");
+		return NULL;
+	}
+
 	memset( list, 0, sizeof( char * ) * nfiles );
 
 	s = Sys_FindFirst( findname, musthave, canthave );
@@ -1994,6 +1976,12 @@ char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned
 		if ( s[strlen(s)-1] != '.' )
 		{
 			list[nfiles] = strdup( s );
+			if (!list[nfiles])
+			{
+				free(list);
+				Sys_Error("COM_ListFiles(): Out of memory.");
+				return NULL;
+			}
 #if defined(_WIN32) || defined(__MSDOS__)
 			strlwr( list[nfiles] );
 #endif

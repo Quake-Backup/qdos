@@ -70,7 +70,10 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
 	mplane_t	*plane;
 	
 	if (!model || !model->nodes)
+	{
 		Sys_Error ("Mod_PointInLeaf: bad model");
+		return NULL;
+	}
 
 	node = model->nodes;
 	while (1)
@@ -233,7 +236,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 //
 // load the file
 //
-	buf = (unsigned *)COM_LoadFile (mod->name, 0);
+	buf = (unsigned *)COM_LoadFile (mod->name);
 	if (!buf)
 	{
 		if (crash)
@@ -394,7 +397,10 @@ void Mod_LoadTextures (lump_t *l)
 			altmax++;
 		}
 		else
+		{
 			Sys_Error ("Bad animating texture %s", tx->name);
+			return;
+		}
 
 		for (j=i+1 ; j<m->nummiptex ; j++)
 		{
@@ -422,7 +428,10 @@ void Mod_LoadTextures (lump_t *l)
 					altmax = num+1;
 			}
 			else
+			{
 				Sys_Error ("Bad animating texture %s", tx->name);
+				return;
+			}
 		}
 		
 #define	ANIM_CYCLE	2
@@ -431,7 +440,10 @@ void Mod_LoadTextures (lump_t *l)
 		{
 			tx2 = anims[j];
 			if (!tx2)
-				Sys_Error ("Missing frame %i of %s",j, tx->name);
+			{
+				Sys_Error ("Missing frame %i of %s", j, tx->name);
+				return;
+			}
 			tx2->anim_total = max * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j+1) * ANIM_CYCLE;
@@ -443,7 +455,10 @@ void Mod_LoadTextures (lump_t *l)
 		{
 			tx2 = altanims[j];
 			if (!tx2)
-				Sys_Error ("Missing frame %i of %s",j, tx->name);
+			{
+				Sys_Error ("Missing frame %i of %s", j, tx->name);
+				return;
+			}
 			tx2->anim_total = altmax * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j+1) * ANIM_CYCLE;
@@ -1609,6 +1624,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		bsp2 = 2;	//sanitised revision
 		break;
 	default:
+		bsp2 = false; /* FS: Shut up compiler. */
 		Sys_Error ("Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", mod->name, mod->bspversion, BSPVERSION);
 		break;
 	}

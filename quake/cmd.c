@@ -270,7 +270,7 @@ void Cmd_Exec_f (void)
 		if(!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
 			s = "qdos.cfg";
 
-	f = (char *)COM_LoadFile (s, 0);
+	f = (char *)COM_LoadFile (s);
 	if (!f)
 	{
 		Com_Printf ("couldn't exec %s\n",s);

@@ -74,10 +74,10 @@ void W_LoadWadFile (char *filename)
 
 	if (wad_base)
 	{
-		Z_Free(wad_base);
+		Z_Free(wad_base); /* FS: FIXME: Free on disconnect/quit. */
 	}
 
-	wad_base = COM_LoadFile(filename, 0); //COM_LoadHunkFile (filename);
+	wad_base = COM_LoadFile(filename);
 	if (!wad_base)
 	{
 		Sys_Error ("W_LoadWadFile: couldn't load %s", filename);

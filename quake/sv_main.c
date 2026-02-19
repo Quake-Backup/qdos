@@ -1457,14 +1457,14 @@ void SV_SpawnServer (char *server)
 		{
 			Z_Free(entitystring);
 		}
-		entitystring = (char *)COM_LoadFile(filename, 0); //COM_LoadHunkFile (filename);
 
+		entitystring = (char *)COM_LoadFile(filename); /* FS: FIXME: Free on disconnect/quit. */
 		if (!entitystring)
 			Com_DPrintf(DEVELOPER_MSG_IO, "No external ent file found.\n");
 		else
 			Con_Warning("External ent file found!\n"); /* FS: Warn about non-standardness */
 
-		if(entitystring && strlen(entitystring) == 0) /* FS: Check to see if it's blank. */
+		if (entitystring && strlen(entitystring) == 0) /* FS: Check to see if it's blank. */
 		{
 			Con_Warning("%s.ent is blank!  Defaulting to %s.bsp.\n", filename, server);
 			entitystring = NULL;
