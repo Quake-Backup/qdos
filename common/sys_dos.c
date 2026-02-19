@@ -257,7 +257,6 @@ void Sys_Shutdown(void)
 	{
 		dos_unlockmem (&start_of_memory,
 					   end_of_memory - (int)&start_of_memory);
-		dos_unlockmem (quakeparms.membase, quakeparms.memsize);
 	}
 }
 
@@ -510,20 +509,6 @@ void Sys_GetMemory(void)
 
 	if ((j = COM_CheckParm("-mem")) != 0 && j < com_argc-1)
 		quakeparms.memsize = Q_atoi(com_argv[j+1]) * 1024 * 1024;
-
-	if ((j = COM_CheckParm ("-heapsize")) != 0 && j < com_argc-1)
-		quakeparms.memsize = Q_atoi(com_argv[j+1]) * 1024;
-
-	quakeparms.membase = malloc (quakeparms.memsize);
-
-	printf("malloc'd: %d\n", quakeparms.memsize);
-
-	if (!COM_CheckParm ("-noclear")) /* FS: Wanted the option */
-	{
-		printf("Clearing allocated memory...\n");
-		memset(quakeparms.membase,0x0,quakeparms.memsize); // JASON: Clear memory on startup
-		printf("Done!  Continuing to load Quake.\n");
-	}
 }
 
 static int Sys_Get_Physical_Memory(void) /* FS: From DJGPP tutorial */

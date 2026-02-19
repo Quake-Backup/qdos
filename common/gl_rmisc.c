@@ -33,7 +33,7 @@ void	R_InitTextures (void)
 	byte	*dest;
 
 // create a simple checkerboard texture for the default
-	r_notexture_mip = Hunk_Alloc (sizeof(texture_t) + 16*16+8*8+4*4+2*2);
+	r_notexture_mip = Z_Malloc (sizeof(texture_t) + 16*16+8*8+4*4+2*2); /* FS: FIXME: Free on shutdown/restart. */
 	
 	r_notexture_mip->width = r_notexture_mip->height = 16;
 	r_notexture_mip->offsets[0] = sizeof(texture_t);

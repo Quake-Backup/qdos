@@ -1167,7 +1167,7 @@ void Host_Loadgame_f (void)
 	for (i=0 ; i<MAX_LIGHTSTYLES ; i++)
 	{
 		fscanf (f, "%s\n", str);
-		sv.lightstyles[i] = Hunk_Alloc (strlen(str)+1);
+		sv.lightstyles[i] = Z_TagMalloc (strlen(str)+1, TAG_LEVEL);
 		strcpy (sv.lightstyles[i], str);
 	}
 

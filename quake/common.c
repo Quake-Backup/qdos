@@ -1836,30 +1836,21 @@ byte *COM_LoadFile (char *path, int usehunk)
 	len = COM_OpenFile (path, &h);
 	if (h == -1)
 		return NULL;
-	
+
 	if (usehunk == 1)
 	{
-		Hunk_Begin(len * 2); /* FS: FIXME */
-		buf = Hunk_Alloc (len+1);
+		/* FS: FIXME. */
+		Hunk_Begin((len+31)&~31);
+		buf = Hunk_Alloc(len);
 		Hunk_End();
 	}
 	else if (usehunk == 2)
 	{
-		buf = Z_TagMalloc(len+1, TAG_TEMP);
+		buf = Z_TagMalloc(len, TAG_TEMP); /* FS: FIXME. */
 	}
 	else if (usehunk == 0)
 	{
 		buf = Z_Malloc (len+1);
-	}
-	else if (usehunk == 3)
-	{
-
-		Sys_Error("Fix this!\n");
-//		buf = Cache_Alloc (loadcache, len+1, base);
-	}
-	else if (usehunk == 4)
-	{
-		Sys_Error("No!\n");
 	}
 	else
 	{
@@ -1872,13 +1863,14 @@ byte *COM_LoadFile (char *path, int usehunk)
 	((byte *)buf)[len] = 0;
 
 	Draw_BeginDisc ();
-	Sys_FileRead (h, buf, len);                     
+	Sys_FileRead (h, buf, len);
 	COM_CloseFile (h);
 	Draw_EndDisc ();
 
 	return buf;
 }
 
+/* FS: FIXME: These two need to go away. */
 byte *COM_LoadHunkFile (char *path)
 {
 	return COM_LoadFile (path, 1);

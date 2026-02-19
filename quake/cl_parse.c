@@ -326,7 +326,7 @@ void CL_ParseServerInfo (void)
 	{
 		Host_Error ("Bad maxclients (%u) from server", cl.maxclients);
 	}
-	cl.scores = Hunk_Alloc (cl.maxclients*sizeof(*cl.scores));
+	cl.scores = Z_TagMalloc (cl.maxclients*sizeof(*cl.scores), TAG_LEVEL);
 
 // parse gametype
 	cl.gametype = MSG_ReadByte ();
