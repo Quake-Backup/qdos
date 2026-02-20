@@ -339,15 +339,7 @@ void Skin_Precache (void)
 	}
 }
 
-
-/*
-==========
-Skin_Skins_f
-
-Refind all skins, downloading if needed.
-==========
-*/
-void	Skin_Skins_f (void)
+void	Skin_FreeAll (void)
 {
 	int		i;
 
@@ -359,6 +351,18 @@ void	Skin_Skins_f (void)
 	}
 
 	numskins = 0;
+}
+
+/*
+==========
+Skin_Skins_f
+
+Refind all skins, downloading if needed.
+==========
+*/
+void	Skin_Skins_f (void)
+{
+	Skin_FreeAll();
 
 	if (cls.state == ca_disconnected) /* FS: QuakeForge fix */
 		return;

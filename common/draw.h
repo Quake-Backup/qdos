@@ -44,4 +44,8 @@ qpic_t *Draw_PicFromWad (char *name);
 qpic_t *Draw_CachePic (char *path);
 void Draw_Crosshair(void);
 
+#ifdef GLQUAKE
+void GL_ShutdownTexures (void);
+#endif
+
 #endif // __DRAW_H

@@ -112,6 +112,7 @@ extern	struct texture_s	*r_notexture_mip;
 extern	entity_t	r_worldentity;
 
 void R_Init (void);
+void R_Shutdown (void);
 void R_InitTextures (void);
 void R_InitEfrags (void);
 void R_RenderView (void);		// must set r_refdef first
@@ -140,7 +141,7 @@ void R_InitParticles (void);
 void R_ClearParticles (void);
 void R_DrawParticles (void);
 void R_DrawWaterSurfaces (void);
-
+void R_ShutdownParticles (void);
 
 //
 // surface cache related

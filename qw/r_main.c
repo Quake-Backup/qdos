@@ -258,6 +258,7 @@ void R_Init (void)
 	D_Init ();
 }
 
+static surf_t *oldsurfaces;
 /*
 ===============
 R_NewMap
@@ -266,16 +267,8 @@ R_NewMap
 void R_NewMap (void)
 {
 	int		i;
-	static surf_t *oldsurfaces;
 
-	if (bedges)
-		Z_Free(bedges);
-
-	if (auxedges)
-		Z_Free(auxedges);
-
-	if (oldsurfaces)
-		Z_Free(oldsurfaces);
+	R_ClearDynamic();
 
 	memset (&r_worldentity, 0, sizeof(r_worldentity));
 	r_worldentity.model = cl.worldmodel;
@@ -1023,7 +1016,7 @@ void R_RenderView_ (void)
 
 	if (!r_worldentity.model || !cl.worldmodel)
 		Sys_Error ("R_RenderView: NULL worldmodel");
-		
+
 	R_EdgeDrawing ();
 
 	if (r_dspeeds->value)
@@ -1125,66 +1118,24 @@ void R_ClearDynamic (void) /* FS */
 	if (bedges)
 		Z_Free(bedges);
 	bedges = NULL;
+
+	if (auxedges)
+		Z_Free(auxedges);
+	auxedges = NULL;
+
+	if (oldsurfaces)
+		Z_Free(oldsurfaces);
+	oldsurfaces = NULL;
+
+	r_maxedgesseen = 0;
+	r_maxsurfsseen = 0;
 }
 
 void R_Restart_f (void)
 {
-	if (bedges)
-		Z_Free(bedges);
+}
 
-#if 0
-	/* FS: FIXME: This causes a memory leak until next map load.  But, currently it's better than changing r_maxbmodeledges to a higher value and bombing out */
-	r_viewleaf = NULL;
-	R_ClearParticles ();
-
-	r_cnumsurfs = r_maxsurfs->value;
-
-	if (r_cnumsurfs <= MINSURFACES)
-		r_cnumsurfs = MINSURFACES;
-
-	if (r_cnumsurfs > NUMSTACKSURFACES)
-	{
-		surfaces = Hunk_AllocName (r_cnumsurfs * sizeof(surf_t), "surfaces");
-		surface_p = surfaces;
-		surf_max = &surfaces[r_cnumsurfs];
-		r_surfsonstack = false;
-	// surface 0 doesn't really exist; it's just a dummy because index 0
-	// is used to indicate no edge attached to surface
-		surfaces--;
-		R_SurfacePatch ();
-	}
-	else
-	{
-		r_surfsonstack = true;
-	}
-
-	r_maxedgesseen = 0;
-	r_maxsurfsseen = 0;
-
-	r_numallocatededges = r_maxedges->value;
-
-	if (r_numallocatededges < MINEDGES)
-		r_numallocatededges = MINEDGES;
-
-	if (r_numallocatededges <= NUMSTACKEDGES)
-	{
-		auxedges = NULL;
-	}
-	else
-	{
-		auxedges = Hunk_AllocName (r_numallocatededges * sizeof(edge_t),
-								   "edges");
-	}
-
-#endif
-
-	bedges = NULL;
-
-	if(r_maxbmodeledges->intValue > MIN_BMODEL_EDGES) /* FS: Dynamic allocation of bmodel edges */
-		bedges = Z_Malloc (r_maxbmodeledges->intValue * sizeof(bedge_t));
-	else
-		bedges = Z_Malloc (MIN_BMODEL_EDGES * sizeof(bedge_t));
-
-	r_dowarpold = false;
-	r_viewchanged = true;
+void R_Shutdown (void)
+{
+	//R_ClearDynamic();
 }

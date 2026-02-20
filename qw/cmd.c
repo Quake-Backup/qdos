@@ -334,15 +334,6 @@ Creates a new command that executes a command string (possibly ; seperated)
 ===============
 */
 
-char *CopyString (char *in)
-{
-	char	*out;
-	
-	out = Z_Malloc (strlen(in)+1);
-	strcpy (out, in);
-	return out;
-}
-
 void Cmd_Alias_f (void)
 {
 	cmdalias_t	*a;
@@ -370,18 +361,18 @@ void Cmd_Alias_f (void)
 	{
 		if (!strcmp(s, a->name))
 		{
-			Z_Free (a->value);
+			free(a->value);
 			break;
 		}
 	}
 
 	if (!a)
 	{
-		a = Z_Malloc (sizeof(cmdalias_t));
+		a = malloc(sizeof(cmdalias_t));
 		a->next = cmd_alias;
 		cmd_alias = a;
 	}
-	strcpy (a->name, s);	
+	Com_strcpy (a->name, sizeof(a->name), s);	
 
 // copy the rest of the command line
 	cmd[0] = 0;		// start out with a null string
@@ -394,7 +385,7 @@ void Cmd_Alias_f (void)
 	}
 	strcat (cmd, "\n");
 	
-	a->value = CopyString (cmd);
+	a->value = strdup(cmd);
 }
 
 /*
@@ -514,13 +505,7 @@ Cmd_AddCommand
 void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 {
 	cmd_function_t	*cmd;
-	
-	if (host_initialized)	// because hunk allocation would get stomped
-	{
-		//Sys_Error ("Cmd_AddCommand after host_initialized");
-		return;
-	}
-		
+
 // fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
 	{
@@ -539,7 +524,7 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	}
 
 	cmd = Z_Malloc(sizeof(cmd_function_t));
-	cmd->name = cmd_name;
+	cmd->name = strdup(cmd_name);
 	cmd->function = function;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
@@ -838,5 +823,46 @@ void Cbuf_AddEarlyCommands (qboolean clear)
 		}
 
 		i+=2;
+	}
+}
+
+void Cmd_RemoveAllCommands (void)
+{
+	cmdalias_t *alias, *aNext;
+	cmd_function_t	*cmd, *next;
+	int i;
+
+	for (alias=cmd_alias; alias; alias = aNext)
+	{
+		aNext = alias->next;
+
+		if (alias->value)
+		{
+			free(alias->value);
+			alias->value = NULL;
+		}
+
+		free(alias);
+		alias = NULL;
+	}
+
+	for (cmd = cmd_functions; cmd; cmd = next)
+	{
+		next = cmd->next;
+
+		if (cmd->name)
+		{
+			free(cmd->name);
+			cmd->name = NULL;
+		}
+
+		free(cmd);
+		cmd = NULL;
+	}
+
+	for (i = 0; i < cmd_argc; i++)
+	{
+		free(cmd_argv[i]);
+		cmd_argv[i] = NULL;
 	}
 }

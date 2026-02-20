@@ -282,11 +282,6 @@ void Con_afk_f (void) /* FS: EZQ Chat */
 	}
 }
 
-void Con_MemClear_f (void) /* FS: Force clear state */
-{
-	CL_ClearState();
-}
-
 /*
 ================
 Con_Init
@@ -317,7 +312,6 @@ void Con_Init (void)
 	Cmd_AddCommand ("messagemode", Con_MessageMode_f);
 	Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
 	Cmd_AddCommand ("clear", Con_Clear_f);
-	Cmd_AddCommand ("memclear", Con_MemClear_f); /* FS: Force clear state */
 
 	con_initialized = true;
 }

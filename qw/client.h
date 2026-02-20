@@ -627,6 +627,7 @@ void	Skin_Skins_f (void);
 void	Skin_AllSkins_f (void);
 void	Skin_NextDownload (qboolean queue);
 void	Skin_Precache (void);
+void	Skin_FreeAll(void);
 
 #define RSSHOT_WIDTH 320
 #define RSSHOT_HEIGHT 200

@@ -78,7 +78,7 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
 	
 	if (!model || !model->nodes)
 	{
-		Sys_Error ("Mod_PointInLeaf: bad model");
+		Sys_Error ("Mod_PointInLeaf: bad model: %s", model->name); /* FS: Tell me the model name */
 		return NULL;
 	}
 
@@ -152,6 +152,37 @@ byte *Mod_LeafPVS (mleaf_t *leaf, model_t *model)
 }
 
 /*
+================
+Mod_Free
+================
+*/
+void Mod_Free (model_t *mod)
+{
+	Hunk_Free (mod->extradata);
+	memset (mod, 0, sizeof(*mod));
+}
+
+/*
+================
+Mod_FreeAll
+================
+*/
+void Mod_FreeAll (void)
+{
+	int		i;
+	model_t *mod;
+
+	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
+	{
+		if (mod->type != mod_alias)
+		{
+			if (mod->extradatasize)
+				Mod_Free (mod);
+		}
+	}
+}
+
+/*
 ==================
 Mod_FindName
 
@@ -164,10 +195,10 @@ model_t *Mod_FindName (char *name)
 	
 	if (!name[0])
 	{
-		Sys_Error ("Mod_ForName: NULL name");
+		Sys_Error ("Mod_FindName: NULL name"); //johnfitz -- was "Mod_ForName"
 		return NULL;
 	}
-		
+
 //
 // search the currently loaded models
 //
@@ -273,7 +304,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 //
 
 // call the apropriate loader
-	
+
 	switch (LittleLong(*(unsigned *)buf))
 	{
 	case IDPOLYHEADER:
@@ -392,7 +423,7 @@ void Mod_LoadTextures (lump_t *l)
 		if (!tx || tx->name[0] != '+')
 			continue;
 		if (tx->anim_next)
-			continue;	// allready sequenced
+			continue;       // allready sequenced
 
 	// find the number of frames in the animation
 		memset (anims, 0, sizeof(anims));
@@ -570,7 +601,7 @@ void Mod_LoadVertexes (lump_t *l)
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		Sys_Error ("Mod_LoadVertexes: funny lump size in %s", loadmodel->name);
 		return;
 	}
 	count = l->filelen / sizeof(*in);
@@ -601,7 +632,7 @@ void Mod_LoadSubmodels (lump_t *l)
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		Sys_Error ("Mod_LoadSubmodels: funny lump size in %s", loadmodel->name);
 		return;
 	}
 	count = l->filelen / sizeof(*in);
@@ -643,7 +674,7 @@ void Mod_LoadEdges (lump_t *l, int bsp2)
 
 		if (l->filelen % sizeof(*in))
 		{
-			Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+			Sys_Error ("Mod_LoadEdges: funny lump size in %s", loadmodel->name);
 			return;
 		}
 
@@ -665,7 +696,7 @@ void Mod_LoadEdges (lump_t *l, int bsp2)
 
 		if (l->filelen % sizeof(*in))
 		{
-			Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+			Sys_Error ("Mod_LoadEdges: funny lump size in %s", loadmodel->name);
 			return;
 		}
 
@@ -682,7 +713,6 @@ void Mod_LoadEdges (lump_t *l, int bsp2)
 		}
 	}
 }
-
 
 /*
 =================
@@ -849,7 +879,7 @@ void Mod_LoadFaces_L1 (lump_t *l)
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		Sys_Error ("Mod_LoadFaces_L1: funny lump size in %s", loadmodel->name);
 		return;
 	}
 	count = l->filelen / sizeof(*in);
@@ -1026,7 +1056,7 @@ void Mod_LoadNodes_S (lump_t *l)
 	in = (dnode_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		Sys_Error ("Mod_LoadNodes_S: funny lump size in %s", loadmodel->name);
 		return;
 	}
 	count = l->filelen / sizeof(*in);
@@ -1210,7 +1240,7 @@ void Mod_ProcessLeafs_S (dleaf_t *in, int filelen)
 
 	if (filelen % sizeof(*in))
 	{
-		Sys_Error ("Mod_ProcessLeafs: funny lump size in %s", loadmodel->name);
+		Sys_Error ("Mod_ProcessLeafs_S: funny lump size in %s", loadmodel->name);
 		return;
 	}
 	count = filelen / sizeof(*in);
@@ -1375,6 +1405,7 @@ void Mod_LoadLeafs (lump_t *l, int bsp2)
 	else
 		Mod_ProcessLeafs_S  ((dleaf_t *) in, l->filelen);
 }
+
 /*
 =================
 Mod_LoadClipnodes
@@ -1574,7 +1605,7 @@ void Mod_LoadMarksurfaces (lump_t *l, int bsp2) /* FS: BSP2 support */
 		short *in = (short *)(mod_base + l->fileofs);
 		if (l->filelen % sizeof(*in))
 		{
-			Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+			Sys_Error ("Mod_LoadMarksurfaces: funny lump size in %s", loadmodel->name);
 			return;
 		}
 		count = l->filelen / sizeof(*in);
@@ -1593,7 +1624,7 @@ void Mod_LoadMarksurfaces (lump_t *l, int bsp2) /* FS: BSP2 support */
 			j = (unsigned short)LittleShort(in[i]); //johnfitz -- explicit cast as unsigned short
 			if (j >= loadmodel->numsurfaces)
 			{
-				Sys_Error ("Mod_ParseMarksurfaces: bad surface number");
+				Sys_Error ("Mod_LoadMarksurfaces: bad surface number");
 				return;
 			}
 			out[i] = loadmodel->surfaces + j;
@@ -1614,7 +1645,7 @@ void Mod_LoadSurfedges (lump_t *l)
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		Sys_Error ("Mod_LoadSurfedges: funny lump size in %s",loadmodel->name);
 		return;
 	}
 	count = l->filelen / sizeof(*in);
@@ -1626,7 +1657,6 @@ void Mod_LoadSurfedges (lump_t *l)
 	for ( i=0 ; i<count ; i++)
 		out[i] = LittleLong (in[i]);
 }
-
 
 /*
 =================
@@ -1644,7 +1674,7 @@ void Mod_LoadPlanes (lump_t *l)
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		Sys_Error ("Mod_LoadPlanes: funny lump size in %s", loadmodel->name);
 		return;
 	}
 	count = l->filelen / sizeof(*in);
@@ -1735,7 +1765,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
 
 // load into heap
-	
+
 	Mod_LoadVertexes (&header->lumps[LUMP_VERTEXES]);
 	Mod_LoadEdges (&header->lumps[LUMP_EDGES], bsp2);
 	Mod_LoadSurfedges (&header->lumps[LUMP_SURFEDGES]);
@@ -1755,6 +1785,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 	Mod_MakeHull0 ();
 
 	mod->numframes = 2;		// regular and alternate animation
+	mod->flags = 0;
 
 #if 0 /* FS: FIXME: This doesn't actually work. */
 	for (i=0 ; i<mod->numsubmodels ; i++)
@@ -2386,7 +2417,8 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 	version = LittleLong (pin->version);
 	if (version != SPRITE_VERSION)
 	{
-		Sys_Error ("%s has wrong version number "
+		/* FS: Don't bail out for this.  Must be some new map that we haven't added support for this format yet. */
+		Com_Printf ("%s has wrong version number "
 			"(%i should be %i)", mod->name, version, SPRITE_VERSION);
 		return;
 	}
@@ -2421,6 +2453,7 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 	}
 
 	mod->numframes = numframes;
+	mod->flags = 0;
 
 	pframetype = (dspriteframetype_t *)(pin + 1);
 
@@ -2465,37 +2498,8 @@ void Mod_Print (void)
 	{
 		Com_Printf ("%8p : %s\n",mod->extradata, mod->name);
 	}
-}
 
-/*
-================
-Mod_Free
-================
-*/
-void Mod_Free (model_t *mod)
-{
-	Hunk_Free (mod->extradata);
-	memset (mod, 0, sizeof(*mod));
-}
-
-/*
-================
-Mod_FreeAll
-================
-*/
-void Mod_FreeAll (void)
-{
-	int		i;
-	model_t *mod;
-
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
-	{
-		if (mod->type != mod_alias)
-		{
-			if (mod->extradatasize)
-				Mod_Free (mod);
-		}
-	}
+	Com_Printf ("%i models\n",mod_numknown); //johnfitz -- print the total too
 }
 
 //=============================================================================

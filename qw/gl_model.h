@@ -420,7 +420,7 @@ typedef struct model_s
 // additional model data
 //
 	void		*extradata;
-	int			extradatasize;
+	size_t		extradatasize;
 } model_t;
 
 //============================================================================

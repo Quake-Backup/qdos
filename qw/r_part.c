@@ -47,7 +47,7 @@ void R_InitParticles (void)
 {
 	int		i;
 
-	i = COM_CheckParm ("-particles");
+	i = COM_CheckParm ("-particles"); /* FS: TODO: Make this a CVAR. */
 
 	if (i)
 	{
@@ -171,6 +171,40 @@ void R_ParticleExplosion (vec3_t org)
 				p->org[j] = org[j] + ((rand()%32)-16);
 				p->vel[j] = (rand()%512)-256;
 			}
+		}
+	}
+}
+
+/*
+===============
+R_ParticleExplosion2
+
+===============
+*/
+void R_ParticleExplosion2 (vec3_t org, int colorStart, int colorLength)
+{
+	int			i, j;
+	particle_t	*p;
+	int			colorMod = 0;
+
+	for (i=0; i<512; i++)
+	{
+		if (!free_particles)
+			return;
+		p = free_particles;
+		free_particles = p->next;
+		p->next = active_particles;
+		active_particles = p;
+
+		p->die = cl.time + 0.3;
+		p->color = colorStart + (colorMod % colorLength);
+		colorMod++;
+
+		p->type = pt_blob;
+		for (j=0 ; j<3 ; j++)
+		{
+			p->org[j] = org[j] + ((rand()%32)-16);
+			p->vel[j] = (rand()%512)-256;
 		}
 	}
 }
@@ -614,3 +648,9 @@ void R_DrawParticles (void)
 #endif
 }
 
+void R_ShutdownParticles (void)
+{
+	R_ClearParticles();
+	Z_Free(particles);
+	r_numparticles = 0;
+}

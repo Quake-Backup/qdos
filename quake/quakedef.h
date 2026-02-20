@@ -70,11 +70,6 @@ void    VID_UnlockBuffer (void);
 #define id386   0
 #endif
 
-#ifdef _MSC_VER
-#undef id386
-#define id386 0 /* FS: FIXME: ASAN TEST */
-#endif
-
 #if id386
 //broken!!!
 #define UNALIGNED_OK    1       // set to 0 if unaligned accesses are not supported

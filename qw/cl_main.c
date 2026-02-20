@@ -1927,6 +1927,7 @@ void Host_Shutdown(void)
 	IN_Shutdown ();
 	if (host_basepal)
 		VID_Shutdown();
+	Cmd_RemoveAllCommands();
 }
 
 void CL_Flashlight_f (void) /* FS: Flashlight */

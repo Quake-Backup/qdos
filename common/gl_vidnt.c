@@ -786,6 +786,8 @@ void	VID_Shutdown (void)
 
 	if (vid_initialized)
 	{
+		R_Shutdown();
+
 		vid_canalttab = false;
 		hRC = wglGetCurrentContext();
     	hDC = wglGetCurrentDC();
@@ -815,6 +817,8 @@ static PIXELFORMATDESCRIPTOR pfd;
 
 BOOL bSetupPixelFormat(HDC hDC)
 {
+    int pixelformat;
+
 	memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -828,7 +832,6 @@ BOOL bSetupPixelFormat(HDC hDC)
 	pfd.cStencilBits = 8;	// Knightmare added 2/22/13
 	pfd.iLayerType = PFD_MAIN_PLANE;
 
-    int pixelformat;
 	pixelformat = ChoosePixelFormat(hDC, &pfd);
     if ( pixelformat == 0 )
     {

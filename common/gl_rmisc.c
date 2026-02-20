@@ -33,7 +33,7 @@ void	R_InitTextures (void)
 	byte	*dest;
 
 // create a simple checkerboard texture for the default
-	r_notexture_mip = Z_Malloc (sizeof(texture_t) + 16*16+8*8+4*4+2*2); /* FS: FIXME: Free on shutdown/restart. */
+	r_notexture_mip = Z_Malloc (sizeof(texture_t) + 16*16+8*8+4*4+2*2);
 	
 	r_notexture_mip->width = r_notexture_mip->height = 16;
 	r_notexture_mip->offsets[0] = sizeof(texture_t);
@@ -55,7 +55,7 @@ void	R_InitTextures (void)
 	}	
 }
 
-byte	dottexture[8][8] =
+static const byte	dottexture[8][8] =
 {
 	{0,1,1,0,0,0,0,0},
 	{1,1,1,1,0,0,0,0},
@@ -66,6 +66,7 @@ byte	dottexture[8][8] =
 	{0,0,0,0,0,0,0,0},
 	{0,0,0,0,0,0,0,0},
 };
+
 void R_InitParticleTexture (void)
 {
 	int		x,y;
@@ -170,7 +171,7 @@ void R_Init (void)
 {	
 	Cmd_AddCommand ("timerefresh", R_TimeRefresh_f);	
 	Cmd_AddCommand ("envmap", R_Envmap_f);	
-	Cmd_AddCommand ("pointfile", R_ReadPointFile_f);	
+	Cmd_AddCommand ("pointfile", R_ReadPointFile_f);
 
 	r_norefresh = Cvar_Get("r_norefresh", "0", 0);
 	r_lightmap = Cvar_Get("r_lightmap", "0", 0);
@@ -364,6 +365,7 @@ void R_TranslatePlayerSkin (int playernum)
 		translate32[i] = d_8to24table[translate[i]];
 
 	out = pixels;
+	memset(pixels, 0, sizeof(pixels));
 	fracstep = inwidth*0x10000/scaled_width;
 	for (i=0 ; i<scaled_height ; i++, out += scaled_width)
 	{
@@ -509,7 +511,7 @@ void R_TranslatePlayerSkin (int playernum)
 			translate32[i] = d_8to24table[translate[i]];
 
 		out = pixels;
-		memset(pixels, 0, sizeof(pixels)); /* FS: FIXME: Should this happen in QDOS too? */
+		memset(pixels, 0, sizeof(pixels));
 		fracstep = tinwidth*0x10000/scaled_width;
 		for (i=0 ; i<scaled_height ; i++, out += scaled_width)
 		{
@@ -617,4 +619,19 @@ void D_FlushCaches (void)
 {
 }
 
+#ifdef QUAKE1
+void Skin_FreeAll (void) {}
+#endif
 
+void R_Shutdown (void)
+{
+	Cmd_RemoveCommand ("timerefresh");	
+	Cmd_RemoveCommand ("envmap");	
+	Cmd_RemoveCommand ("pointfile");
+
+	R_ShutdownParticles();
+	Skin_FreeAll();
+	Mod_FreeAll();
+	GL_ShutdownTexures();
+	Z_Free(r_notexture_mip);
+}

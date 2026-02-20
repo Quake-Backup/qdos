@@ -1686,6 +1686,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 		return false;
 	}
 
+	R_Shutdown(); /* FS: Free memory stuff. */
 	D_InitCaches (vid_surfcache, vid_surfcachesize);
 
 	while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
@@ -2185,6 +2186,8 @@ void	VID_Shutdown (void)
 {
 	if (vid_initialized)
 	{
+		R_Shutdown();
+
 		if (modestate == MS_FULLDIB)
 			ChangeDisplaySettings (NULL, CDS_FULLSCREEN);
 

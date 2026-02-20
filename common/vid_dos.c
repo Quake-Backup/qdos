@@ -228,6 +228,8 @@ int VID_SetMode (int modenum, unsigned char *palette)
 	if (pnewmode == pcurrentmode)
 		return 1;	// already in the desired mode
 
+	R_Shutdown(); /* FS: Free memory stuff first. */
+
 // initialize the new mode
 	poldmode = pcurrentmode;
 	pcurrentmode = pnewmode;
@@ -313,6 +315,7 @@ VID_Shutdown
 */
 void VID_Shutdown (void)
 {
+	R_Shutdown();
 
 	regs.h.ah = 0;
 	regs.h.al = 0x3;

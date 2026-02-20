@@ -181,19 +181,16 @@ void S_Init (void)
 	if (COM_CheckParm("-nosound"))
 		return;
 
-	if (!host_initialized)
-	{
-		Cmd_AddCommand("play", S_Play);
-		Cmd_AddCommand("play2", S_Play2); /* FS: For Nehara */
-		Cmd_AddCommand("playvol", S_PlayVol);
-		Cmd_AddCommand("stopsound", S_StopAllSounds);
-		Cmd_AddCommand("soundlist", S_SoundList);
-		Cmd_AddCommand("soundinfo", S_SoundInfo_f);
+	Cmd_AddCommand("play", S_Play);
+	Cmd_AddCommand("play2", S_Play2); /* FS: For Nehara */
+	Cmd_AddCommand("playvol", S_PlayVol);
+	Cmd_AddCommand("stopsound", S_StopAllSounds);
+	Cmd_AddCommand("soundlist", S_SoundList);
+	Cmd_AddCommand("soundinfo", S_SoundInfo_f);
 #ifdef OGG_SUPPORT
-		Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
+	Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
 #endif
-		Cmd_AddCommand("wav_restart", S_WAV_Restart); /* FS: Added */
-	}
+	Cmd_AddCommand("wav_restart", S_WAV_Restart); /* FS: Added */
 
 	if (host_parms.memsize < 0x800000)
 	{
@@ -294,6 +291,20 @@ void S_Shutdown(void)
 	if (!sound_started)
 		return;
 
+	if (snd_initialized)
+	{
+		Cmd_RemoveCommand("play");
+		Cmd_RemoveCommand("play2"); /* FS: For Nehara */
+		Cmd_RemoveCommand("playvol");
+		Cmd_RemoveCommand("stopsound");
+		Cmd_RemoveCommand("soundlist");
+		Cmd_RemoveCommand("soundinfo");
+#ifdef OGG_SUPPORT
+		Cmd_RemoveCommand("ogg_restart"); /* Knightmare added */
+#endif
+		Cmd_RemoveCommand("wav_restart"); /* FS: Added */
+	}
+
 #ifdef OGG_SUPPORT
 	S_OGG_Shutdown(); /* Knightmare added */
 #endif
@@ -303,6 +314,7 @@ void S_Shutdown(void)
 
 	dma.buffer = NULL;
 	sound_started = 0;
+	snd_initialized = 0;
 }
 
 

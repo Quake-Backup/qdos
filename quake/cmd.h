@@ -98,6 +98,8 @@ extern	cmd_source_t	cmd_source;
 void	Cmd_Init (void);
 
 void	Cmd_AddCommand (char *cmd_name, xcommand_t function);
+void	Cmd_RemoveCommand(char *cmd_name);
+
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory

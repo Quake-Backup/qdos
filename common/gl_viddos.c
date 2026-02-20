@@ -626,6 +626,7 @@ void VID_Init(unsigned char *palette)
 void VID_Shutdown(void)
 {
 	VID_ShutdownGamma();
+	R_Shutdown();
 	if (DOSGL_Shutdown)
 		DOSGL_Shutdown ();
 #ifdef GL_DLSYM

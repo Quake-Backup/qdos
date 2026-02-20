@@ -1417,3 +1417,18 @@ void GL_SelectTexture (GLenum target)
 
 	currenttarget = target;
 }
+
+void GL_ShutdownTexures (void)
+{
+	int i;
+	cachepic_t *pic;
+
+	numgltextures = 0;
+
+	for (pic = menu_cachepics, i = 0; i < menu_numcachepics; pic++, i++)
+	{
+		memset(pic, 0, sizeof(*pic));
+	}
+
+	menu_numcachepics = 0;
+}

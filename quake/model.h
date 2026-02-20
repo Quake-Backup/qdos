@@ -389,8 +389,11 @@ typedef struct model_s
 	byte		*lightdata;
 	char		*entities;
 
-	size_t		extradatasize;
+//
+// additional model data
+//
 	void		*extradata;
+	size_t		extradatasize;
 } model_t;
 
 //============================================================================
