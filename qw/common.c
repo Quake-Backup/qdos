@@ -68,7 +68,7 @@ qboolean		standard_quake = true, rogue, hipnotic;
 char	gamedirfile[MAX_OSPATH];
 
 // this graphic needs to be in the pak file to use registered features
-unsigned short pop[] =
+static const unsigned short pop[] =
 {
  0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 ,0x0000,0x0000,0x6600,0x0000,0x0000,0x0000,0x6600,0x0000
@@ -510,11 +510,14 @@ coorddata MSG_ToAngle(float f, int bytes)	//return value is NOT byteswapped.
 
 void MSG_WriteChar (sizebuf_t *sb, int c)
 {
-	byte	*buf;
-	
+	byte *buf;
+
 #ifdef PARANOID
 	if (c < -128 || c > 127)
+	{
 		Sys_Error ("MSG_WriteChar: range error");
+		return;
+	}
 #endif
 
 	buf = SZ_GetSpace (sb, 1);
@@ -523,11 +526,14 @@ void MSG_WriteChar (sizebuf_t *sb, int c)
 
 void MSG_WriteByte (sizebuf_t *sb, int c)
 {
-	byte	*buf;
-	
+	byte *buf;
+
 #ifdef PARANOID
 	if (c < 0 || c > 255)
+	{
 		Sys_Error ("MSG_WriteByte: range error");
+		return;
+	}
 #endif
 
 	buf = SZ_GetSpace (sb, 1);
@@ -536,11 +542,14 @@ void MSG_WriteByte (sizebuf_t *sb, int c)
 
 void MSG_WriteShort (sizebuf_t *sb, int c)
 {
-	byte	*buf;
-	
+	byte *buf;
+
 #ifdef PARANOID
 	if (c < ((short)0x8000) || c > (short)0x7fff)
+	{
 		Sys_Error ("MSG_WriteShort: range error");
+		return;
+	}
 #endif
 
 	buf = SZ_GetSpace (sb, 2);
@@ -880,10 +889,16 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 	if (buf->cursize + length > buf->maxsize)
 	{
 		if (!buf->allowoverflow)
+		{
 			Sys_Error ("SZ_GetSpace: overflow without allowoverflow set (%d)", buf->maxsize);
+			return NULL;
+		}
 
 		if (length > buf->maxsize)
+		{
 			Sys_Error ("SZ_GetSpace: %i is > full buffer size", length);
+			return NULL;
+		}
 			
 		Sys_Printf ("SZ_GetSpace: overflow\n");	// because Com_Printf may be redirected
 		SZ_Clear (buf); 
@@ -967,37 +982,6 @@ char *COM_FileExtension (char *in)
 		exten[i] = *in;
 	exten[i] = 0;
 	return exten;
-}
-
-/*
-============
-COM_FileBase
-============
-*/
-void COM_FileBase (char *in, char *out)
-{
-	char *s, *s2;
-
-	if (!*in) {
-		*out = 0;
-		return;
-	}
-	s = in + strlen(in) - 1;
-
-	while (s != in && *s != '.')
-		s--;
-
-	for (s2 = s ; s2 != in && *s2 != '/' ; s2--)
-	 ;
-
-	if (s-s2 < 2)
-		strcpy (out,"?model?");
-	else
-	{
-		s--;
-		strncpy (out,s2+1, s-s2);
-		out[s-s2] = 0;
-	}
 }
 
 /*
@@ -1210,9 +1194,14 @@ void COM_CheckRegistered (void)
 	fread (check, 1, sizeof(check), h);
 	fclose (h);
 	
-	for (i=0 ; i<128 ; i++)
+	for (i = 0; i < 128; i++)
+	{
 		if (pop[i] != (unsigned short)BigShort (check[i]))
+		{
 			Sys_Error ("Corrupted data file.");
+			return;
+		}
+	}
 	
 	Cvar_ForceSet("registered", "1");
 	static_registered = 1;
@@ -1310,8 +1299,6 @@ void COM_Init (void)
 	COM_CheckRegistered ();
 }
 
-/* FS: VA varargs from QF */
-
 /*
 ============
 va
@@ -1320,8 +1307,7 @@ does a varargs printf into a temp buffer, so I don't need to have
 varargs versions of all text functions.
 ============
 */
-char *
-va (const char *fmt, ...)
+char *va (const char *fmt, ...)
 {
 	va_list     args;
 	static char string[MAXPRINTMSG];
@@ -1331,17 +1317,6 @@ va (const char *fmt, ...)
 	va_end (args);
 
 	return string;
-}
-
-/// just for debugging
-int memsearch (byte *start, int count, int search)
-{
-	int	i;
-	
-	for (i=0 ; i<count ; i++)
-		if (start[i] == search)
-			return i;
-	return -1;
 }
 
 /*
@@ -1482,7 +1457,10 @@ void COM_WriteFile (char *filename, void *data, int len)
 		Sys_mkdir(com_gamedir);
 		f = fopen (name, "wb");
 		if (!f)
+		{
 			Sys_Error ("Error opening %s", filename);
+			return;
+		}
 	}
 	
 	Sys_Printf ("COM_WriteFile: %s\n", name);
@@ -1532,7 +1510,10 @@ void COM_CopyFile (char *netpath, char *cachepath)
 	COM_CreatePath (cachepath);	// create directories up to the cache file
 	out = fopen(cachepath, "wb");
 	if (!out)
-		Sys_Error ("Error opening %s", cachepath);
+	{
+		Sys_Error ("COM_CopyFile: error opening %s", cachepath);
+		return;
+	}
 	
 	while (remaining)
 	{
@@ -1574,6 +1555,11 @@ char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned
 	*numfiles = nfiles;
 
 	list = malloc( sizeof( char * ) * nfiles );
+	if (!list)
+	{
+		Sys_Error("COM_ListFiles: out of memory");
+		return NULL;
+	}
 	memset( list, 0, sizeof( char * ) * nfiles );
 
 	s = Sys_FindFirst( findname, musthave, canthave );
@@ -1583,6 +1569,11 @@ char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned
 		if ( s[strlen(s)-1] != '.' )
 		{
 			list[nfiles] = strdup( s );
+			if (!list[nfiles])
+			{
+				Sys_Error("COM_ListFiles: out of memory");
+				return NULL;
+			}
 #if defined(_WIN32) || defined(__MSDOS__)
 			strlwr( list[nfiles] );
 #endif
@@ -1873,7 +1864,6 @@ byte *COM_LoadFile (char *path)
 {
 	FILE	*h;
 	byte	*buf;
-	char	base[32];
 	int		len;
 
 	buf = NULL;	// quiet compiler warning
@@ -1882,9 +1872,6 @@ byte *COM_LoadFile (char *path)
 	len = com_filesize = COM_FOpenFile (path, &h);
 	if (!h)
 		return NULL;
-	
-// extract the filename base name for hunk tag
-	COM_FileBase (path, base);
 	
 	buf = Z_Malloc (len+1);
 	if (!buf)
@@ -2565,10 +2552,10 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 }
 
 // char *date = "Oct 24 1996";
-static char *date = __DATE__ ;
-static char *mon[12] = 
+static const char *date = __DATE__ ;
+static const char *mon[12] = 
 { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-static char mond[12] = 
+static const char mond[12] = 
 { 31,    28,    31,    30,    31,    30,    31,    31,    30,    31,    30,    31 };
 
 // returns days since Oct 24 1996
@@ -2645,8 +2632,7 @@ int vsnprintf(char *str, size_t n, const char *fmt, va_list ap)
 #endif
 
 #if defined(__DJGPP__) || defined(_WIN32)
-char * /* from OpenBSD */
-strtok_r(char *s, const char *delim, char **last)
+char *strtok_r(char *s, const char *delim, char **last) /* from OpenBSD */
 {
 	const char *spanp;
 	int c, sc;

@@ -282,11 +282,6 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		return NULL;
 	}
 	
-//
-// allocate a new model
-//
-	COM_FileBase (mod->name, loadname);
-	
 	loadmodel = mod;
 
 //
@@ -295,7 +290,6 @@ model_t *Mod_ForName (char *name, qboolean crash)
 
 // call the apropriate loader
 
-	//mod_type = (buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24));
 	switch (LittleLong(*(unsigned *)buf))
 	{
 	case IDPOLYHEADER:

@@ -266,11 +266,6 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		return NULL;
 	}
 	
-//
-// allocate a new model
-//
-	COM_FileBase (mod->name, loadname);
-	
 	loadmodel = mod;
 
 //

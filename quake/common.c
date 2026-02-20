@@ -1000,37 +1000,6 @@ char *COM_FileExtension (char *in)
 
 /*
 ============
-COM_FileBase
-============
-*/
-void COM_FileBase (char *in, char *out)
-{
-	char *s, *s2;
-
-	if (!*in) {
-		*out = 0;
-		return;
-	}
-	s = in + strlen(in) - 1;
-
-	while (s != in && *s != '.')
-		s--;
-
-	for (s2 = s ; s2 != in && *s2 != '/' ; s2--)
-	 ;
-
-	if (s-s2 < 2)
-		strcpy (out,"?model?");
-	else
-	{
-		s--;
-		strncpy (out,s2+1, s-s2);
-		out[s-s2] = 0;
-	}
-}
-
-/*
-============
 COM_FilePath
 
 Returns the path up to, but not including the last /
