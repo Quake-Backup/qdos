@@ -903,7 +903,7 @@ void Key_Event (int key, qboolean down)
 	{
 		key_repeats[key]++;
 
-		if (!cl_autorepeat_allkeys->intValue) /* FS: Added */
+		if (cl_autorepeat_allkeys && !cl_autorepeat_allkeys->intValue) /* FS: Added */
 		{
 			if (key != K_BACKSPACE 
 				&& key != K_PAUSE 
