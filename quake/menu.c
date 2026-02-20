@@ -770,7 +770,7 @@ void M_Load_Key (int k)
 	// issue the load command
 		if (load_cursor == AUTOSAVE_POS)
 		{
-			Cbuf_AddText (va ("deathmatch 0; coop 0;load auto\n", load_cursor) );
+			Cbuf_AddText ("deathmatch 0; coop 0;load auto\n");
 		}
 		else
 		{
@@ -810,7 +810,7 @@ void M_Save_Key (int k)
 		key_dest = key_game;
 		if (load_cursor == AUTOSAVE_POS)
 		{
-			Cbuf_AddText (va("save auto\n", load_cursor));
+			Cbuf_AddText ("save auto\n");
 		}
 		else
 		{
