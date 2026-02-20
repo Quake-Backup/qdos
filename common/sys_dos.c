@@ -44,14 +44,6 @@ unsigned int _stklen = 1048576; /* need a 1MB stack */
 #include "dosisms.h"
 #include "sys_dxe.h"
 
-#ifdef QUAKE1
-#define MINIMUM_WIN_MEMORY                      0x800000
-#else
-#define MINIMUM_WIN_MEMORY                      0xf00000
-#endif // QUAKE1
-
-#define MINIMUM_WIN_MEMORY_LEVELPAK     (MINIMUM_WIN_MEMORY + 0x100000)
-
 #define STDOUT  1
 
 #define	KEYBUF_SIZE	256
@@ -490,25 +482,6 @@ double Sys_DoubleTime (void)
 	return (double) uclock() / (double) UCLOCKS_PER_SEC; /* FS: Accurate Clock (QIP) */
 }
 
-/*
-================
-Sys_GetMemory
-================
-*/
-void Sys_GetMemory(void)
-{
-	int j;
-
-	quakeparms.memsize = 0x2000000;
-#ifdef QUAKE1
-	if (extended_mod)  /* FS: For big boy mods */
-		quakeparms.memsize = 0x4000000;
-#endif
-
-	if ((j = COM_CheckParm("-mem")) != 0 && j < com_argc-1)
-		quakeparms.memsize = Q_atoi(com_argv[j+1]) * 1024 * 1024;
-}
-
 static int Sys_Get_Physical_Memory(void) /* FS: From DJGPP tutorial */
 {
 	_go32_dpmi_meminfo meminfo;
@@ -573,6 +546,8 @@ static void Sys_PageInProgram(void)
 	/* FS: Report total amount available and save it for later if we run /memstats */
 	physicalMemStart = (Sys_Get_Physical_Memory() / 0x100000);
 	virtualMemStart = (_go32_dpmi_remaining_virtual_memory() / 0x100000);
+
+	quakeparms.memsize = Sys_Get_Physical_Memory();
 
 	printf("%d Mb available for QDOS.\n", physicalMemStart);
 	printf("%lu Virtual Mb available for QDOS.\n", virtualMemStart);
@@ -662,7 +637,6 @@ int main (int c, char **v)
 	Sys_DetectLFN ();
 	Sys_DetectWin95 ();
 	Sys_PageInProgram ();
-	Sys_GetMemory ();
 
 	atexit (Sys_AtExit);    // in case we crash
 
