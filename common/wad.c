@@ -74,7 +74,7 @@ void W_LoadWadFile (char *filename)
 
 	if (wad_base)
 	{
-		Z_Free(wad_base); /* FS: FIXME: Free on disconnect/quit. */
+		Z_Free(wad_base);
 	}
 
 	wad_base = COM_LoadFile(filename);
