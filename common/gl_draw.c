@@ -252,7 +252,10 @@ qpic_t	*Draw_CachePic (char *path)
 			return &pic->pic;
 
 	if (menu_numcachepics == MAX_CACHED_PICS)
+	{
 		Sys_Error ("menu_numcachepics == MAX_CACHED_PICS");
+		return NULL;
+	}
 	menu_numcachepics++;
 	strcpy (pic->name, path);
 
@@ -492,7 +495,6 @@ void Draw_Init (void)
 }
 
 
-
 /*
 ================
 Draw_Character
@@ -599,20 +601,6 @@ void Draw_Crosshair(void)
 			'+');
 }
 
-
-/*
-================
-Draw_DebugChar
-
-Draws a single character directly to the upper right corner of the screen.
-This is for debugging lockups by drawing different chars in different parts
-of the code.
-================
-*/
-void Draw_DebugChar (char num)
-{
-}
-
 /*
 =============
 Draw_Pic
@@ -716,6 +704,7 @@ void Draw_TransPic (int x, int y, qpic_t *pic)
 		 (unsigned)(y + pic->height) > vid.height)
 	{
 		Sys_Error ("Draw_TransPic: bad coordinates");
+		return;
 	}
 		
 	Draw_Pic (x, y, pic);
@@ -1111,8 +1100,11 @@ static	unsigned	scaled[1024*512];	// [512*256];
 	if (scaled_height > gl_max_size->intValue)
 		scaled_height = gl_max_size->intValue;
 
-	if (scaled_width * scaled_height > sizeof(scaled)/4)
+	if (scaled_width * scaled_height > sizeof(scaled) / 4)
+	{
 		Sys_Error ("GL_LoadTexture: too big");
+		return;
+	}
 
 	samples = alpha ? gl_alpha_format : gl_solid_format;
 
@@ -1213,7 +1205,10 @@ void GL_Upload8_EXT (byte *data, int width, int height,  qboolean mipmap, qboole
 		scaled_height = gl_max_size->intValue;
 
 	if (scaled_width * scaled_height > sizeof(scaled))
+	{
 		Sys_Error ("GL_LoadTexture: too big");
+		return;
+	}
 
 	texels += scaled_width * scaled_height;
 
@@ -1294,8 +1289,12 @@ static	unsigned	trans[640*480];		// FIXME, temporary
 	}
 	else
 	{
-		if (s&3)
+		if (s & 3)
+		{
 			Sys_Error ("GL_Upload8: s&3");
+			return;
+		}
+
 		for (i=0 ; i<s ; i+=4)
 		{
 			trans[i] = d_8to24table[data[i]];
@@ -1320,7 +1319,6 @@ GL_LoadTexture
 
 ================
 */
-#if 1
 /* FS: From DarkPlaces 1.05 for cache mismatch issues */
 int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolean mipmap, qboolean alpha)
 {
@@ -1328,7 +1326,7 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 	unsigned short crc;
 	gltexture_t *glt;
 #ifdef QUAKE1
-	extern	qboolean isDedicated;
+	extern	qboolean isDedicated; /* FS: FIXME: What the fuck was this all about? */
 #endif
 
 	// LordHavoc: do a checksum to confirm the data really is the same as previous
@@ -1348,7 +1346,6 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 				if (crc != glt->crc || width != glt->width || height != glt->height)
 				{
 					Com_DPrintf(DEVELOPER_MSG_VIDEO, "GL_LoadTexture: cache mismatch, replacing old texture\n");
-
 					goto GL_LoadTexture_setup; // drop out with glt pointing to the texture to replace
 				}
 				return glt->texnum;
@@ -1379,44 +1376,6 @@ GL_LoadTexture_setup:
 
 	return glt->texnum;
 }
-#else
-int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolean mipmap, qboolean alpha)
-{
-	int			i;
-	gltexture_t	*glt;
-
-	// see if the texture is allready present
-	if (identifier[0])
-	{
-		for (i=0, glt=gltextures ; i<numgltextures ; i++, glt++)
-		{
-			if (!strcmp (identifier, glt->identifier))
-			{
-				if (width != glt->width || height != glt->height)
-					Sys_Error ("GL_LoadTexture: cache mismatch");
-				return gltextures[i].texnum;
-			}
-		}
-	}
-	else
-		glt = &gltextures[numgltextures];
-	numgltextures++;
-
-	strcpy (glt->identifier, identifier);
-	glt->texnum = texture_extension_number;
-	glt->width = width;
-	glt->height = height;
-	glt->mipmap = mipmap;
-
-	GL_Bind(texture_extension_number );
-
-	GL_Upload8 (data, width, height, mipmap, alpha);
-
-	texture_extension_number++;
-
-	return texture_extension_number-1;
-}
-#endif
 
 /*
 ================

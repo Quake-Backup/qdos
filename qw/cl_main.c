@@ -309,7 +309,7 @@ void CL_SendConnectPacket (
 )
 {
 	netadr_t adr;
-	dstring_t *data;
+	char data[MAX_MSGLEN];
 	double t1, t2;
 
 // JACK: Fixed bug where DNS lookups would cause two connects real fast
@@ -325,7 +325,7 @@ void CL_SendConnectPacket (
 
 	t1 = Sys_DoubleTime ();
 
-	if (!NET_StringToAdr (cls.servername->str, &adr))
+	if (!NET_StringToAdr (cls.servername, &adr))
 	{
 		Com_Printf ("Bad server address\n");
 		connect_time = -1;
@@ -349,10 +349,9 @@ void CL_SendConnectPacket (
 
 	Info_SetValueForStarKey (cls.userinfo, "*ip", NET_AdrToString(adr), MAX_INFO_STRING);
 
-	Com_Printf ("Connecting to %s...\n", cls.servername->str);
+	Com_Printf ("Connecting to %s...\n", cls.servername);
 
-	data = dstring_new();
-	dsprintf(data, "%c%c%c%cconnect %i %i %i \"%s\"\n",
+	Com_sprintf(data, sizeof(data), "%c%c%c%cconnect %i %i %i \"%s\"\n",
                 255, 255, 255, 255,     PROTOCOL_VERSION, cls.qport, cls.challenge, cls.userinfo);
 #ifdef PROTOCOL_VERSION_FTE
 	if (cls.fteprotocolextensions) 
@@ -360,11 +359,10 @@ void CL_SendConnectPacket (
 		char tmp[128];
 		Com_sprintf(tmp, sizeof(tmp), "0x%x 0x%x\n", PROTOCOL_VERSION_FTE, cls.fteprotocolextensions);
 		Com_DPrintf(DEVELOPER_MSG_NET, "0x%x is fte protocol ver and 0x%x is fteprotocolextensions\n", PROTOCOL_VERSION_FTE, cls.fteprotocolextensions);
-		strcat(data->str, tmp);
+		strcat(data, tmp);
 	}
 #endif // PROTOCOL_VERSION_FTE 
-	NET_SendPacket (strlen(data->str), data->str, adr);
-	dstring_delete(data);
+	NET_SendPacket (strlen(data), data, adr);
 }
 
 /*
@@ -378,7 +376,7 @@ Resend a connect message if the last one has timed out
 void CL_CheckForResend (void)
 {
 	netadr_t adr;
-	dstring_t *data;
+	char data[MAX_MSGLEN];
 	double t1, t2;
 
 	if (connect_time == -1)
@@ -390,7 +388,7 @@ void CL_CheckForResend (void)
 
 	t1 = Sys_DoubleTime ();
 
-	if (!NET_StringToAdr (cls.servername->str, &adr))
+	if (!NET_StringToAdr (cls.servername, &adr))
 	{
 		Com_Printf ("Bad server address\n");
 		connect_time = -1;
@@ -411,14 +409,10 @@ void CL_CheckForResend (void)
 
 	connect_time = realtime+t2-t1;   // for retransmit requests
 
-	Com_Printf ("Connecting to %s...\n", cls.servername->str);
+	Com_Printf ("Connecting to %s...\n", cls.servername);
 
-	data = dstring_new();
-
-	dsprintf(data, "%c%c%c%cgetchallenge\n", 255, 255, 255, 255);
-	NET_SendPacket (strlen(data->str), data->str, adr);
-
-	dstring_delete(data);
+	Com_sprintf(data, sizeof(data), "%c%c%c%cgetchallenge\n", 255, 255, 255, 255);
+	NET_SendPacket (strlen(data), data, adr);
 }
 
 void CL_BeginServerConnect(void)
@@ -442,12 +436,12 @@ void CL_Connect_f (void)
 		Com_Printf ("usage: connect <server>\n");
 		return;  
 	}
-   
+
 	server = Cmd_Argv (1);
 
 	CL_Disconnect ();
 
-	dstring_copystr (cls.servername, server); // taniwha
+	Com_sprintf(cls.servername, sizeof(cls.servername), server);
 	CL_BeginServerConnect();
 }
 
@@ -524,13 +518,12 @@ void CL_ClearState (void)
 
 	Com_DPrintf (DEVELOPER_MSG_MEM, "Clearing memory\n");
 	D_FlushCaches ();
-	Mod_ClearAll ();
+	Mod_FreeAll ();
 	R_ClearDynamic(); /* FS */
 
-	if (host_hunklevel)  // FIXME: check this...
-		Hunk_FreeToLowMark (host_hunklevel);
-
 	CL_ClearTEnts ();
+
+	Z_FreeTags(TAG_LEVEL);
 
 // wipe the entire cl structure
 	memset (&cl, 0, sizeof(cl));
@@ -566,7 +559,7 @@ void CL_Disconnect (void)
 	connect_time = -1;
 
 #ifdef _WIN32
-	SetWindowText (mainwindow, "QWDOS: disconnected");
+	SetWindowText (cl_hwnd, "QWDOS: disconnected");
 #endif
 
 // stop sounds (especially looping!)
@@ -949,7 +942,9 @@ void CL_Reconnect_f (void)
       return;
    }
 
-        if (!*cls.servername->str) {
+
+   if (!cls.servername[0])
+   {
       Com_Printf("No server to reconnect to...\n");
       return;
    }
@@ -1012,8 +1007,8 @@ void CL_ConnectionlessPacket (void)
 			return;
 		}
 #ifdef _WIN32
-		ShowWindow (mainwindow, SW_RESTORE);
-		SetForegroundWindow (mainwindow);
+		ShowWindow (cl_hwnd, SW_RESTORE);
+		SetForegroundWindow (cl_hwnd);
 #endif
 		s = MSG_ReadString ();
 
@@ -1197,7 +1192,7 @@ CL_Download_f
 void CL_Download_f (void)
 {
 	char *p, *q;
-	dstring_t *dlstr;
+	char dlstr[MAX_OSPATH];
 
 	if (cls.state == ca_disconnected)
 	{
@@ -1211,15 +1206,14 @@ void CL_Download_f (void)
 		return;
 	}
 
-	dlstr = dstring_new();
-	dsprintf (cls.downloadname, "%s/%s", com_gamedir, Cmd_Argv(1));
-	p = cls.downloadname->str;
+	Com_sprintf (cls.downloadname, sizeof(cls.downloadname), "%s/%s", com_gamedir, Cmd_Argv(1));
+	p = cls.downloadname;
 	for (;;)
 	{
 		if ((q = strchr(p, '/')) != NULL)
 		{
 			*q = 0;
-			Sys_mkdir(cls.downloadname->str);
+			Sys_mkdir(cls.downloadname);
 			*q = '/';
 			p = q + 1;
 		}
@@ -1227,14 +1221,13 @@ void CL_Download_f (void)
 			break;
 	}
 
-	dstring_copystr (cls.downloadtempname, cls.downloadname->str);
-	cls.download = fopen (cls.downloadname->str, "wb");
+	Com_strcpy(cls.downloadtempname, sizeof(cls.downloadtempname), cls.downloadname);
+	cls.download = fopen (cls.downloadname, "wb");
 	cls.downloadtype = dl_single;
 
 	MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
-	dsprintf(dlstr, "download %s\n", Cmd_Argv(1));
-	SZ_Print (&cls.netchan.message, dlstr->str);
-	dstring_delete(dlstr);
+	Com_sprintf(dlstr, sizeof(dlstr), "download %s\n", Cmd_Argv(1));
+	SZ_Print (&cls.netchan.message, dlstr);
 }
 
 #ifdef _WINDOWS
@@ -1247,9 +1240,9 @@ CL_Minimize_f
 void CL_Windows_f (void)
 {
 //	if (modestate == MS_WINDOWED)
-//		ShowWindow(mainwindow, SW_MINIMIZE);
+//		ShowWindow(cl_hwnd, SW_MINIMIZE);
 //	else
-		SendMessage(mainwindow, WM_SYSKEYUP, VK_TAB, 1 | (0x0F << 16) | (1<<29));
+		SendMessage(cl_hwnd, WM_SYSKEYUP, VK_TAB, 1 | (0x0F << 16) | (1<<29));
 }
 #endif
 
@@ -1263,7 +1256,6 @@ void CL_Snd_Restart_f (void)
 {
 	S_StopAllSounds();
 	S_Shutdown();
-	//Cache_Flush();
 	S_Init();
 }
 
@@ -1274,8 +1266,8 @@ CL_Init
 */
 void CL_Init (void)
 {
-	dstring_t *version = dstring_new();
-	dsprintf(version, "QWDOS v%4.2f", VERSION);
+	char version[64];
+	Com_sprintf(version, sizeof(version), "QWDOS v%4.2f", VERSION);
 
 	cls.state = ca_disconnected;
 
@@ -1287,7 +1279,7 @@ void CL_Init (void)
 	Info_SetValueForKey (cls.userinfo, "bottomcolor", "0", MAX_INFO_STRING);
 	Info_SetValueForKey (cls.userinfo, "rate", "2500", MAX_INFO_STRING);
 	Info_SetValueForKey (cls.userinfo, "msg", "1", MAX_INFO_STRING);
-	Info_SetValueForStarKey (cls.userinfo, "*ver", version->str, MAX_INFO_STRING);
+	Info_SetValueForStarKey (cls.userinfo, "*ver", version, MAX_INFO_STRING);
 	Info_SetValueForKey (cls.userinfo, "chat", "", MAX_INFO_STRING); /* FS: EZQ Chat */
 
 	CL_InitInput ();
@@ -1479,8 +1471,6 @@ void CL_Init (void)
 	memset(&browserListAll, 0, sizeof(browserListAll));
 #endif
 
-	dstring_delete(version);
-
 	Cmd_AddCommand ("snd_shutdown", CL_Snd_Shutdown_f);
 	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
 
@@ -1502,17 +1492,14 @@ Call this to drop to a console without exiting the qwcl
 void Host_EndGame (const char *message, ...)
 {
 	va_list      argptr;
-	static dstring_t *string;
-
-	if (!string)
-		string = dstring_new ();
+	char	string[MAXPRINTMSG];
 
 	va_start (argptr, message);
-	dvsprintf (string, message, argptr);
+	Q_vsnprintf (string, sizeof(string), message, argptr);
 	va_end (argptr);
 
 	Com_Printf ("\n===========================\n");
-	Com_Printf ("Host_EndGame: %s\n",string->str);
+	Com_Printf ("Host_EndGame: %s\n",string);
 	Com_Printf ("===========================\n\n");
    
 	CL_Disconnect ();
@@ -1530,28 +1517,28 @@ This shuts down the client and exits qwcl
 void Host_Error (const char *error, ...)
 {
 	va_list     argptr;
-	static dstring_t       *string;
+	char       string[MAXPRINTMSG];
 	static qboolean inerror = false;
-   
-	if(!string)
-		string = dstring_new();
 
 	if (inerror)
+	{
 		Sys_Error ("Host_Error: recursively entered");
+		return;
+	}
 
 	inerror = true;
-   
+
 	va_start (argptr,error);
-	dvsprintf (string,error,argptr);
+	Q_vsnprintf (string, sizeof(string), error,argptr);
 	va_end (argptr);
-	Com_Printf ("Host_Error: %s\n",string->str);
-   
+	Com_Printf ("Host_Error: %s\n",string);
+
 	CL_Disconnect ();
 	cls.demonum = -1;
 
 	inerror = false;
 
-	Sys_Error ("Host_Error: %s\n",string->str);
+	Sys_Error ("Host_Error: %s\n",string);
 }
 
 /*
@@ -1811,7 +1798,8 @@ void Host_Init (quakeparms_t *parms)
 	if (parms->memsize < MINIMUM_MEMORY)
 		Sys_Error ("Only %4.1f megs of memory reported, can't execute game", parms->memsize / (float)0x100000);
 
-	Memory_Init (parms->membase, parms->memsize);
+	z_chain.next = z_chain.prev = &z_chain;
+
 	Cbuf_Init ();
 	Cmd_Init ();
 	Cvar_Init ();
@@ -1830,10 +1818,10 @@ void Host_Init (quakeparms_t *parms)
 	Cbuf_AddEarlyCommands (true);
 	Cbuf_Execute();
 
-	cls.servername = dstring_newstr ();
-	cls.downloadtempname = dstring_newstr ();
-	cls.downloadname = dstring_newstr();
-	cls.downloadurl = dstring_newstr();
+	cls.servername[0] = '\0';
+	cls.downloadtempname[0] = '\0';
+	cls.downloadname[0] = '\0';
+	cls.downloadurl[0] = '\0';
 
 	Host_FixupModelNames();
 	V_Init ();
@@ -1851,27 +1839,25 @@ void Host_Init (quakeparms_t *parms)
    
 	R_InitTextures ();
  
-	host_basepal = (byte *)COM_LoadHunkFile ("gfx/palette.lmp");
-
+	host_basepal = (byte *)COM_LoadFile("gfx/palette.lmp");
 	if (!host_basepal)
+	{
 		Sys_Error ("Couldn't load gfx/palette.lmp");
+		return;
+	}
 
-	host_colormap = (byte *)COM_LoadHunkFile ("gfx/colormap.lmp");
-
+	host_colormap = (byte *)COM_LoadFile("gfx/colormap.lmp");
 	if (!host_colormap)
+	{
 		Sys_Error ("Couldn't load gfx/colormap.lmp");
+		return;
+	}
 
 	VID_Init (host_basepal);
 	Draw_Init ();
 	SCR_Init ();
 	R_Init ();
-#ifndef _WIN32
-	S_Init ();
-#else
-#ifdef GLQUAKE
 	S_Init();
-#endif
-#endif
 	cls.state = ca_disconnected;
 	CDAudio_Init ();
 	Sbar_Init ();
@@ -1890,9 +1876,6 @@ void Host_Init (quakeparms_t *parms)
 	Cbuf_AddText ("echo Type connect <internet address> or use GameSpy to connect to a game.\n");
 	Cbuf_AddText ("cl_warncmd 1\n");
 	quakerc_init = false;
-
-	Hunk_AllocName (0, "-HOST_HUNKLEVEL-");
-	host_hunklevel = Hunk_LowMark ();
 
 	host_initialized = true;
 

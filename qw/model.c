@@ -158,10 +158,10 @@ byte *Mod_LeafPVS (mleaf_t *leaf, model_t *model)
 
 /*
 ===================
-Mod_ClearAll
+Mod_FreeAll
 ===================
 */
-void Mod_ClearAll (void)
+void Mod_FreeAll (void)
 {
 	int             i;
 	model_t *mod;
@@ -202,25 +202,6 @@ model_t *Mod_FindName (char *name)
 	}
 
 	return mod;
-}
-
-/*
-==================
-Mod_TouchModel
-
-==================
-*/
-void Mod_TouchModel (char *name)
-{
-	model_t *mod;
-	
-	mod = Mod_FindName (name);
-	
-	if (!mod->needload)
-	{
-		if (mod->type == mod_alias)
-			Cache_Check (&mod->cache);
-	}
 }
 
 /*

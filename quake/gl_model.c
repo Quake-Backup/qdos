@@ -2491,11 +2491,15 @@ Mod_FreeAll
 void Mod_FreeAll (void)
 {
 	int		i;
+	model_t *mod;
 
-	for (i=0 ; i<mod_numknown ; i++)
+	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
 	{
-		if (mod_known[i].extradatasize)
-			Mod_Free (&mod_known[i]);
+		if (mod->type != mod_alias)
+		{
+			if (mod->extradatasize)
+				Mod_Free (mod);
+		}
 	}
 }
 

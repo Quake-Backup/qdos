@@ -45,7 +45,12 @@ char *strtok_r(char *s, const char *delim, char **last);
 
 /* from Quake3 */
 #ifdef _WIN32
-#define Q_vsnprintf _vsnprintf
+__inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list Args)
+{
+	int ret = _vsnprintf(Dest, Count, Format, Args);
+	Dest[Count - 1] = 0;	// null terminate
+	return ret;
+}
 #else
 #define Q_vsnprintf  vsnprintf
 #endif
@@ -271,10 +276,7 @@ void COM_WriteFile (char *filename, void *data, int len);
 int COM_OpenFile (char *filename, int *hndl); /* FS: From Q1 */
 int COM_FOpenFile (char *filename, FILE **file);
 
-byte *COM_LoadStackFile (char *path, void *buffer, int bufsize);
-byte *COM_LoadTempFile (char *path);
-byte *COM_LoadHunkFile (char *path);
-void COM_LoadCacheFile (char *path, struct cache_user_s *cu);
+byte *COM_LoadFile (char *path);
 void COM_CreatePath (char *path);
 void COM_Gamedir (char *dir);
 

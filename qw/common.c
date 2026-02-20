@@ -1320,35 +1320,17 @@ does a varargs printf into a temp buffer, so I don't need to have
 varargs versions of all text functions.
 ============
 */
-VISIBLE char *
+char *
 va (const char *fmt, ...)
 {
 	va_list     args;
-	static dstring_t *string;
-
-	if (!string)
-		string = dstring_new ();
+	static char string[MAXPRINTMSG];
 
 	va_start (args, fmt);
-	dvsprintf (string, fmt, args);
+	Q_vsnprintf (string, sizeof(string), fmt, args);
 	va_end (args);
 
-	return string->str;
-}
-
-VISIBLE char *
-nva (const char *fmt, ...)
-{
-	va_list     args;
-	dstring_t  *string;
-
-	string = dstring_new ();
-
-	va_start (args, fmt);
-	dvsprintf (string, fmt, args);
-	va_end (args);
-
-	return dstring_freeze (string);
+	return string;
 }
 
 /// just for debugging
@@ -1807,13 +1789,11 @@ int file_from_pak; // global indicating file came from pack file ZOID
 int COM_FOpenFile (char *filename, FILE **file)
 {
 	searchpath_t	*search;
-	static dstring_t *netpath;
+	char	netpath[MAX_OSPATH];
 	pack_t		*pak;
 	int			i;
 	int			findtime;
 
-	if(!netpath)
-		netpath = dstring_new();
 	file_from_pak = 0;
 		
 //
@@ -1849,15 +1829,15 @@ int COM_FOpenFile (char *filename, FILE **file)
 					continue;
 			}
 			
-			dsprintf (netpath, "%s/%s",search->filename, filename);
+			Com_sprintf (netpath, sizeof(netpath), "%s/%s",search->filename, filename);
 			
-			findtime = Sys_FileTime (netpath->str);
+			findtime = Sys_FileTime (netpath);
 			if (findtime == -1)
 				continue;
 				
-			Sys_Printf ("FindFile: %s\n",netpath->str);
+			Sys_Printf ("FindFile: %s\n",netpath);
 
-			*file = fopen (netpath->str, "rb");
+			*file = fopen (netpath, "rb");
 			return COM_filelength (*file);
 		}
 	}
@@ -1877,10 +1857,9 @@ Filename are reletive to the quake directory.
 Allways appends a 0 byte to the loaded data.
 ============
 */
-cache_user_t *loadcache;
 byte	*loadbuf;
 int		loadsize;
-byte *COM_LoadFile (char *path, int usehunk)
+byte *COM_LoadFile (char *path)
 {
 	FILE	*h;
 	byte	*buf;
@@ -1897,26 +1876,12 @@ byte *COM_LoadFile (char *path, int usehunk)
 // extract the filename base name for hunk tag
 	COM_FileBase (path, base);
 	
-	if (usehunk == 1)
-		buf = Hunk_AllocName (len+1, base);
-	else if (usehunk == 2)
-		buf = Hunk_TempAlloc (len+1);
-	else if (usehunk == 0)
-		buf = Z_Malloc (len+1);
-	else if (usehunk == 3)
-		buf = Cache_Alloc (loadcache, len+1, base);
-	else if (usehunk == 4)
-	{
-		if (len+1 > loadsize)
-			buf = Hunk_TempAlloc (len+1);
-		else
-			buf = loadbuf;
-	}
-	else
-		Sys_Error ("COM_LoadFile: bad usehunk");
-
+	buf = Z_Malloc (len+1);
 	if (!buf)
+	{
 		Sys_Error ("COM_LoadFile: not enough space for %s", path);
+		return NULL;
+	}
 		
 	((byte *)buf)[len] = 0;
 #ifndef SERVERONLY
@@ -1931,32 +1896,10 @@ byte *COM_LoadFile (char *path, int usehunk)
 	return buf;
 }
 
-byte *COM_LoadHunkFile (char *path)
+void COM_FreeFile (void *buffer)
 {
-	return COM_LoadFile (path, 1);
-}
-
-byte *COM_LoadTempFile (char *path)
-{
-	return COM_LoadFile (path, 2);
-}
-
-void COM_LoadCacheFile (char *path, struct cache_user_s *cu)
-{
-	loadcache = cu;
-	COM_LoadFile (path, 3);
-}
-
-// uses temp hunk if larger than bufsize
-byte *COM_LoadStackFile (char *path, void *buffer, int bufsize)
-{
-	byte	*buf;
-	
-	loadbuf = (byte *)buffer;
-	loadsize = bufsize;
-	buf = COM_LoadFile (path, 4);
-	
-	return buf;
+	if (buffer)
+		Z_Free (buffer);
 }
 
 /*
@@ -2116,7 +2059,7 @@ void COM_AddGameDirectory (char *dir)
 //
 // add the directory to the search path
 //
-	search = Hunk_Alloc (sizeof(searchpath_t));
+	search = Z_Malloc (sizeof(searchpath_t));
 	strcpy (search->filename, dir);
 	search->next = com_searchpaths;
 	com_searchpaths = search;
@@ -2130,7 +2073,7 @@ void COM_AddGameDirectory (char *dir)
 		pak = COM_LoadPackFile (pakfile);
 		if (!pak)
 			break;
-		search = Hunk_Alloc (sizeof(searchpath_t));
+		search = Z_Malloc (sizeof(searchpath_t));
 		search->pack = pak;
 		search->next = com_searchpaths;
 		com_searchpaths = search;		
@@ -2178,11 +2121,6 @@ void COM_Gamedir (char *dir)
 		Z_Free (com_searchpaths);
 		com_searchpaths = next;
 	}
-
-	//
-	// flush all data, so it will be forced to reload
-	//
-	Cache_Flush ();
 
 	if (!strcmp(dir,"id1") || !strcmp(dir, "qw"))
 		return;

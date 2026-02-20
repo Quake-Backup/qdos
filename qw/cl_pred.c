@@ -146,9 +146,9 @@ void CL_PredictMove (void)
 		char		text[1024];
 
 		cls.state = ca_active;
-		sprintf (text, "QWDOS: %s", cls.servername->str);
+		sprintf (text, "QWDOS: %s", cls.servername);
 #ifdef _WIN32
-		SetWindowText (mainwindow, text);
+		SetWindowText (cl_hwnd, text);
 #endif
 	}
 

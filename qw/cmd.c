@@ -276,7 +276,6 @@ void Cmd_Exec_f (void)
 {
 	char	*f;
 	char	*s;
-	int		mark;
 
 	if (Cmd_Argc () != 2)
 	{
@@ -285,7 +284,6 @@ void Cmd_Exec_f (void)
 	}
 
 	s = Cmd_Argv(1);
-	mark = Hunk_LowMark ();
 
 	if(!strncmp(s,"default.cfg",11)) /* FS: unbindall protection hack */
 	{
@@ -297,7 +295,7 @@ void Cmd_Exec_f (void)
 		if(!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
 			s = "qdos.cfg";
 
-	f = (char *)COM_LoadHunkFile (s);
+	f = (char *)COM_LoadFile(s);
 	if (!f)
 	{
 		Com_Printf ("couldn't exec %s\n",s);
@@ -308,7 +306,7 @@ void Cmd_Exec_f (void)
 		Com_Printf ("execing %s\n",s);
 	
 	Cbuf_InsertText (f);
-	Hunk_FreeToLowMark (mark);
+	Z_Free(f);
 }
 
 
@@ -537,7 +535,7 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = Hunk_Alloc (sizeof(cmd_function_t));
+	cmd = Z_Malloc(sizeof(cmd_function_t));
 	cmd->name = cmd_name;
 	cmd->function = function;
 	cmd->next = cmd_functions;

@@ -148,17 +148,13 @@ Sends a text message in an out-of-band datagram
 void Netchan_OutOfBandPrint (netadr_t adr, const char *format, ...)
 {
 	va_list		argptr;
-	static dstring_t *string;
-
-	if(!string)
-		string = dstring_new();
+	char string[MAXPRINTMSG];
 
 	va_start (argptr, format);
-	dvsprintf (string, format,argptr);
+	Q_vsnprintf (string, sizeof(string), format,argptr);
 	va_end (argptr);
 
-
-	Netchan_OutOfBand (adr, strlen(string->str), (byte *)string->str);
+	Netchan_OutOfBand (adr, strlen(string), (byte *)string);
 }
 
 

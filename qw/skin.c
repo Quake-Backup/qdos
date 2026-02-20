@@ -69,7 +69,7 @@ void Skin_Find (player_info_t *sc)
 		if (!strcmp (name, skins[i].name))
 		{
 			sc->skin = &skins[i];
-			Skin_Cache (sc->skin);
+			sc->skin->data = Skin_Cache (sc->skin);
 			return;
 		}
 	}
@@ -98,7 +98,7 @@ Returns a pointer to the skin bitmap, or NULL to use the default
 */
 byte	*Skin_Cache (skin_t *skin)
 {
-	dstring_t *name;
+	char	name[MAX_QPATH];
 	byte	*raw;
 	byte	*out, *pix;
 	pcx_t	*pcx;
@@ -107,49 +107,43 @@ byte	*Skin_Cache (skin_t *skin)
 	int		dataByte;
 	int		runLength;
 
-	name = dstring_new();
-	
 	if (cls.downloadtype == dl_skin)
 	{
-		dstring_delete(name);
 		return NULL;		// use base until downloaded
 	}
 
 	if (!allow_download_skins->intValue) /* FS: Was noskins */
 	// JACK: So NOSKINS > 1 will show skins, but
 	{
-		dstring_delete(name);
 		return NULL;	  // not download new ones.
 	}
 
 	if (skin->failedload)
 	{
-		dstring_delete(name);
 		return NULL;
 	}
-	out = Cache_Check (&skin->cache);
+
+	out = skin->data;
 	if (out)
 	{
-		dstring_delete(name);
 		return out;
 	}
 //
 // load the pic from disk
 //
-	dsprintf (name, "skins/%s.pcx", skin->name);
+	Com_sprintf (name, sizeof(name), "skins/%s.pcx", skin->name);
 
-	Com_DPrintf (DEVELOPER_MSG_IO, "Loading skin: %s\n", name->str); /* FS */
+	Com_DPrintf (DEVELOPER_MSG_IO, "Loading skin: %s\n", name); /* FS */
 
-	raw = COM_LoadTempFile (name->str);
+	raw = COM_LoadFile(name);
 	if (!raw)
 	{
-		Com_Printf ("Couldn't load skin %s\n", name->str);
-		dsprintf (name, "skins/%s.pcx", baseskin->string);
-		raw = COM_LoadTempFile (name->str);
+		Com_Printf ("Couldn't load skin %s\n", name);
+		Com_sprintf (name, sizeof(name), "skins/%s.pcx", baseskin->string);
+		raw = COM_LoadFile(name);
 		if (!raw)
 		{
 			skin->failedload = true;
-			dstring_delete(name);
 			return NULL;
 		}
 	}
@@ -168,14 +162,16 @@ byte	*Skin_Cache (skin_t *skin)
 		|| pcx->ymax >= MAX_LBM_HEIGHT) /* FS: Was >= 200 */
 	{
 		skin->failedload = true;
-		Com_Printf ("Bad skin %s\n", name->str);
-		dstring_delete(name);
+		Com_Printf ("Bad skin %s\n", name);
 		return NULL;
 	}
 	
-	out = Cache_Alloc (&skin->cache, 320*MAX_LBM_HEIGHT, skin->name); /* FS: Was 320*200 */
+	out = Z_Malloc(320 * MAX_LBM_HEIGHT); /* FS: Was 320*200 */
 	if (!out)
+	{
 		Sys_Error ("Skin_Cache: couldn't allocate");
+		return NULL;
+	}
 
 	pix = out;
 	memset (out, 0, 320*MAX_LBM_HEIGHT); /* FS: Was 320*200 */
@@ -186,10 +182,9 @@ byte	*Skin_Cache (skin_t *skin)
 		{
 			if (raw - (byte*)pcx > com_filesize) 
 			{
-				Cache_Free (&skin->cache);
+				Z_Free(out);
 				skin->failedload = true;
-				Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
-				dstring_delete(name);
+				Com_Printf ("Skin %s was malformed.  You should delete it.\n", name);
 				return NULL;
 			}
 			dataByte = *raw++;
@@ -199,10 +194,9 @@ byte	*Skin_Cache (skin_t *skin)
 				runLength = dataByte & 0x3F;
 				if (raw - (byte*)pcx > com_filesize) 
 				{
-					Cache_Free (&skin->cache);
+					Z_Free(out);
 					skin->failedload = true;
-					Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
-					dstring_delete(name);
+					Com_Printf ("Skin %s was malformed.  You should delete it.\n", name);
 					return NULL;
 				}
 				dataByte = *raw++;
@@ -212,10 +206,9 @@ byte	*Skin_Cache (skin_t *skin)
 
 			// skin sanity check
 			if (runLength + x > pcx->xmax + 2) {
-				Cache_Free (&skin->cache);
+				Z_Free(out);
 				skin->failedload = true;
-				Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
-				dstring_delete(name);
+				Com_Printf ("Skin %s was malformed.  You should delete it.\n", name);
 				return NULL;
 			}
 			while(runLength-- > 0)
@@ -224,19 +217,17 @@ byte	*Skin_Cache (skin_t *skin)
 
 	}
 
-	Com_DPrintf(DEVELOPER_MSG_IO, "Skin: %s, Size: %d, Width: %d\n", name->str, com_filesize, x); /* FS */
+	Com_DPrintf(DEVELOPER_MSG_IO, "Skin: %s, Size: %d, Width: %d\n", name, com_filesize, x); /* FS */
 	
 	if ( raw - (byte *)pcx > com_filesize)
 	{
-		Cache_Free (&skin->cache);
+		Z_Free(out);
 		skin->failedload = true;
-		Com_Printf ("Skin %s was malformed.  You should delete it.\n", name->str);
-		dstring_delete(name);
+		Com_Printf ("Skin %s was malformed.  You should delete it.\n", name);
 		return NULL;
 	}
 
 	skin->failedload = false;
-	dstring_delete(name);
 	return out;
 }
 
@@ -338,14 +329,13 @@ void Skin_Precache (void)
 #ifdef GLQUAKE
 		sc->skin = NULL;
 #endif
-        }
+	}
 
 	if (cls.state != ca_active)
 	{	// get next signon phase
 		MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
 		MSG_WriteString (&cls.netchan.message,
 			va("begin %i", cl.servercount));
-		Cache_Report ();		// print remaining memory
 	}
 }
 
@@ -363,9 +353,11 @@ void	Skin_Skins_f (void)
 
 	for (i=0 ; i<numskins ; i++)
 	{
-		if (skins[i].cache.data)
-			Cache_Free (&skins[i].cache);
+		if (skins[i].data)
+			Z_Free(skins[i].data);
+		skins[i].data = NULL;
 	}
+
 	numskins = 0;
 
 	if (cls.state == ca_disconnected) /* FS: QuakeForge fix */

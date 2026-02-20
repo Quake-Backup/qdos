@@ -795,10 +795,10 @@ void Con_DrawConsole (int lines)
 	// figure out width
 	if (cls.download)
 	{
-		if ((text = strrchr(cls.downloadname->str, '/')) != NULL)
+		if ((text = strrchr(cls.downloadname, '/')) != NULL)
 				text++;
 		else
-			text = cls.downloadname->str;
+			text = cls.downloadname;
 
 		x = con_linewidth - ((con_linewidth * 7) / 40);
 

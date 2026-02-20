@@ -796,7 +796,7 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx_t	*pcx;
 	byte		*pack;
 	  
-	pcx = Hunk_TempAlloc (width*height*2+1000);
+	pcx = Z_Malloc (width*height*2+1000);
 	if (pcx == NULL)
 	{
 		Com_Printf("SCR_ScreenShot_f: not enough memory\n");
@@ -853,6 +853,8 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 		CL_StartUpload((void *)pcx, length);
 	else
 		COM_WriteFile (filename, pcx, length);
+
+	Z_Free(pcx);
 } 
  
 
@@ -1022,7 +1024,7 @@ void SCR_RSShot_f (void)
 	st[strlen(st) - 1] = 0;
 	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 1, w);
 
-	strncpy(st, cls.servername->str, sizeof(st));
+	strncpy(st, cls.servername, sizeof(st));
 	st[sizeof(st) - 1] = 0;
 	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 11, w);
 

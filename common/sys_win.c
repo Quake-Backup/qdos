@@ -375,19 +375,16 @@ void Sys_Error (const char *error, ...)
 void Sys_Error (const char *error, ...)
 {
 	va_list		argptr;
-    static dstring_t    *string;
-
-    if (!string)
-        string = dstring_new();
+    char	string[MAXPRINTMSG];
 
 	Host_Shutdown ();
 
 	va_start (argptr, error);
-    dvsprintf (string,error,argptr);
+    Q_vsnprintf (string, sizeof(string), error,argptr);
 	va_end (argptr);
 
-	MessageBox(NULL, string->str, "Error", 0 /* MB_OK */ );
-	fprintf(stderr, "Error: %s\n", string->str);
+	MessageBox(NULL, string, "Error", 0 /* MB_OK */ );
+	fprintf(stderr, "Error: %s\n", string);
 
 
 	exit (1);

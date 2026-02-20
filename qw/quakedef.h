@@ -42,12 +42,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h> //johnfitz
 #endif
 
-#ifndef VISIBLE
-#define VISIBLE /* FS: for dstrings */
-#endif
-
-#include "dstring.h"
-
 #include "bothdefs.h"
 
 #include "common.h"
@@ -169,5 +163,12 @@ extern qboolean		msg_suppress_1;		// suppresses resolution and cache size consol
 char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave);
 char *Sys_FindNext (unsigned musthave, unsigned canthave);
 void Sys_FindClose (void);
+
+#define MAXPRINTMSG 8192
+
+/* FS: FIXME: Move. */
+#define	TAG_GAME	765		// clear when unloading the dll
+#define	TAG_LEVEL	766		// clear when loading a new level
+#define TAG_TEMP	767
 
 #endif // __QUAKEDEF_H

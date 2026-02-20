@@ -360,9 +360,9 @@ void Sys_Quit (void)
 
 	// load the sell screen before shutting everything down
 	if (registered->value)
-		d = COM_LoadFile ("end2.bin", 0);
+		d = COM_LoadFile ("end2.bin");
 	else
-		d = COM_LoadFile ("end1.bin", 0);
+		d = COM_LoadFile ("end1.bin");
 	if (d)
 		memcpy (screen, d, sizeof(screen));
 

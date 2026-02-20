@@ -224,7 +224,7 @@ void V_DriftPitch (void)
 	move = host_frametime * cl.pitchvel;
 	cl.pitchvel += host_frametime * v_centerspeed->value;
 	
-//Con_Printf ("move: %f (%f)\n", move, host_frametime);
+//Com_Printf ("move: %f (%f)\n", move, host_frametime);
 
 	if (delta > 0)
 	{
@@ -544,7 +544,7 @@ void V_CalcBlend (void)
 		if (!a2)
 			continue;
 		a = a + a2*(1-a);
-//Con_Printf ("j:%i a:%f\n", j, a);
+//Com_Printf ("j:%i a:%f\n", j, a);
 		a2 = a2/a;
 		r = r*(1-a2) + cl.cshifts[j].destcolor[0]*a2;
 		g = g*(1-a2) + cl.cshifts[j].destcolor[1]*a2;
