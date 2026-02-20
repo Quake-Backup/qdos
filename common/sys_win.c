@@ -693,25 +693,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	if (parms.memsize > MAXIMUM_WIN_MEMORY)
 		parms.memsize = MAXIMUM_WIN_MEMORY;
 
-#ifdef QUAKE1
-	if (extended_mod) /* FS: For big boy mods */
-		parms.memsize = (int) 64 * 1024 * 1024;
-#endif
-
-	/* FS */
-	t = COM_CheckParm("-mem");
-	if (t && t < com_argc-1)
-		parms.memsize = Q_atoi(com_argv[t+1]) * 1024 * 1024;
-
-	t = COM_CheckParm("-heapsize");
-	if (t && t < com_argc-1)
-		parms.memsize = Q_atoi(com_argv[t+1]) * 1024;
-
-	//parms.membase = malloc (parms.memsize);
-
-	//if (!parms.membase)
-	//	Sys_Error ("Not enough memory free; check disk space\n");
-
 	tevent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	if (!tevent)

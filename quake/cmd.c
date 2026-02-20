@@ -61,6 +61,7 @@ void Cmd_Wait_f (void)
 */
 
 sizebuf_t	cmd_text;
+byte		cmd_text_buf[8192];
 
 /*
 ============
@@ -69,7 +70,8 @@ Cbuf_Init
 */
 void Cbuf_Init (void)
 {
-	SZ_Alloc (&cmd_text, 8192);		// space for commands and script files
+	cmd_text.data = cmd_text_buf;
+	cmd_text.maxsize = sizeof(cmd_text_buf);
 }
 
 /*
@@ -280,6 +282,7 @@ void Cmd_Exec_f (void)
 	Com_Printf ("execing %s\n",s);
 	
 	Cbuf_InsertText (f);
+	Z_Free(f);
 }
 
 
@@ -541,7 +544,7 @@ Cmd_Argv
 */
 char	*Cmd_Argv (int arg)
 {
-	if ( (unsigned)arg >= cmd_argc )
+	if ( arg >= cmd_argc )
 		return cmd_null_string;
 	return cmd_argv[arg];	
 }
@@ -549,10 +552,14 @@ char	*Cmd_Argv (int arg)
 /*
 ============
 Cmd_Args
+
+Returns a single string containing argv(1) to argv(argc()-1)
 ============
 */
 char		*Cmd_Args (void)
 {
+	if (!cmd_args)
+		return "";
 	return cmd_args;
 }
 
@@ -713,13 +720,15 @@ char *Cmd_CompleteCommand (char *partial)
 	if (!len)
 		return NULL;
 		
+// check for exact match
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 		if (!strcmp (partial,cmd->name))
 			return cmd->name;
 	for (a=cmd_alias ; a ; a=a->next)
 		if (!strcmp (partial, a->name))
 			return a->name;
-// check functions
+
+// check for partial match
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 		if (!strncmp (partial,cmd->name, len))
 			return cmd->name;

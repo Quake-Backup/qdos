@@ -967,6 +967,11 @@ void SCR_RSShot_f (void)
 // save the pcx file 
 // 
 	newbuf = malloc(glheight * glwidth * 3);
+	if (!newbuf)
+	{
+		Sys_Error("SCR_RSShot_f: out of memory");
+		return;
+	}
 
 	glReadPixels_fp (glx, gly, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, newbuf ); 
 

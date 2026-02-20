@@ -23,9 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __COMMON_H
 #define __COMMON_H
 
-#ifdef _MSC_VER /* FS: VS6 */
-	#define __attribute__(x)
-#endif
 
 typedef unsigned char           byte;
 #define _DEF_BYTE_
@@ -54,6 +51,22 @@ __inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list 
 #else
 #define Q_vsnprintf  vsnprintf
 #endif
+
+// FIXME: DG: the following is a duplication from qcommon.h
+#ifdef __GNUC__ // gcc or clang
+
+// validate arguments for printf-like functions
+// STRIDX: index of format string in function arguments (first arg == 1)
+// FIRSTARGIDX: index of first argument for the format string (usually STRIDX+1)
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX) __attribute__ ((format (printf, STRIDX, FIRSTARGIDX)))
+
+#else // MSVC and other compilers
+
+// sorry, no printf-style-format validation for you :P
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX)
+#pragma warning (disable:4996)
+
+#endif // __GNUC__
 
 #define MAX_INFO_STRING 1024 /* FS: Was 196 */
 #define MAX_SERVERINFO_STRING 2048  /* FS: Was 1024 */
@@ -261,9 +274,7 @@ void COM_FilePath (char *in, char *out);
 void COM_DefaultExtension (char *path, char *extension);
 
 // does a varargs printf into a temp buffer
-char	*va(const char *format, ...) __attribute__((format(printf,1,2)));
-// does a varargs printf into a malloced buffer
-char	*nva(const char *format, ...) __attribute__((format(printf,1,2)));
+char	*va(const char *format, ...) ATTRIBUTE_PRINTF(1, 2);
 
 //============================================================================
 
@@ -308,7 +319,7 @@ byte    COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
 
 int build_number( void );
 void CompleteCommand (void); /* FS: Autocomplete commands */
-void Com_sprintf (char *dest, int size, char *fmt, ...); /* FS: Added */
-void Com_strcpy (char *dest, int destSize, const char *src); /* FS: Added */
+void Com_sprintf (char *dest, size_t size, char *fmt, ...); /* FS: Added */
+void Com_strcpy (char *dest, size_t destSize, const char *src); /* FS: Added */
 
 #endif // __COMMON_H

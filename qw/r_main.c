@@ -144,7 +144,6 @@ void R_NetGraph (void);
 void R_ZGraph (void);
 
 /* FS: Dynamic allocation stuff */
-int bedgesMark;
 static qboolean map_initialized = false;
 
 /*
@@ -158,7 +157,7 @@ void	R_InitTextures (void)
 	byte	*dest;
 	
 // create a simple checkerboard texture for the default
-	r_notexture_mip = Hunk_AllocName (sizeof(texture_t) + 16*16+8*8+4*4+2*2, "notexture");
+	r_notexture_mip = Z_Malloc (sizeof(texture_t) + 16*16+8*8+4*4+2*2);
 	
 	r_notexture_mip->width = r_notexture_mip->height = 16;
 	r_notexture_mip->offsets[0] = sizeof(texture_t);
@@ -267,7 +266,17 @@ R_NewMap
 void R_NewMap (void)
 {
 	int		i;
-	
+	static surf_t *oldsurfaces;
+
+	if (bedges)
+		Z_Free(bedges);
+
+	if (auxedges)
+		Z_Free(auxedges);
+
+	if (oldsurfaces)
+		Z_Free(oldsurfaces);
+
 	memset (&r_worldentity, 0, sizeof(r_worldentity));
 	r_worldentity.model = cl.worldmodel;
 
@@ -286,7 +295,7 @@ void R_NewMap (void)
 
 	if (r_cnumsurfs > NUMSTACKSURFACES)
 	{
-		surfaces = Hunk_AllocName (r_cnumsurfs * sizeof(surf_t), "surfaces");
+		oldsurfaces = surfaces = Z_Malloc (r_cnumsurfs * sizeof(surf_t));
 		surface_p = surfaces;
 		surf_max = &surfaces[r_cnumsurfs];
 		r_surfsonstack = false;
@@ -314,17 +323,13 @@ void R_NewMap (void)
 	}
 	else
 	{
-		auxedges = Hunk_AllocName (r_numallocatededges * sizeof(edge_t),
-								   "edges");
+		auxedges = Z_Malloc (r_numallocatededges * sizeof(edge_t));
 	}
 
-	bedgesMark = Hunk_LowMark ();
-	Hunk_AllocName(0, "-Dynamic-");
-
 	if(r_maxbmodeledges->intValue > MIN_BMODEL_EDGES) /* FS: Dynamic allocation of bmodel edges */
-		bedges = Hunk_AllocName (r_maxbmodeledges->intValue * sizeof(bedge_t), "bedges");
+		bedges = Z_Malloc (r_maxbmodeledges->intValue * sizeof(bedge_t));
 	else
-		bedges = Hunk_AllocName (MIN_BMODEL_EDGES * sizeof(bedge_t), "bedges");
+		bedges = Z_Malloc (MIN_BMODEL_EDGES * sizeof(bedge_t));
 
 	r_dowarpold = false;
 	r_viewchanged = false;
@@ -1090,9 +1095,6 @@ void R_RenderView (void)
 	if (delta < -10000 || delta > 10000)
 		Sys_Error ("R_RenderView: called without enough stack");
 
-	if ( Hunk_LowMark() & 3 )
-		Sys_Error ("Hunk is missaligned");
-
 	if ( (long)(&dummy) & 3 )
 		Sys_Error ("Stack is missaligned");
 
@@ -1120,17 +1122,16 @@ void R_InitTurb (void)
 
 void R_ClearDynamic (void) /* FS */
 {
-	if (bedgesMark)
-	{
-		Hunk_FreeToLowMark (bedgesMark);
-	}
-
-	bedgesMark = 0;
+	if (bedges)
+		Z_Free(bedges);
 	bedges = NULL;
 }
 
 void R_Restart_f (void)
 {
+	if (bedges)
+		Z_Free(bedges);
+
 #if 0
 	/* FS: FIXME: This causes a memory leak until next map load.  But, currently it's better than changing r_maxbmodeledges to a higher value and bombing out */
 	r_viewleaf = NULL;
@@ -1176,18 +1177,13 @@ void R_Restart_f (void)
 	}
 
 #endif
-	if(bedgesMark)
-		Hunk_FreeToLowMark(bedgesMark);
 
 	bedges = NULL;
 
-	bedgesMark = Hunk_LowMark ();
-	Hunk_AllocName(0, "-Dynamic-");
-
 	if(r_maxbmodeledges->intValue > MIN_BMODEL_EDGES) /* FS: Dynamic allocation of bmodel edges */
-		bedges = Hunk_AllocName (r_maxbmodeledges->intValue * sizeof(bedge_t), "bedges");
+		bedges = Z_Malloc (r_maxbmodeledges->intValue * sizeof(bedge_t));
 	else
-		bedges = Hunk_AllocName (MIN_BMODEL_EDGES * sizeof(bedge_t), "bedges");
+		bedges = Z_Malloc (MIN_BMODEL_EDGES * sizeof(bedge_t));
 
 	r_dowarpold = false;
 	r_viewchanged = true;

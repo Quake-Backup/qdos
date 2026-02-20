@@ -104,7 +104,7 @@ typedef struct
 	int		argc;
 	char	**argv;
 	void	*membase;
-	int		memsize;
+	size_t	memsize;
 } quakeparms_t;
 
 
@@ -164,11 +164,11 @@ char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave);
 char *Sys_FindNext (unsigned musthave, unsigned canthave);
 void Sys_FindClose (void);
 
-#define MAXPRINTMSG 8192
-
 /* FS: FIXME: Move. */
 #define	TAG_GAME	765		// clear when unloading the dll
 #define	TAG_LEVEL	766		// clear when loading a new level
 #define TAG_TEMP	767
+
+#define		MAXPRINTMSG	8192	// Knightmare 3/12/15- was 4096
 
 #endif // __QUAKEDEF_H

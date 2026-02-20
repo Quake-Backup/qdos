@@ -1415,6 +1415,9 @@ int COM_filelength (FILE *f)
 	int		pos;
 	int		end;
 
+	if (!f)
+		return 0;
+
 	pos = ftell (f);
 	fseek (f, 0, SEEK_END);
 	end = ftell (f);
@@ -1665,9 +1668,16 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 	int                     findtime, cachetime;
 
 	if (file && handle)
+	{
 		Sys_Error ("COM_FindFile: both handle and file set");
+		return -1;
+	}
+
 	if (!file && !handle)
+	{
 		Sys_Error ("COM_FindFile: neither handle or file set");
+		return -1;
+	}
 
 //
 // search through the path, one element at a time
@@ -2095,8 +2105,8 @@ void COM_Gamedir (char *dir)
 	pack_t			*pak;
 	char			pakfile[MAX_OSPATH];
 
-	if (strstr(dir, "..") || strstr(dir, "/")
-		|| strstr(dir, "\\") || strstr(dir, ":") )
+	if (strstr(dir, "..") || strchr(dir, '/')
+		|| strchr(dir, '\\') || strchr(dir, ':') )
 	{
 		Com_Printf ("Gamedir should be a single filename, not a path\n");
 		return;
@@ -2255,7 +2265,12 @@ void Info_RemoveKey (char *s, char *key)
 	char	value[512];
 	char	*o;
 
-	if (strstr (key, "\\"))
+	if (!s || !key)
+	{
+		return;
+	}
+
+	if (strchr (key, '\\'))
 	{
 		Com_Printf ("Can't use a key with a \\\n");
 		return;
@@ -2350,13 +2365,18 @@ void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize
 	extern cvar_t sv_highchars;
 #endif
 
-	if (strstr (key, "\\") || strstr (value, "\\") )
+	if (!s || !key || !value)
+	{
+		return;
+	}
+
+	if (strchr (key, '\\') || strchr (value, '\\') )
 	{
 		Com_Printf ("Can't use keys or values with a \\\n");
 		return;
 	}
 
-	if (strstr (key, "\"") || strstr (value, "\"") )
+	if (strchr (key, '\"') || strchr (value, '\"'))
 	{
 		Com_Printf ("Can't use keys or values with a \"\n");
 		return;
@@ -2674,7 +2694,7 @@ cont:
 #endif
 
 /* FS: Buffer safe sprintf so we aren't va'ing all over the place */
-void Com_sprintf (char *dest, int size, char *fmt, ...)
+void Com_sprintf (char *dest, size_t size, char *fmt, ...)
 {
 	int		len;
 	va_list		argptr;
@@ -2689,7 +2709,7 @@ void Com_sprintf (char *dest, int size, char *fmt, ...)
 }
 
 // Knightmare added
-void Com_strcpy (char *dest, int destSize, const char *src)
+void Com_strcpy (char *dest, size_t destSize, const char *src)
 {
 	if (!dest) {
 		Com_Printf ("Com_strcpy: NULL dst\n");

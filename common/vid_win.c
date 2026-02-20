@@ -107,7 +107,6 @@ modestate_t	modestate = MS_UNINIT;
 
 static byte		*vid_surfcache;
 static int		vid_surfcachesize;
-static int		VID_highhunkmark;
 
 unsigned char	vid_curpal[256*3];
 
@@ -286,13 +285,11 @@ qboolean VID_AllocBuffers (int width, int height)
 	if (d_pzbuffer)
 	{
 		D_FlushCaches ();
-		Hunk_FreeToHighMark (VID_highhunkmark);
+		free(d_pzbuffer);
 		d_pzbuffer = NULL;
 	}
 
-	VID_highhunkmark = Hunk_HighMark ();
-
-	d_pzbuffer = Hunk_HighAllocName (tbuffersize, "video");
+	d_pzbuffer = malloc(tbuffersize);
 
 	vid_surfcache = (byte *)d_pzbuffer +
 			width * height * sizeof (*d_pzbuffer);
@@ -337,7 +334,7 @@ int VID_Suspend (MGLDC *dc, int flags)
 		// fix the leftover Alt from any Alt-Tab or the like that switched us away
 		ClearAllStates ();
 		CDAudio_Resume ();
-		S_UnblockSound ();
+		//S_UnblockSound ();
 
 		in_mode_set = false;
 
@@ -2166,7 +2163,6 @@ void	VID_Init (unsigned char *palette)
 	hide_window = true;
 	VID_SetMode (MODE_WINDOWED, palette);
 	hide_window = false;
-	S_Init ();
 
 	vid_initialized = true;
 

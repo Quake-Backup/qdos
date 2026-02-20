@@ -73,7 +73,10 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
 	mplane_t	*plane;
 	
 	if (!model || !model->nodes)
+	{
 		Sys_Error ("Mod_PointInLeaf: bad model");
+		return NULL;
+	}
 
 	node = model->nodes;
 	while (1)
@@ -145,37 +148,6 @@ byte *Mod_LeafPVS (mleaf_t *leaf, model_t *model)
 }
 
 /*
-================
-Mod_Free
-================
-*/
-void Mod_Free (model_t *mod)
-{
-	Hunk_Free (mod->extradata);
-	memset (mod, 0, sizeof(*mod));
-}
-
-/*
-===================
-Mod_FreeAll
-===================
-*/
-void Mod_FreeAll (void)
-{
-	int		i;
-	model_t	*mod;
-	
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
-	{
-		if (mod->type != mod_alias)
-		{
-			if (mod->extradatasize)
-				Mod_Free (mod);
-		}
-	}
-}
-
-/*
 ==================
 Mod_FindName
 
@@ -187,7 +159,10 @@ model_t *Mod_FindName (char *name)
 	model_t	*mod;
 	
 	if (!name[0])
+	{
 		Sys_Error ("Mod_ForName: NULL name");
+		return NULL;
+	}
 		
 //
 // search the currently loaded models
@@ -199,8 +174,12 @@ model_t *Mod_FindName (char *name)
 	if (i == mod_numknown)
 	{
 		if (mod_numknown == MAX_MOD_KNOWN)
+		{
 			Sys_Error ("mod_numknown == MAX_MOD_KNOWN");
+			return NULL;
+		}
 		strcpy (mod->name, name);
+		mod->registration_sequence = 666; /* FS: FIXME */
 		mod_numknown++;
 	}
 
@@ -209,16 +188,16 @@ model_t *Mod_FindName (char *name)
 
 /*
 ==================
-Mod_LoadModel
+Mod_ForName
 
-Loads a model into the cache
+Loads in a model for the given name
 ==================
 */
 model_t *Mod_ForName (char *name, qboolean crash)
 {
-	model_t *mod, *starmod;
+	model_t	*mod, *starmod;
 	unsigned *buf;
-	int i;
+	int		i;
 
 	if (!name[0])
 	{
@@ -227,12 +206,12 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	}
 
 #if 0 /* FS: FIXME */
-	//
-	// inline models are grabbed only from worldmodel
-	//
+//
+// inline models are grabbed only from worldmodel
+//
 	if (name[0] == '*')
 	{
-		i = atoi(name + 1);
+		i = atoi(name+1);
 		if (i < 1 || !sv.worldmodel || i >= sv.worldmodel->numsubmodels)
 		{
 			Host_Error ("bad inline model number");
@@ -242,21 +221,21 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	}
 #endif
 
-	//
-	// search the currently loaded models
-	//
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
+//
+// search the currently loaded models
+//
+	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;
-		if (!strcmp (mod->name, name))
+		if (!strcmp (mod->name, name) )
 			return mod;
 	}
-
+	
 	//
 	// find a free model slot spot
 	//
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
+	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++)
 	{
 		if (!mod->name[0])
 			break;	// free spot
@@ -295,6 +274,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 //
 
 // call the apropriate loader
+	
 	switch (LittleLong(*(unsigned *)buf))
 	{
 	case IDPOLYHEADER:
@@ -370,8 +350,11 @@ void Mod_LoadTextures (lump_t *l)
 		for (j=0 ; j<MIPLEVELS ; j++)
 			mt->offsets[j] = LittleLong (mt->offsets[j]);
 		
-		if ( (mt->width & 15) || (mt->height & 15) )
+		if ((mt->width & 15) || (mt->height & 15))
+		{
 			Sys_Error ("Texture %s is not 16 aligned", mt->name);
+			return;
+		}
 		pixels = mt->width*mt->height/64*85;
 		tx = Hunk_Alloc (sizeof(texture_t) +pixels);
 		loadmodel->textures[i] = tx;
@@ -389,7 +372,15 @@ void Mod_LoadTextures (lump_t *l)
 			R_InitSky (tx);
 		else
 		{
-			tx->gl_texturenum = GL_LoadTexture (mt->name, tx->width, tx->height, (byte *)(tx+1), true, false);
+			// ericw -- fence textures
+			qboolean	alpha = false;
+
+			if (tx->name[0] == '{')
+			{
+				alpha = true;
+			}
+			// ericw
+			tx->gl_texturenum = GL_LoadTexture (mt->name, tx->width, tx->height, (byte *)(tx+1), true, alpha);
 		}
 	}
 
@@ -427,7 +418,10 @@ void Mod_LoadTextures (lump_t *l)
 			altmax++;
 		}
 		else
+		{
 			Sys_Error ("Bad animating texture %s", tx->name);
+			return;
+		}
 
 		for (j=i+1 ; j<m->nummiptex ; j++)
 		{
@@ -455,7 +449,10 @@ void Mod_LoadTextures (lump_t *l)
 					altmax = num+1;
 			}
 			else
+			{
 				Sys_Error ("Bad animating texture %s", tx->name);
+				return;
+			}
 		}
 		
 #define	ANIM_CYCLE	2
@@ -464,7 +461,10 @@ void Mod_LoadTextures (lump_t *l)
 		{
 			tx2 = anims[j];
 			if (!tx2)
-				Sys_Error ("Missing frame %i of %s",j, tx->name);
+			{
+				Sys_Error ("Missing frame %i of %s", j, tx->name);
+				return;
+			}
 			tx2->anim_total = max * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j+1) * ANIM_CYCLE;
@@ -476,7 +476,10 @@ void Mod_LoadTextures (lump_t *l)
 		{
 			tx2 = altanims[j];
 			if (!tx2)
-				Sys_Error ("Missing frame %i of %s",j, tx->name);
+			{
+				Sys_Error ("Missing frame %i of %s", j, tx->name);
+				return;
+			}
 			tx2->anim_total = altmax * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j+1) * ANIM_CYCLE;
@@ -551,7 +554,10 @@ void Mod_LoadVertexes (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+	{
+		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		return;
+	}
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -579,7 +585,10 @@ void Mod_LoadSubmodels (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+	{
+		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		return;
+	}
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -644,7 +653,10 @@ void Mod_LoadTexinfo (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+	{
+		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		return;
+	}
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -762,8 +774,12 @@ void CalcSurfaceExtents (msurface_t *s)
 
 		s->texturemins[i] = bmins[i] * 16;
 		s->extents[i] = (bmaxs[i] - bmins[i]) * 16;
-		if ( !(tex->flags & TEX_SPECIAL) && s->extents[i] > 512 /* 256 */ )
+
+		if (!(tex->flags & TEX_SPECIAL) && s->extents[i] > 2000) //johnfitz -- was 512 in glquake, 256 in winquake
+		{
 			Sys_Error ("Bad surface extents");
+			return;
+		}
 	}
 }
 
@@ -782,7 +798,10 @@ void Mod_LoadFaces (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+	{
+		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		return;
+	}
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -869,7 +888,10 @@ void Mod_LoadNodes (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+	{
+		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		return;
+	}
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -1098,7 +1120,10 @@ void Mod_LoadSurfedges (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+	{
+		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		return;
+	}
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -1125,7 +1150,10 @@ void Mod_LoadPlanes (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		Sys_Error ("MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+	{
+		Sys_Error ("MOD_LoadBmodel: funny lump size in %s", loadmodel->name);
+		return;
+	}
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*2*sizeof(*out));	
 	
@@ -1258,7 +1286,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		{	// duplicate the basic information
 			char	name[10];
 
-			sprintf (name, "*%i", i+1);
+			Com_sprintf (name, sizeof(name), "*%i", i+1);
 			loadmodel = Mod_FindName (name);
 			*loadmodel = *mod;
 			strcpy (loadmodel->name, name);
@@ -1309,7 +1337,7 @@ void * Mod_LoadAliasFrame (void * pin, maliasframedesc_t *frame)
 	// these are byte values, so we don't have to worry about
 	// endianness
 		frame->bboxmin.v[i] = pdaliasframe->bboxmin.v[i];
-		frame->bboxmin.v[i] = pdaliasframe->bboxmax.v[i];
+		frame->bboxmax.v[i] = pdaliasframe->bboxmax.v[i];
 	}
 
 	pinframe = (trivertx_t *)(pdaliasframe + 1);
@@ -1346,7 +1374,7 @@ void *Mod_LoadAliasGroup (void * pin,  maliasframedesc_t *frame)
 	{
 	// these are byte values, so we don't have to worry about endianness
 		frame->bboxmin.v[i] = pingroup->bboxmin.v[i];
-		frame->bboxmin.v[i] = pingroup->bboxmax.v[i];
+		frame->bboxmax.v[i] = pingroup->bboxmax.v[i];
 	}
 
 	pin_intervals = (daliasinterval_t *)(pingroup + 1);
@@ -1464,7 +1492,10 @@ void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 	skin = (byte *)(pskintype + 1);
 
 	if (numskins < 1 || numskins > MAX_SKINS)
+	{
 		Sys_Error ("Mod_LoadAliasModel: Invalid # of skins: %d\n", numskins);
+		return NULL;
+	}
 
 	s = pheader->skinwidth * pheader->skinheight;
 
@@ -1478,7 +1509,10 @@ void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 			if (!strcmp(loadmodel->name,"progs/player.mdl"))
 			{
 				if (s > sizeof(player_8bit_texels))
+				{
 					Sys_Error ("Player skin too large");
+					return NULL;
+				}
 				memcpy (player_8bit_texels, (byte *)(pskintype + 1), s);
 			}
 			sprintf (name, "%s_%i", loadmodel->name, i);
@@ -1564,8 +1598,11 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 
 	version = LittleLong (pinmodel->version);
 	if (version != ALIAS_VERSION)
+	{
 		Sys_Error ("%s has wrong version number (%i should be %i)",
-				 mod->name, version, ALIAS_VERSION);
+			mod->name, version, ALIAS_VERSION);
+		return;
+	}
 
 //
 // allocate space for a working header, plus all the data except the frames,
@@ -1587,26 +1624,41 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 	pheader->skinheight = LittleLong (pinmodel->skinheight);
 
 	if (pheader->skinheight > MAX_LBM_HEIGHT)
+	{
 		Sys_Error ("model %s has a skin taller than %d", mod->name,
-				   MAX_LBM_HEIGHT);
+			MAX_LBM_HEIGHT);
+		return;
+	}
 
 	pheader->numverts = LittleLong (pinmodel->numverts);
 
 	if (pheader->numverts <= 0)
+	{
 		Sys_Error ("model %s has no vertices", mod->name);
+		return;
+	}
 
 	if (pheader->numverts > MAXALIASVERTS)
+	{
 		Sys_Error ("model %s has too many vertices", mod->name);
+		return;
+	}
 
 	pheader->numtris = LittleLong (pinmodel->numtris);
 
 	if (pheader->numtris <= 0)
+	{
 		Sys_Error ("model %s has no triangles", mod->name);
+		return;
+	}
 
 	pheader->numframes = LittleLong (pinmodel->numframes);
 	numframes = pheader->numframes;
 	if (numframes < 1)
+	{
 		Sys_Error ("Mod_LoadAliasModel: Invalid # of frames: %d\n", numframes);
+		return;
+	}
 
 	pheader->size = LittleFloat (pinmodel->size) * ALIAS_BASE_SIZE_RATIO;
 	mod->synctype = LittleLong (pinmodel->synctype);
@@ -1770,7 +1822,10 @@ void * Mod_LoadSpriteGroup (void * pin, mspriteframe_t **ppframe, int framenum)
 	{
 		*poutintervals = LittleFloat (pin_intervals->interval);
 		if (*poutintervals <= 0.0)
+		{
 			Sys_Error ("Mod_LoadSpriteGroup: interval<=0");
+			return NULL;
+		}
 
 		poutintervals++;
 		pin_intervals++;
@@ -1806,8 +1861,11 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 
 	version = LittleLong (pin->version);
 	if (version != SPRITE_VERSION)
+	{
 		Sys_Error ("%s has wrong version number "
-				 "(%i should be %i)", mod->name, version, SPRITE_VERSION);
+			"(%i should be %i)", mod->name, version, SPRITE_VERSION);
+		return;
+	}
 
 	numframes = LittleLong (pin->numframes);
 
@@ -1833,7 +1891,10 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 // load the frames
 //
 	if (numframes < 1)
+	{
 		Sys_Error ("Mod_LoadSpriteModel: Invalid # of frames: %d\n", numframes);
+		return;
+	}
 
 	mod->numframes = numframes;
 
@@ -1882,4 +1943,90 @@ void Mod_Print (void)
 	}
 }
 
+/*
+================
+Mod_Free
+================
+*/
+void Mod_Free (model_t *mod)
+{
+	Hunk_Free (mod->extradata);
+	memset (mod, 0, sizeof(*mod));
+}
 
+/*
+================
+Mod_FreeAll
+================
+*/
+void Mod_FreeAll (void)
+{
+	int		i;
+	model_t *mod;
+
+	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
+	{
+		if (mod->type != mod_alias)
+		{
+			if (mod->extradatasize)
+				Mod_Free (mod);
+		}
+	}
+}
+
+//=============================================================================
+
+/* FS: FIXME.  Do something with this. */
+
+/*
+@@@@@@@@@@@@@@@@@@@@@
+R_BeginRegistration
+
+Specifies the model that will be used as the world
+@@@@@@@@@@@@@@@@@@@@@
+*/
+void R_BeginRegistration (char *model)
+{
+	char	fullname[MAX_QPATH];
+	cvar_t	*flushmap;
+
+	registration_sequence++;
+	//r_oldviewcluster = -1;		// force markleafs /* FS: FIXME */
+	Com_sprintf (fullname, sizeof(fullname), "maps/%s.bsp", model);
+
+	D_FlushCaches ();
+	// explicitly free the old map if different
+	// this guarantees that mod_known[0] is the world map
+	flushmap = Cvar_Get ("flushmap", "0", 0);
+	if ((strcmp(mod_known[0].name, fullname) != 0) || flushmap->intValue)
+		Mod_Free (&mod_known[0]);
+
+	cl.worldmodel = Mod_ForName (fullname, false);
+	R_NewMap ();
+}
+
+/*
+@@@@@@@@@@@@@@@@@@@@@
+R_EndRegistration
+
+@@@@@@@@@@@@@@@@@@@@@
+*/
+void R_EndRegistration (void)
+{
+	int		i;
+	model_t	*mod;
+
+	for (i=0, mod=mod_known ; i<mod_numknown ; i++, mod++)
+	{
+		if (!mod->name[0])
+			continue;
+		if (mod->registration_sequence != registration_sequence)
+		{	// don't need this model
+			Mod_Free (mod);
+		}
+	}
+
+	//GL_FreeUnusedImages (); /* FS: FIXME */
+
+	//registration_active = false;	/* Knightmare- map registration flag */
+}

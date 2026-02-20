@@ -64,7 +64,7 @@ void	Hunk_Free (void *buf)
 	free (buf);
 }
 
-int	Hunk_End (void)
+size_t	Hunk_End (void)
 {
 /* for realloc() to be useful here: you either need DJGPP-2.05 or newer,
  * or you need to replace malloc() & friends in any older DJGPP version

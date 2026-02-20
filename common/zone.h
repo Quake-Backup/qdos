@@ -40,6 +40,6 @@ void Z_FreeTags (int tag);
 void	*Hunk_Begin (size_t maxsize);
 void	*Hunk_Alloc (size_t size);
 void	Hunk_Free (void *buf);
-int		Hunk_End (void);
+size_t	Hunk_End (void);
 
 #endif // __ZONE_H

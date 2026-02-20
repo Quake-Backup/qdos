@@ -535,6 +535,8 @@ not reinitialize anything.
 */
 void Host_ClearMemory (void)
 {
+	S_StopAllSounds ();
+
 	Com_DPrintf (DEVELOPER_MSG_MEM, "Clearing memory\n");
 	D_FlushCaches ();
 	Mod_FreeAll ();

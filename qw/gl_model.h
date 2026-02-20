@@ -346,6 +346,8 @@ typedef struct model_s
 {
 	char		name[MAX_QPATH];
 
+	int			registration_sequence;
+
 	modtype_t	type;
 	int			numframes;
 	synctype_t	synctype;
@@ -417,9 +419,8 @@ typedef struct model_s
 //
 // additional model data
 //
-	void *extradata;
+	void		*extradata;
 	int			extradatasize;
-
 } model_t;
 
 //============================================================================

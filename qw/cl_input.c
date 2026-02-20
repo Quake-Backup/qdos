@@ -565,7 +565,7 @@ void CL_InitInput (void)
 
 	cl_nodelta = Cvar_Get("cl_nodelta","0", 0);
 	in_freelook = Cvar_Get("in_freelook","1.0", CVAR_ARCHIVE); /* FS: mlook */
-	in_freelook->description = "Enables Mouselook.";
+	Cvar_Set_Description("in_freelook", "Enables Mouselook.");
 }
 
 /*

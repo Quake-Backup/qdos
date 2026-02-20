@@ -1438,23 +1438,10 @@ char *
 va (const char *fmt, ...)
 {
 	va_list     args;
-	static char string[4096];
+	static char string[MAXPRINTMSG];
 
 	va_start (args, fmt);
-	vsnprintf (string, sizeof(string), fmt, args);
-	va_end (args);
-
-	return string;
-}
-
-char *
-nva (const char *fmt, ...)
-{
-	va_list     args;
-	static char  string[4096];
-
-	va_start (args, fmt);
-	vsnprintf (string, sizeof(string), fmt, args);
+	Q_vsnprintf (string, sizeof(string), fmt, args);
 	va_end (args);
 
 	return string;
@@ -1536,8 +1523,6 @@ COM_Path_f
 
 ============
 */
-
-
 void COM_Path_f (void)
 {
 	searchpath_t    *s;
@@ -1931,8 +1916,8 @@ pack_t *COM_LoadPackFile (char *packfile)
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
-
-	//Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
+	
+	Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
 	return pack;
 }
 
@@ -2143,7 +2128,7 @@ void COM_AddGameDirectory (char *dir)
 COM_InitFilesystem
 ================
 */
-void COM_InitFilesystem () //johnfitz -- modified based on topaz's tutorial
+void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 {
 	int             i, j;
 	char    basedir[MAX_OSPATH];

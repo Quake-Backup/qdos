@@ -48,12 +48,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h> //johnfitz
 #endif
 
-//#ifndef VISIBLE
-//#define VISIBLE /* FS: for dstrings */
-//#endif
-
-//#include "dstring.h"
-
 #if defined(_WIN32) && !defined(WINDED)
 
 #if defined(_M_IX86)

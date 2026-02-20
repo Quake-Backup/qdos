@@ -213,6 +213,10 @@ char soundlist_name[] =
    { 's'^0xff, 'o'^0xff, 'u'^0xff, 'n'^0xff, 'd'^0xff, 'l'^0xff, 'i'^0xff, 's'^0xff, 't'^0xff, 
       ' '^0xff, '%'^0xff, 'i'^0xff, ' '^0xff, '%'^0xff, 'i'^0xff, 0 };
  
+#ifdef __DJGPP__
+void Sys_Memory_Stats_f (void); /* FS: Added */
+#endif
+
 
 /*
 ==================
@@ -1478,6 +1482,10 @@ void CL_Init (void)
 	if (allow_download_http->intValue)
 		Info_SetValueForStarKey (cls.userinfo, "*cap", "h", MAX_INFO_STRING); /* FS: HTTP downloading from QuakeForge */
 	CL_HTTP_Init();
+#endif
+
+#ifdef __DJGPP__
+	Cmd_AddCommand ("memstats", Sys_Memory_Stats_f); /* FS: Added to keep track of memory usage in DOS */
 #endif
 }
 

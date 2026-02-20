@@ -41,8 +41,6 @@ static int		VGA_buffersize;
 void	*vid_surfcache;
 int		vid_surfcachesize;
 
-int		VGA_highhunkmark;
-
 #include "vgamodes.h"
 
 #define NUMVIDMODES		(sizeof(vgavidmodes) / sizeof(vgavidmodes[0]))
@@ -284,13 +282,11 @@ qboolean VGA_FreeAndAllocVidbuffer (viddef_t *lvid, int allocnewbuffer)
 	if (d_pzbuffer)
 	{
 		D_FlushCaches ();
-		Hunk_FreeToHighMark (VGA_highhunkmark);
+		free(d_pzbuffer);
 		d_pzbuffer = NULL;
 	}
 
-	VGA_highhunkmark = Hunk_HighMark ();
-
-	d_pzbuffer = Hunk_HighAllocName (VGA_buffersize, "video");
+	d_pzbuffer = malloc(VGA_buffersize);
 
 	vid_surfcache = (byte *)d_pzbuffer
 		+ lvid->width * lvid->height * sizeof (*d_pzbuffer);

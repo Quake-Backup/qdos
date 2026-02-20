@@ -290,7 +290,7 @@ void R_DrawSprite (void)
 	vec3_t			tvec;
 	float			dot, angle, sr, cr;
 
-	psprite = currententity->model->cache.data;
+	psprite = currententity->model->extradata;
 
 	r_spritedesc.pspriteframe = R_GetSpriteframe (psprite);
 

@@ -1075,6 +1075,8 @@ void V_Init (void)
 	v_iroll_level = Cvar_Get("v_iroll_level", "0.1", 0);
 	v_ipitch_level = Cvar_Get("v_ipitch_level", "0.3", 0);
 
+	v_contentblend = Cvar_Get("v_contentblend", "1", CVAR_ARCHIVE);
+	Cvar_Set_Description("v_contentblend", "Disable palette blends."); /* FS: Fucking hate palette blends */
 	v_idlescale = Cvar_Get("v_idlescale", "0", 0);
 	crosshaircolor = Cvar_Get("crosshaircolor", "79", CVAR_ARCHIVE);
 	crosshair = Cvar_Get("crosshair", "0", CVAR_ARCHIVE);
@@ -1097,8 +1099,6 @@ void V_Init (void)
 	/* FS: New stuff */
 	net_showchat = Cvar_Get("net_showchat", "1", CVAR_ARCHIVE); /* FS: EZQ Chat */
 	net_showchatgfx = Cvar_Get("net_showchatgfx", "1", CVAR_ARCHIVE); /* FS: EZQ Chat */
-	v_contentblend = Cvar_Get("v_contentblend", "1",  CVAR_ARCHIVE);
-	v_contentblend->description = "Disable palette blends."; /* FS: Fucking hate palette blends */
 
 	BuildGammaTable (1.0);	// no gamma yet
 	v_gamma = Cvar_Get("gamma", "1", CVAR_ARCHIVE);
