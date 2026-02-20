@@ -70,6 +70,7 @@ typedef struct
 	byte		signon_buf[MAX_MSGLEN-2]; //johnfitz -- was 8192, now uses MAX_MSGLEN
 
 	unsigned	protocol; //johnfitz
+	qboolean	doAutoSave; /* FS */
 } server_t;
 
 
@@ -245,6 +246,6 @@ void SV_MoveToGoal (void);
 void SV_CheckForNewClients (void);
 void SV_RunClients (void);
 void SV_SaveSpawnparms ();
-void SV_SpawnServer (char *server);
+void SV_SpawnServer (char *server, qboolean loadgame);
 
 #endif // __SERVER_H

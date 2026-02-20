@@ -809,7 +809,7 @@ void Host_Map_f (void)
 	svs.serverflags = 0;			// haven't completed an episode yet
 	strcpy (name, Cmd_Argv(1));
 
-	SV_SpawnServer (name);
+	SV_SpawnServer (name, false);
 
 	if (!sv.active)
 		return;
@@ -860,7 +860,7 @@ void Host_Changelevel_f (void)
 
 	SV_SaveSpawnparms ();
 	strcpy (level, Cmd_Argv(1));
-	SV_SpawnServer (level);
+	SV_SpawnServer (level, false);
 	// also issue an error if spawn failed -- O.S.
 	if (!sv.active)
 		Host_Error ("cannot run map %s", level);
@@ -883,7 +883,7 @@ void Host_Restart_f (void)
 	if (cmd_source != src_command)
 		return;
 	strcpy (mapname, sv.name);	// mapname gets cleared in spawnserver
-	SV_SpawnServer (mapname);
+	SV_SpawnServer (mapname, true);
 	if (!sv.active)
 		Host_Error ("cannot restart map %s", mapname);
 }
@@ -1147,7 +1147,7 @@ void Host_Loadgame_f (void)
 
 	CL_Disconnect_f ();
 
-	SV_SpawnServer (mapname);
+	SV_SpawnServer (mapname, true);
 
 	if (!sv.active)
 	{

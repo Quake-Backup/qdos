@@ -84,6 +84,8 @@ cvar_t	*con_show_description;
 cvar_t	*con_show_dev_flags;
 cvar_t	*timestamp; /* FS: Timestamp */
 
+extern cvar_t *sv_autosave;
+
 extern char *entitystring;
 
 /*
@@ -701,6 +703,23 @@ void Host_ServerFrame (void)
 
 // send all messages to the clients
 	SV_SendClientMessages ();
+
+	if (sv.doAutoSave)
+	{
+		if (sv_autosave->intValue && svs.maxclients == 1)
+		{
+			if (svs.clients[0].active && (svs.clients[0].edict->v.health > 0)) /* FS: Wait until we're actually spawned in. */
+			{
+				Cbuf_AddText("save auto\n");
+				sv.doAutoSave = false;
+			}
+		}
+		else
+		{
+
+			sv.doAutoSave = false;
+		}
+	}
 }
 
 #endif

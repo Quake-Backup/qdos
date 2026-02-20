@@ -652,7 +652,8 @@ void M_SinglePlayer_Key (int key)
 
 int		load_cursor;		// 0 < load_cursor < MAX_SAVEGAMES
 
-#define	MAX_SAVEGAMES		12
+#define	MAX_SAVEGAMES		13
+#define AUTOSAVE_POS MAX_SAVEGAMES-1
 char	m_filenames[MAX_SAVEGAMES][SAVEGAME_COMMENT_LENGTH+1];
 int		loadable[MAX_SAVEGAMES];
 
@@ -667,7 +668,14 @@ void M_ScanSaves (void)
 	{
 		strcpy (m_filenames[i], "--- UNUSED SLOT ---");
 		loadable[i] = false;
-		Com_sprintf (name, sizeof(name), "%s/s%i.sav", com_gamedir, i);
+		if (i == AUTOSAVE_POS)
+		{
+			Com_sprintf (name, sizeof(name), "%s/auto.sav", com_gamedir, i);
+		}
+		else
+		{
+			Com_sprintf (name, sizeof(name), "%s/s%i.sav", com_gamedir, i);
+		}
 		f = fopen (name, "r");
 		if (!f)
 			continue;
@@ -760,7 +768,14 @@ void M_Load_Key (int k)
 		SCR_BeginLoadingPlaque ();
 
 	// issue the load command
-		Cbuf_AddText (va ("deathmatch 0; coop 0;load s%i\n", load_cursor) );
+		if (load_cursor == AUTOSAVE_POS)
+		{
+			Cbuf_AddText (va ("deathmatch 0; coop 0;load auto\n", load_cursor) );
+		}
+		else
+		{
+			Cbuf_AddText (va ("deathmatch 0; coop 0;load s%i\n", load_cursor) );
+		}
 		return;
 
 	case K_UPARROW:
@@ -793,7 +808,14 @@ void M_Save_Key (int k)
 	case K_ENTER:
 		m_state = m_none;
 		key_dest = key_game;
-		Cbuf_AddText (va("save s%i\n", load_cursor));
+		if (load_cursor == AUTOSAVE_POS)
+		{
+			Cbuf_AddText (va("save auto\n", load_cursor));
+		}
+		else
+		{
+			Cbuf_AddText (va("save s%i\n", load_cursor));
+		}
 		return;
 
 	case K_UPARROW:

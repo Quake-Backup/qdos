@@ -41,6 +41,7 @@ cvar_t	*sv_accelerate;
 cvar_t	*sv_aim;
 
 cvar_t  *sv_loadentfiles; /* FS: Load external ent files */
+cvar_t	*sv_autosave; /* FS */
 
  /* FS: Gamespy Stuff */
 cvar_t	*sv_master_server_ip;
@@ -129,6 +130,8 @@ void SV_Init (void)
 	/* FS: New stuff */
 	sv_loadentfiles = Cvar_Get("sv_loadentfiles","1", CVAR_ARCHIVE); /* FS: Load external ent files */
 	Cvar_Set_Description("sv_loadentfiles", "Attempt to load external *.ent files if they exist.");
+	sv_autosave = Cvar_Get("sv_autosave", "1", CVAR_ARCHIVE);
+	Cvar_Set_Description("sv_autosave", "Auto save when entering a new level in single player.");
 	sv_altnoclip = Cvar_Get("sv_altnoclip","1", CVAR_ARCHIVE); //johnfitz
 	pq_fullpitch = Cvar_Get("pq_fullpitch", "0", 0); /* FS: ProQuake Shit */
 
@@ -1312,7 +1315,7 @@ This is called at the start of each level
 extern float      scr_centertime_off;
 char	*entitystring; /* FS: Ent file loading */
 
-void SV_SpawnServer (char *server)
+void SV_SpawnServer (char *server, qboolean loadgame)
 {
 	edict_t	*ent;
 	int		i;
@@ -1501,4 +1504,7 @@ void SV_SpawnServer (char *server)
 			SV_SendServerinfo (host_client);
    
 	Com_DPrintf(DEVELOPER_MSG_SERVER, "Server spawned.\n");
+
+	if (!loadgame && svs.maxclients == 1 && !deathmatch->intValue && !coop->intValue)
+		sv.doAutoSave = true;
 }
