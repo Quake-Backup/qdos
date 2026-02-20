@@ -1928,6 +1928,11 @@ void Host_Shutdown(void)
 	if (host_basepal)
 		VID_Shutdown();
 	Cmd_RemoveAllCommands();
+
+	if (wad_base)
+		Z_Free(wad_base);
+
+	wad_base = NULL;
 }
 
 void CL_Flashlight_f (void) /* FS: Flashlight */
