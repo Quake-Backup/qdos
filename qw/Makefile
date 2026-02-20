@@ -111,7 +111,6 @@ CLIENT = $(SYSOBJ_DXE)       \
 	crc.o      \
 	cvar.o     \
 	dos_v2.o   \
-	dstring.o  \
 	in_dos.o   \
 	keys.o     \
 	math.o     \
@@ -123,6 +122,7 @@ CLIENT = $(SYSOBJ_DXE)       \
 	nonintel.o \
 	pmove.o    \
 	pmovetst.o \
+	q_shdos.o  \
 	r_part.o   \
 	sbar.o     \
 	skin.o     \

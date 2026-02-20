@@ -279,6 +279,7 @@ int COM_FOpenFile (char *filename, FILE **file);
 byte *COM_LoadFile (char *path);
 void COM_CreatePath (char *path);
 void COM_Gamedir (char *dir);
+void COM_FreeFile (void *buffer);
 
 /* FS: New stuff */
 int Q_tolower(int c);
