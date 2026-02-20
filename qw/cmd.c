@@ -328,12 +328,11 @@ void Cmd_Echo_f (void)
 
 /*
 ===============
-Cmd_Alias_f
+Cmd_Alias_f -- johnfitz -- rewritten
 
 Creates a new command that executes a command string (possibly ; seperated)
 ===============
 */
-
 void Cmd_Alias_f (void)
 {
 	cmdalias_t	*a;
@@ -341,51 +340,112 @@ void Cmd_Alias_f (void)
 	int			i, c;
 	char		*s;
 
-	if (Cmd_Argc() == 1)
+
+	switch (Cmd_Argc())
 	{
-		Com_Printf ("Current alias commands:\n");
+	case 1: //list all aliases
+		for (a = cmd_alias, i = 0; a; a=a->next, i++)
+			Com_SafePrintf ("   %s: %s", a->name, a->value);
+		if (i)
+			Com_SafePrintf ("%i alias command(s)\n", i);
+		else
+			Com_SafePrintf ("no alias commands found\n");
+		break;
+	case 2: //output current alias string
 		for (a = cmd_alias ; a ; a=a->next)
-			Com_Printf ("%s : %s\n", a->name, a->value);
-		return;
-	}
-
-	s = Cmd_Argv(1);
-	if (strlen(s) >= MAX_ALIAS_NAME)
-	{
-		Com_Printf ("Alias name is too long\n");
-		return;
-	}
-
-	// if the alias allready exists, reuse it
-	for (a = cmd_alias ; a ; a=a->next)
-	{
-		if (!strcmp(s, a->name))
+			if (!strcmp(Cmd_Argv(1), a->name))
+				Com_Printf ("   %s: %s", a->name, a->value);
+		break;
+	default: //set alias string
+		s = Cmd_Argv(1);
+		if (strlen(s) >= MAX_ALIAS_NAME)
 		{
-			free(a->value);
-			break;
+			Com_Printf ("Alias name is too long\n");
+			return;
 		}
-	}
 
-	if (!a)
-	{
-		a = malloc(sizeof(cmdalias_t));
-		a->next = cmd_alias;
-		cmd_alias = a;
-	}
-	Com_strcpy (a->name, sizeof(a->name), s);	
+		// if the alias allready exists, reuse it
+		for (a = cmd_alias ; a ; a=a->next)
+		{
+			if (!strcmp(s, a->name))
+			{
+				free (a->value);
+				break;
+			}
+		}
 
-// copy the rest of the command line
-	cmd[0] = 0;		// start out with a null string
-	c = Cmd_Argc();
-	for (i=2 ; i< c ; i++)
-	{
-		strcat (cmd, Cmd_Argv(i));
-		if (i != c)
-			strcat (cmd, " ");
+		if (!a)
+		{
+			a = malloc (sizeof(cmdalias_t));
+			a->next = cmd_alias;
+			cmd_alias = a;
+		}
+		Com_strcpy (a->name, sizeof(a->name), s);
+
+		// copy the rest of the command line
+		cmd[0] = 0;		// start out with a null string
+		c = Cmd_Argc();
+		for (i=2 ; i< c ; i++)
+		{
+			strcat (cmd, Cmd_Argv(i));
+			if (i != c)
+				strcat (cmd, " ");
+		}
+		strcat (cmd, "\n");
+
+		a->value = strdup (cmd);
+		break;
 	}
-	strcat (cmd, "\n");
-	
-	a->value = strdup(cmd);
+}
+
+/*
+===============
+Cmd_Unalias_f -- johnfitz
+===============
+*/
+void Cmd_Unalias_f (void)
+{
+	cmdalias_t	*a, *prev;
+
+	switch (Cmd_Argc())
+	{
+	default:
+	case 1:
+		Com_Printf("unalias <name> : delete alias\n");
+		break;
+	case 2:
+		for (prev = a = cmd_alias; a; a = a->next)
+		{
+			if (!strcmp(Cmd_Argv(1), a->name))
+			{
+				prev->next = a->next;
+				free (a->value);
+				free (a);
+				prev = a;
+				return;
+			}
+			prev = a;
+		}
+		break;
+	}
+}
+
+/*
+===============
+Cmd_Unaliasall_f -- johnfitz
+===============
+*/
+void Cmd_Unaliasall_f (void)
+{
+	cmdalias_t	*blah;
+
+	while (cmd_alias)
+	{
+		blah = cmd_alias->next;
+		free(cmd_alias->value);
+		free(cmd_alias);
+		cmd_alias = blah;
+	}
 }
 
 /*
@@ -457,7 +517,7 @@ void Cmd_TokenizeString (char *text)
 	
 // clear the args from the last string
 	for (i=0 ; i<cmd_argc ; i++)
-		Z_Free (cmd_argv[i]);
+		free (cmd_argv[i]);
 		
 	cmd_argc = 0;
 	cmd_args = NULL;
@@ -488,7 +548,7 @@ void Cmd_TokenizeString (char *text)
 
 		if (cmd_argc < MAX_ARGS)
 		{
-			cmd_argv[cmd_argc] = Z_Malloc (Q_strlen(com_token)+1);
+			cmd_argv[cmd_argc] = malloc (Q_strlen(com_token)+1);
 			Q_strcpy (cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -523,7 +583,7 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = Z_Malloc(sizeof(cmd_function_t));
+	cmd = malloc(sizeof(cmd_function_t));
 	cmd->name = strdup(cmd_name);
 	cmd->function = function;
 	cmd->next = cmd_functions;
@@ -551,7 +611,7 @@ void	Cmd_RemoveCommand (char *cmd_name)
 		if (!strcmp (cmd_name, cmd->name))
 		{
 			*back = cmd->next;
-			Z_Free (cmd);
+			free (cmd);
 			return;
 		}
 		back = &cmd->next;
@@ -776,6 +836,8 @@ Cmd_Init
 void Cmd_Init (void)
 {
 	cl_warncmd = Cvar_Get("cl_warncmd", "0", 0);
+	Cvar_Set_Description("cl_warncmd", "Warn about unknown commands.");
+
 //
 // register our commands
 //
@@ -787,6 +849,9 @@ void Cmd_Init (void)
 #ifndef SERVERONLY
 	Cmd_AddCommand ("cmd", Cmd_ForwardToServer_f);
 #endif
+	Cmd_AddCommand ("cmdlist", Cmd_List_f); //johnfitz
+	Cmd_AddCommand ("unalias", Cmd_Unalias_f); //johnfitz
+	Cmd_AddCommand ("unaliasall", Cmd_Unaliasall_f); //johnfitz
 }
 
 

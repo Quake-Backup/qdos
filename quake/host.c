@@ -1019,6 +1019,10 @@ void Host_Shutdown(void)
 	S_Shutdown();
 	IN_Shutdown ();
 
+	if (cls.state != ca_dedicated)
+	{
+		VID_Shutdown();
+	}
 
 	if (wad_base)
 		Z_Free(wad_base);
@@ -1030,9 +1034,5 @@ void Host_Shutdown(void)
 
 	svs.maxclients = NULL;
 
-	if (cls.state != ca_dedicated)
-	{
-		VID_Shutdown();
-	}
+	Cmd_RemoveAllCommands();
 }
-

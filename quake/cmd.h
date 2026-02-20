@@ -148,4 +148,8 @@ void Cbuf_AddEarlyCommands (qboolean clear);
 
 void Cmd_RemoveAutoComplete (void); /* FS */
 
-#endif // __CMD_H
+void Cmd_RemoveAllCommands (void);
+
+void Cmd_List_f (void); /* FS: Moved to cmd_auto.c for BSD licensing. */
+
+#endif // _CMD_H

@@ -1149,7 +1149,10 @@ int TTY_Init(void)
 	{
 		p = (ComPort *)Z_Malloc(sizeof(ComPort));
 		if (p == NULL)
-			Sys_Error("Hunk alloc failed for com port\n");
+		{
+			Sys_Error("Z_Malloc failed for com port\n");
+			return -1;
+		}
 		p->next = portList;
 		portList = p;
 		handleToPort[n] = p;
@@ -1183,6 +1186,7 @@ void TTY_Shutdown(void)
 				NET_Poll();
 			ComPort_Disable (p);
 		}
+		Z_Free(p);
 	}
 }
 

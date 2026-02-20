@@ -582,3 +582,80 @@ void Cmd_RemoveAutoComplete (void)
 	auto_cvars = NULL;
 	cmdcount = aliascount = cvarcount = 0;
 }
+
+/*
+============
+Cmd_List_f -- Redone by me.
+============
+*/
+void Cmd_List_f (void)
+{
+	cmd_function_t **sorted_cmds = NULL; /* FS: Sort by name. */
+	cmd_function_t	*head = &cmd_functions[0];
+	cmd_function_t	*cmd;
+	const char *search_filter = NULL;
+	int		i = 0, j = 0, q = 0, args = 0, search_filter_len = 0, cmd_count = 0;
+
+	args = Cmd_Argc();
+
+	if (args > 1) /* FS */
+	{
+		search_filter = Cmd_Argv(1);
+		if (search_filter != NULL)
+		{
+			Com_SafePrintf("Listing matches for '%s'...\n", search_filter);
+
+			if (args > 2)
+			{
+				search_filter_len = strlen(search_filter);
+			}
+		}
+	}
+
+	cmd_count = GetCmdCount();
+
+	sorted_cmds = (cmd_function_t **)malloc(sizeof(cmd_function_t*)*cmd_count);
+	if (!sorted_cmds)
+	{
+		Sys_Error ("Cmd_List_f: Failed to allocate memory.");
+		return;
+	}
+
+	for (q = 0; q < cmd_count; q++)
+	{
+		sorted_cmds[q] = cmd_functions;
+		cmd_functions = cmd_functions->next;
+	}
+
+	qsort(sorted_cmds, cmd_count, sizeof(cmd_function_t*), &cmpr_cmds);
+
+	for (i = 0; i < cmd_count; i++)
+	{
+		cmd = sorted_cmds[i];
+		if (!cmd)
+		{
+			break;
+		}
+
+		if (search_filter) /* FS */
+		{
+			if (!strstr(cmd->name, search_filter))
+				continue;
+
+			if ((args > 2) && (strncmp(cmd->name, search_filter, search_filter_len)))
+				continue;
+
+			j++;
+		}
+
+		Com_SafePrintf ("   %s\n", cmd->name);
+	}
+
+	Com_SafePrintf("%d cmds\n", search_filter ? j : i);
+
+	free(sorted_cmds);
+	sorted_cmds = NULL;
+
+	cmd_functions = (cmd_function_t *)head;
+
+}

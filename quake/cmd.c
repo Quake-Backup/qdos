@@ -304,23 +304,6 @@ void Cmd_Echo_f (void)
 
 /*
 ===============
-Cmd_Alias_f
-
-Creates a new command that executes a command string (possibly ; seperated)
-===============
-*/
-
-char *CopyString (char *in)
-{
-	char	*out;
-	
-	out = Z_Malloc (strlen(in)+1);
-	strcpy (out, in);
-	return out;
-}
-
-/*
-===============
 Cmd_Alias_f -- johnfitz -- rewritten
 
 Creates a new command that executes a command string (possibly ; seperated)
@@ -362,18 +345,18 @@ void Cmd_Alias_f (void)
 		{
 			if (!strcmp(s, a->name))
 			{
-				Z_Free (a->value);
+				free (a->value);
 				break;
 			}
 		}
 
 		if (!a)
 		{
-			a = Z_Malloc (sizeof(cmdalias_t));
+			a = malloc (sizeof(cmdalias_t));
 			a->next = cmd_alias;
 			cmd_alias = a;
 		}
-		strcpy (a->name, s);
+		Com_strcpy (a->name, sizeof(a->name), s);
 
 		// copy the rest of the command line
 		cmd[0] = 0;		// start out with a null string
@@ -386,7 +369,7 @@ void Cmd_Alias_f (void)
 		}
 		strcat (cmd, "\n");
 
-		a->value = CopyString (cmd);
+		a->value = strdup (cmd);
 		break;
 	}
 }
@@ -412,8 +395,8 @@ void Cmd_Unalias_f (void)
 			if (!strcmp(Cmd_Argv(1), a->name))
 			{
 				prev->next = a->next;
-				Z_Free (a->value);
-				Z_Free (a);
+				free (a->value);
+				free (a);
 				prev = a;
 				return;
 			}
@@ -435,8 +418,8 @@ void Cmd_Unaliasall_f (void)
 	while (cmd_alias)
 	{
 		blah = cmd_alias->next;
-		Z_Free(cmd_alias->value);
-		Z_Free(cmd_alias);
+		free(cmd_alias->value);
+		free(cmd_alias);
 		cmd_alias = blah;
 	}
 }
@@ -457,52 +440,8 @@ static	char		*cmd_null_string = "";
 static	char		*cmd_args = NULL;
 
 cmd_source_t	cmd_source;
-
-//johnfitz -- better tab completion
-//static	cmd_function_t	*cmd_functions;		// possible commands to execute
 cmd_function_t	*cmd_functions;		// possible commands to execute
-//johnfitz
 
-/*
-============
-Cmd_List_f -- johnfitz
-============
-*/
-void Cmd_List_f (void)
-{
-	cmd_function_t	*cmd;
-	char 			*partial;
-	int				len, count;
-
-	if (Cmd_Argc() > 1)
-	{
-		partial = Cmd_Argv (1);
-		len = Q_strlen(partial);
-	}
-	else
-	{
-		partial = NULL;
-		len = 0;
-	}
-
-	count=0;
-	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
-	{
-		if (partial && Q_strncmp (partial,cmd->name, len))
-		{
-			continue;
-		}
-		Com_SafePrintf ("   %s\n", cmd->name);
-		count++;
-	}
-
-	Com_SafePrintf ("%i commands", count);
-	if (partial)
-	{
-		Com_SafePrintf (" beginning with \"%s\"", partial);
-	}
-	Com_SafePrintf ("\n");
-}
 /*
 ============
 Cmd_Init
@@ -514,7 +453,7 @@ void Cmd_Init (void)
 	cl_warncmd = Cvar_Get("cl_warncmd", "0", 0);
 	Cvar_Set_Description("cl_warncmd", "Warn about unknown commands.");
 
-	Cmd_AddCommand ("cmdlist", Cmd_List_f); //johnfitz
+	Cmd_AddCommand ("cmdlist", Cmd_List_f);
 	Cmd_AddCommand ("unalias", Cmd_Unalias_f); //johnfitz
 	Cmd_AddCommand ("unaliasall", Cmd_Unaliasall_f); //johnfitz
 //
@@ -577,7 +516,7 @@ void Cmd_TokenizeString (char *text)
 	
 // clear the args from the last string
 	for (i=0 ; i<cmd_argc ; i++)
-		Z_Free (cmd_argv[i]);
+		free (cmd_argv[i]);
 		
 	cmd_argc = 0;
 	cmd_args = NULL;
@@ -608,7 +547,7 @@ void Cmd_TokenizeString (char *text)
 
 		if (cmd_argc < MAX_ARGS)
 		{
-			cmd_argv[cmd_argc] = Z_Malloc (Q_strlen(com_token)+1);
+			cmd_argv[cmd_argc] = malloc (Q_strlen(com_token)+1);
 			Q_strcpy (cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -625,13 +564,7 @@ Cmd_AddCommand
 void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 {
 	cmd_function_t	*cmd;
-	
-	if (host_initialized)	// because hunk allocation would get stomped
-	{
-		//Sys_Error ("Cmd_AddCommand after host_initialized");
-		return;
-	}
-		
+
 // fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
 	{
@@ -649,8 +582,8 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = Z_Malloc(sizeof(cmd_function_t));
-	cmd->name = cmd_name;
+	cmd = malloc(sizeof(cmd_function_t));
+	cmd->name = strdup(cmd_name);
 	cmd->function = function;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
@@ -677,7 +610,7 @@ void	Cmd_RemoveCommand (char *cmd_name)
 		if (!strcmp (cmd_name, cmd->name))
 		{
 			*back = cmd->next;
-			Z_Free (cmd);
+			free (cmd);
 			return;
 		}
 		back = &cmd->next;
@@ -900,5 +833,46 @@ void Cbuf_AddEarlyCommands (qboolean clear)
 		}
 
 		i+=2;
+	}
+}
+
+void Cmd_RemoveAllCommands (void)
+{
+	cmdalias_t *alias, *aNext;
+	cmd_function_t	*cmd, *next;
+	int i;
+
+	for (alias=cmd_alias; alias; alias = aNext)
+	{
+		aNext = alias->next;
+
+		if (alias->value)
+		{
+			free(alias->value);
+			alias->value = NULL;
+		}
+
+		free(alias);
+		alias = NULL;
+	}
+
+	for (cmd = cmd_functions; cmd; cmd = next)
+	{
+		next = cmd->next;
+
+		if (cmd->name)
+		{
+			free(cmd->name);
+			cmd->name = NULL;
+		}
+
+		free(cmd);
+		cmd = NULL;
+	}
+
+	for (i = 0; i < cmd_argc; i++)
+	{
+		free(cmd_argv[i]);
+		cmd_argv[i] = NULL;
 	}
 }

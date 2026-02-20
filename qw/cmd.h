@@ -136,4 +136,6 @@ void Cmd_RemoveAutoComplete (void); /* FS */
 
 void Cmd_RemoveAllCommands (void);
 
+void Cmd_List_f (void); /* FS: Moved to cmd_auto.c for BSD licensing. */
+
 #endif // _CMD_H
