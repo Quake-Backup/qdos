@@ -1025,6 +1025,11 @@ void Host_Shutdown(void)
 
 	wad_base = NULL;
 
+	if (svs.clients)
+		Z_Free(svs.clients);
+
+	svs.maxclients = NULL;
+
 	if (cls.state != ca_dedicated)
 	{
 		VID_Shutdown();
