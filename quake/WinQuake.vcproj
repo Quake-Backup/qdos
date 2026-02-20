@@ -222,9 +222,9 @@
 				PreprocessorDefinitions="QUAKE1;WIN32;_DEBUG;_WINDOWS;BSP2_SUPPORT;OGG_SUPPORT;GAMESPY"
 				RuntimeLibrary="1"
 				FloatingPointModel="2"
-				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
