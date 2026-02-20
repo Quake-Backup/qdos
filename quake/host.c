@@ -1032,7 +1032,7 @@ void Host_Shutdown(void)
 	if (svs.clients)
 		Z_Free(svs.clients);
 
-	svs.maxclients = NULL;
+	svs.clients = NULL;
 
 	Cmd_RemoveAllCommands();
 }
