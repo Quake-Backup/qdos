@@ -664,7 +664,7 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx_t	*pcx;
 	byte		*pack;
 	  
-	pcx = Hunk_TempAlloc (width*height*2+1000);
+	pcx = Z_Malloc (width*height*2+1000);
 	if (pcx == NULL)
 	{
 		Com_Printf("SCR_ScreenShot_f: not enough memory\n");
@@ -714,6 +714,8 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 // write output file 
 	length = pack - (byte *)pcx;
 	COM_WriteFile (filename, pcx, length);
+
+	Z_Free(pcx);
 } 
  
 

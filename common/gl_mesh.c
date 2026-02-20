@@ -291,7 +291,7 @@ void GL_MakeAliasModelDisplayLists (model_t *m, aliashdr_t *hdr)
 	FILE	*f;
 
 	aliasmodel = m;
-	paliashdr = hdr;	// (aliashdr_t *)Mod_Extradata (m);
+	paliashdr = hdr;
 
 	//
 	// look for a cached version

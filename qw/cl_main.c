@@ -1804,7 +1804,10 @@ void Host_Init (quakeparms_t *parms)
 	host_parms = *parms;
 
 	if (parms->memsize < MINIMUM_MEMORY)
+	{
 		Sys_Error ("Only %4.1f megs of memory reported, can't execute game", parms->memsize / (float)0x100000);
+		return;
+	}
 
 	z_chain.next = z_chain.prev = &z_chain;
 
