@@ -1310,12 +1310,12 @@ This is called at the start of each level
 ================
 */
 extern float      scr_centertime_off;
+char	*entitystring; /* FS: Ent file loading */
 
 void SV_SpawnServer (char *server)
 {
 	edict_t	*ent;
 	int		i;
-	char	*entitystring = NULL; /* FS: Ent file loading */
 
 	// let's not have any servers with no name
 	if (hostname->string[0] == 0)
@@ -1445,7 +1445,6 @@ void SV_SpawnServer (char *server)
 	// serverflags are for cross level information (sigils)
 	pr_global_struct->serverflags = svs.serverflags;
 
-
 	/* FS: Load external ent files, from MVDSV */
 	if(sv_loadentfiles->intValue)
 	{
@@ -1453,12 +1452,8 @@ void SV_SpawnServer (char *server)
 
 		Com_sprintf(filename, sizeof(filename), "maps/%s.ent", server);
 		Com_DPrintf(DEVELOPER_MSG_IO, "Attempting to load external ent file %s...\n", filename);
-		if (entitystring)
-		{
-			Z_Free(entitystring);
-		}
 
-		entitystring = (char *)COM_LoadFile(filename); /* FS: FIXME: Free on disconnect/quit. */
+		entitystring = (char *)COM_LoadFile(filename);
 		if (!entitystring)
 			Com_DPrintf(DEVELOPER_MSG_IO, "No external ent file found.\n");
 		else
@@ -1467,16 +1462,20 @@ void SV_SpawnServer (char *server)
 		if (entitystring && strlen(entitystring) == 0) /* FS: Check to see if it's blank. */
 		{
 			Con_Warning("%s.ent is blank!  Defaulting to %s.bsp.\n", filename, server);
+			Z_Free(entitystring);
 			entitystring = NULL;
 		}
 	}
 
-	if(!entitystring)
+	if (entitystring)
 	{
-		entitystring = sv.worldmodel->entities;
+		ED_LoadFromFile (entitystring);
+	}
+	else
+	{
+		ED_LoadFromFile (sv.worldmodel->entities);
 	}
 
-	ED_LoadFromFile (entitystring);
 
 	sv.active = true;
 

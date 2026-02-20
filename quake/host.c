@@ -84,6 +84,8 @@ cvar_t	*con_show_description;
 cvar_t	*con_show_dev_flags;
 cvar_t	*timestamp; /* FS: Timestamp */
 
+extern char *entitystring;
+
 /*
 ================
 Max_Edicts_f -- johnfitz
@@ -517,6 +519,11 @@ void Host_ShutdownServer(qboolean crash)
 		if (host_client->active)
 			SV_DropClient(crash);
 
+	if (entitystring)
+		Z_Free(entitystring);
+
+	entitystring = NULL;
+
 //
 // clear structures
 //
@@ -543,6 +550,11 @@ void Host_ClearMemory (void)
 #ifndef GLQUAKE
 	R_ClearDynamic(); /* FS */
 #endif
+
+	if (entitystring)
+		Z_Free(entitystring);
+
+	entitystring = NULL;
 
 	Z_FreeTags(TAG_LEVEL);
 
@@ -987,6 +999,12 @@ void Host_Shutdown(void)
 	NET_Shutdown ();
 	S_Shutdown();
 	IN_Shutdown ();
+
+
+	if (wad_base)
+		Z_Free(wad_base);
+
+	wad_base = NULL;
 
 	if (cls.state != ca_dedicated)
 	{
