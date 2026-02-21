@@ -2539,6 +2539,11 @@ void M_LanConfig_Key (int key)
 	case K_UPARROW:
 		S_LocalSound ("misc/menu1.wav");
 		lanConfig_cursor--;
+#ifdef GAMESPY
+		if (StartingGame && lanConfig_cursor < 0) /* FS: -2 now because we got the gamespy stuff. */
+			lanConfig_cursor = NUM_LANCONFIG_CMDS-2;
+		else
+#endif
 		if (lanConfig_cursor < 0)
 			lanConfig_cursor = NUM_LANCONFIG_CMDS-1;
 		break;
@@ -2630,7 +2635,11 @@ void M_LanConfig_Key (int key)
 		}
 	}
 
+#ifdef GAMESPY /* FS: Added Gamespy */
+	if (StartingGame && lanConfig_cursor == NUM_LANCONFIG_CMDS-2) /* FS: -2 now because we got the gamespy stuff. */
+#else
 	if (StartingGame && lanConfig_cursor == NUM_LANCONFIG_CMDS-1)
+#endif
 	{
 		if (key == K_UPARROW)
 			lanConfig_cursor = 1;
