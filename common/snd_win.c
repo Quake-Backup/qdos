@@ -162,7 +162,7 @@ static qboolean DS_CreateBuffers( void )
 	else
 		Com_Printf("failed\n");
 
-	if (!primary_format_set || !s_primary->value)
+	if (!primary_format_set || !s_primary->intValue)
 	{
 	// create the secondary buffer we'll actually work with
 		memset (&dsbuf, 0, sizeof(dsbuf));

@@ -1093,9 +1093,9 @@ qboolean GUS_Init(void)
 		FSVal = extCodecVoices = 0x03; /* FS: Added extCodecVoices */
 		rc = COM_CheckParm("-sspeed");
 
-		if (s_khz->value >= 22050) /* FS: S_KHZ */
+		if (s_khz->intValue >= 22050) /* FS: S_KHZ */
 		{
-			dma.speed = s_khz->value;
+			dma.speed = s_khz->intValue;
 
 			// Make sure rate not too high
 			if (dma.speed>48000)
@@ -1169,9 +1169,9 @@ qboolean GUS_Init(void)
 		Voices=extVoices=32; /* FS: Added extVoices */
 		rc = COM_CheckParm("-sspeed");
 
-		if (s_khz->value >= 19293) /* FS: S_KHZ */
+		if (s_khz->intValue >= 19293) /* FS: S_KHZ */
 		{
-			dma.speed = s_khz->value;
+			dma.speed = s_khz->intValue;
 
 			// Make sure rate not too high
 			if (dma.speed>44100)

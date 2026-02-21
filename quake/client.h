@@ -254,6 +254,10 @@ typedef struct
 	scoreboard_t	*scores;		// [cl.maxclients]
 
 	unsigned	protocol; //johnfitz
+
+	/* FS: This crap is needed for snd_restart. */
+	char sound_precache_str[MAX_SOUNDS][MAX_QPATH];
+	int numsounds;
 } client_state_t;
 
 

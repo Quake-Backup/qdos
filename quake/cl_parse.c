@@ -358,7 +358,7 @@ void CL_ParseServerInfo (void)
 		{
 			Host_Error ("Server sent too many model precaches");
 		}
-		strcpy (model_precache[nummodels], str);
+		Com_strcpy (model_precache[nummodels], sizeof(model_precache[nummodels]), str);
 		Mod_ForName(str, false);
 	}
 
@@ -368,7 +368,8 @@ void CL_ParseServerInfo (void)
 // johnfitz
 
 // precache sounds
-	memset (cl.sound_precache, 0, sizeof(cl.sound_precache));
+	memset(cl.sound_precache, 0, sizeof(cl.sound_precache));
+	memset(cl.sound_precache_str, 0, sizeof(cl.sound_precache_str));
 	for (numsounds=1 ; ; numsounds++)
 	{
 		str = MSG_ReadString ();
@@ -377,10 +378,13 @@ void CL_ParseServerInfo (void)
 		if (numsounds==MAX_SOUNDS)
 		{
 			Host_Error ("Server sent too many sound precaches");
+			return;
 		}
-		strcpy (sound_precache[numsounds], str);
+		Com_strcpy(sound_precache[numsounds], sizeof(sound_precache[numsounds]), str);
+		Com_strcpy(cl.sound_precache_str[numsounds], sizeof(cl.sound_precache_str[numsounds]), str); /* FS: Save a copy of the name for snd_restart. */
 		S_TouchSound (str);
 	}
+	cl.numsounds = numsounds;
 
 	//johnfitz -- check for excessive sounds
 	if (numsounds >= 256)
@@ -397,6 +401,7 @@ void CL_ParseServerInfo (void)
 		if (cl.model_precache[i] == NULL)
 		{
 			Host_Error ("Model %s not found", model_precache[i]);
+			return;
 		}
 		CL_KeepaliveMessage ();
 	}
@@ -944,7 +949,7 @@ void CL_ParseStaticSound (int version) //johnfitz -- added argument
 }
 
 
-#define SHOWNET(x) if(cl_shownet->value==2)Com_Printf ("%3i:%s\n", msg_readcount-1, x);
+#define SHOWNET(x) if(cl_shownet->intValue==2)Com_Printf ("%3i:%s\n", msg_readcount-1, x);
 
 /*
 =====================
@@ -961,9 +966,9 @@ void CL_ParseServerMessage (void)
 //
 // if recording demos, copy the message out
 //
-	if (cl_shownet->value == 1)
+	if (cl_shownet->intValue == 1)
 		Com_Printf ("%i ",net_message.cursize);
-	else if (cl_shownet->value == 2)
+	else if (cl_shownet->intValue == 2)
 		Com_Printf ("------------------\n");
 	
 	cl.onground = false;	// unless the server says otherwise	

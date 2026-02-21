@@ -94,6 +94,8 @@ static void CL_PrintBrowserList_f (void);
 void Sys_Memory_Stats_f (void); /* FS: Added */
 #endif
 
+extern void CL_PlayBackgroundTrack (int track);
+
 /*
 =====================
 CL_ClearState
@@ -169,6 +171,11 @@ void CL_Disconnect (void)
 	cls.signon = 0;
 	key_dest = 0; /* FS: Fix so main menu still works after disconnect */
 	cl.intermission = 0; /* FS: Baker fix */
+
+	/* FS: Clear these three for snd_restart. */
+	cl.cdtrack = 0;
+	cls.forcetrack = -1;
+	cl.numsounds = 0;
 }
 
 void CL_Disconnect_f (void)
@@ -237,7 +244,7 @@ void CL_SignonReply (void)
 		MSG_WriteString (&cls.message, va("name \"%s\"\n", cl_name->string));
 	
 		MSG_WriteByte (&cls.message, clc_stringcmd);
-		MSG_WriteString (&cls.message, va("color %i %i\n", ((int)cl_color->value)>>4, ((int)cl_color->value)&15));
+		MSG_WriteString (&cls.message, va("color %i %i\n", (cl_color->intValue)>>4, (cl_color->intValue)&15));
 	
 		MSG_WriteByte (&cls.message, clc_stringcmd);
 		Com_sprintf (str, sizeof(str), "spawn %s", cls.spawnparms);
@@ -274,7 +281,7 @@ void CL_NextDemo (void)
 		cls.demonum = 0;
 		if (!cls.demos[cls.demonum][0])
 		{
-			if (!cl_demos->value || nostartupdemos) /* FS: Disable startup demos */
+			if (!cl_demos->intValue || nostartupdemos) /* FS: Disable startup demos */
 				Com_DPrintf(DEVELOPER_MSG_STANDARD, "Startup demos disabled.");
 			else
 				Com_Printf ("No demos listed with startdemos\n");
@@ -404,7 +411,7 @@ float CL_LerpPoint (void)
 
 	f = cl.mtime[0] - cl.mtime[1];
 	
-	if (!f || cl_nolerp->value || cls.timedemo || sv.active)
+	if (!f || cl_nolerp->intValue || cls.timedemo || sv.active)
 	{
 		cl.time = cl.mtime[0];
 		return 1;
@@ -598,7 +605,7 @@ void CL_RelinkEntities (void)
 
 		ent->forcelink = false;
 
-		if (i == cl.viewentity && !chase_active->value)
+		if (i == cl.viewentity && !chase_active->intValue)
 			continue;
 
 		if (cl_numvisedicts < MAX_VISEDICTS)
@@ -637,7 +644,7 @@ int CL_ReadFromServer (void)
 		CL_ParseServerMessage ();
 	} while (ret && cls.state == ca_connected);
 	
-	if (cl_shownet->value)
+	if (cl_shownet->intValue)
 		Com_Printf ("\n");
 
 	CL_RelinkEntities ();
@@ -743,9 +750,29 @@ void CL_Snd_Shutdown_f (void)
 
 void CL_Snd_Restart_f (void)
 {
+	int i;
+
 	S_StopAllSounds();
 	S_Shutdown();
 	S_Init();
+
+	if (cl.numsounds)
+	{
+		for (i = 1; i < cl.numsounds; i++) /* FS: First one is always blank, so skip it. */
+		{
+			S_TouchSound (cl.sound_precache_str[i]);
+			cl.sound_precache[i] = S_PrecacheSound (cl.sound_precache_str[i]);
+		}
+	}
+
+	if ( (cls.demoplayback || cls.demorecording) && (cls.forcetrack != -1) )
+	{
+		CL_PlayBackgroundTrack(cls.forcetrack);
+	}
+	else
+	{
+		CL_PlayBackgroundTrack(cl.cdtrack);
+	}
 }
 
 /*
