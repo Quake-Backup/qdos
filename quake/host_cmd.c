@@ -149,7 +149,7 @@ void Host_Game_f (void)
 	if (Cmd_Argc() > 1)
 	{
 
-		if (!registered->value) //disable command for shareware quake
+		if (!registered->intValue) //disable command for shareware quake
 		{
 			Com_Printf("You must have the registered version to use modified games\n");
 			return;
@@ -1341,7 +1341,7 @@ void Host_Say(qboolean teamonly)
 	{
 		if (!client || !client->active || !client->spawned)
 			continue;
-		if (teamplay->value && teamonly && client->edict->v.team != save->edict->v.team)
+		if (teamplay->intValue && teamonly && client->edict->v.team != save->edict->v.team)
 			continue;
 		host_client = client;
 		SV_ClientPrintf("%s", text);
@@ -1428,7 +1428,7 @@ void Host_Color_f(void)
 	
 	if (Cmd_Argc() == 1)
 	{
-		Com_Printf ("\"color\" is \"%i %i\"\n", ((int)cl_color->value) >> 4, ((int)cl_color->value) & 0x0f);
+		Com_Printf ("\"color\" is \"%i %i\"\n", (cl_color->intValue) >> 4, (cl_color->intValue) & 0x0f);
 		Com_Printf ("color <0-13> [0-13]\n");
 		return;
 	}
@@ -1505,7 +1505,7 @@ void Host_Pause_f (void)
 		Cmd_ForwardToServer ();
 		return;
 	}
-	if (!pausable->value)
+	if (!pausable->intValue)
 		SV_ClientPrintf ("Pause not allowed.\n");
 	else
 	{

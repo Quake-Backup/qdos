@@ -522,12 +522,12 @@ void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 	char msg[MAXPRINTMSG];
 	unsigned long devValue = 0; /* FS: Developer Flags */
 
-	if (!developer->value)
+	if (!developer->intValue)
 		return;			// don't confuse non-developers with techie stuff...
 
 	devValue = (unsigned long)developer->value;
 	
-	if (developer->value == 1)
+	if (developer->intValue == 1)
 		devValue = 65534;
 
 	if (!(devValue & developerFlags))
@@ -592,13 +592,13 @@ void Con_LogCenterPrint (char *str)
 		return; //ignore duplicates
 
 #ifdef QUAKE1
-	if (cl.gametype == GAME_DEATHMATCH && con_logcenterprint->value != 2)
+	if (cl.gametype == GAME_DEATHMATCH && con_logcenterprint->intValue != 2)
 		return; //don't log in deathmatch
 #endif
 
 	strcpy(con_lastcenterstring, str);
 
-	if (con_logcenterprint->value)
+	if (con_logcenterprint->intValue)
 	{
 		Com_Printf (Con_Quakebar(40));
 		Con_CenterPrintf (40, "%s\n", str);

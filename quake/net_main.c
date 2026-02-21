@@ -223,7 +223,7 @@ static void MaxPlayers_f (void)
 	}
 	else
 	{
-		if (coop->value)
+		if (coop->intValue)
 			Cvar_Set ("deathmatch", "0");
 		else
 			Cvar_Set ("deathmatch", "1");
@@ -844,11 +844,11 @@ void NET_Poll(void)
 	{
 		if (serialAvailable)
 		{
-			if (config_com_modem->value == 1.0)
+			if (config_com_modem->intValue == 1)
 				useModem = true;
 			else
 				useModem = false;
-			SetComPortConfig (0, (int)config_com_port->value, (int)config_com_irq->value, (int)config_com_baud->value, useModem);
+			SetComPortConfig (0, config_com_port->intValue, config_com_irq->intValue, config_com_baud->intValue, useModem);
 			SetModemConfig (0, config_modem_dialtype->string, config_modem_clear->string, config_modem_init->string, config_modem_hangup->string);
 		}
 		configRestored = true;

@@ -122,7 +122,7 @@ void    VID_Init (unsigned char *palette)
 
 	vid_testingmode = 0;
 
-	vid_modenum = vid_mode->value;
+	vid_modenum = vid_mode->intValue;
 
 	VID_SetMode (vid_modenum, palette);
 
@@ -332,13 +332,13 @@ VID_Update
 */
 void    VID_Update (vrect_t *rects)
 {
-	if (firstupdate && _vid_default_mode->value)
+	if (firstupdate && _vid_default_mode->intValue)
 	{
-		if(_vid_default_mode->value >= numvidmodes)
+		if(_vid_default_mode->intValue >= numvidmodes)
 			Cvar_SetValue ("_vid_default_mode", 0);
 
 		firstupdate = 0;
-		Cvar_SetValue ("vid_mode", _vid_default_mode->value);
+		Cvar_SetValue ("vid_mode", _vid_default_mode->intValue);
 	}
 
 	(*pcurrentmode->swapbuffers)(&vid, pcurrentmode, rects);
@@ -355,9 +355,9 @@ void    VID_Update (vrect_t *rects)
 		}
 		else
 		{
-			if (vid_mode->value != vid_realmode)
+			if (vid_mode->intValue != vid_realmode)
 			{
-				VID_SetMode ((int)vid_mode->value, vid_current_palette);
+				VID_SetMode (vid_mode->intValue, vid_current_palette);
 				Cvar_SetValue ("vid_mode", (float)vid_modenum);
 									// so if mode set fails, we don't keep on
 									//  trying to set that mode
@@ -434,7 +434,7 @@ void VID_DescribeModes_f (void)
 			Com_Printf ("\n%s\n", pheader);
 
 		if (VGA_CheckAdequateMem (pv->width, pv->height, pv->rowbytes,
-			(pv->numpages == 1) || vid_nopageflip->value))
+			(pv->numpages == 1) || vid_nopageflip->intValue))
 		{
 			Com_Printf ("%2d: %s\n", i, pinfo);
 		}
@@ -466,7 +466,7 @@ char *VID_GetModeDescription (int mode)
 	pinfo = VID_ModeInfo (mode, &pheader);
 
 	if (VGA_CheckAdequateMem (pv->width, pv->height, pv->rowbytes,
-		(pv->numpages == 1) || vid_nopageflip->value))
+		(pv->numpages == 1) || vid_nopageflip->intValue))
 	{
 		return pinfo;
 	}
@@ -686,7 +686,7 @@ void VID_MenuDraw (void)
 		ptr = VID_GetModeDescription (vid_modenum);
 		Com_sprintf (temp, sizeof(temp), "D to make %s the default", ptr);
 		M_Print (6*8, 36 + MAX_COLUMN_SIZE * 8 + 8*5, temp);
-		ptr = VID_GetModeDescription ((int)_vid_default_mode->value);
+		ptr = VID_GetModeDescription (_vid_default_mode->intValue);
 
 		if (ptr)
 		{

@@ -934,8 +934,8 @@ void M_Menu_Setup_f (void)
 	m_entersound = true;
 	Q_strcpy(setup_myname, cl_name->string);
 	Q_strcpy(setup_hostname, hostname->string);
-	setup_top = setup_oldtop = ((int)cl_color->value) >> 4;
-	setup_bottom = setup_oldbottom = ((int)cl_color->value) & 15;
+	setup_top = setup_oldtop = (cl_color->intValue) >> 4;
+	setup_bottom = setup_oldbottom = (cl_color->intValue) & 15;
 }
 
 
@@ -2842,7 +2842,7 @@ void M_GameOptions_Draw (void)
 	M_Print (160, 56, va("%i", maxplayers) );
 
 	M_Print (0, 64, "        Game Type");
-	if (coop->value)
+	if (coop->intValue)
 		M_Print (160, 64, "Cooperative");
 	else
 		M_Print (160, 64, "Deathmatch");
@@ -2852,7 +2852,7 @@ void M_GameOptions_Draw (void)
 	{
 		char *msg;
 
-		switch((int)teamplay->value)
+		switch(teamplay->intValue)
 		{
 			case 1: msg = "No Friendly Fire"; break;
 			case 2: msg = "Friendly Fire"; break;
@@ -2868,7 +2868,7 @@ void M_GameOptions_Draw (void)
 	{
 		char *msg;
 
-		switch((int)teamplay->value)
+		switch(teamplay->intValue)
 		{
 			case 1: msg = "No Friendly Fire"; break;
 			case 2: msg = "Friendly Fire"; break;
@@ -2970,7 +2970,7 @@ void M_NetStart_Change (int dir)
 		break;
 
 	case 2:
-		Cvar_SetValue ("coop", coop->value ? 0 : 1);
+		Cvar_SetValue ("coop", coop->intValue ? 0 : 1);
 		break;
 
 	case 3:
@@ -2979,34 +2979,34 @@ void M_NetStart_Change (int dir)
 		else
 			count = 2;
 
-		Cvar_SetValue ("teamplay", teamplay->value + dir);
-		if (teamplay->value > count)
+		Cvar_SetValue ("teamplay", teamplay->intValue + dir);
+		if (teamplay->intValue > count)
 			Cvar_SetValue ("teamplay", 0);
-		else if (teamplay->value < 0)
+		else if (teamplay->intValue < 0)
 			Cvar_SetValue ("teamplay", count);
 		break;
 
 	case 4:
-		Cvar_SetValue ("skill", skill->value + dir);
-		if (skill->value > 3)
+		Cvar_SetValue ("skill", skill->intValue + dir);
+		if (skill->intValue > 3)
 			Cvar_SetValue ("skill", 0);
-		if (skill->value < 0)
+		if (skill->intValue < 0)
 			Cvar_SetValue ("skill", 3);
 		break;
 
 	case 5:
-		Cvar_SetValue ("fraglimit", fraglimit->value + dir*10);
-		if (fraglimit->value > 100)
+		Cvar_SetValue ("fraglimit", fraglimit->intValue + dir*10);
+		if (fraglimit->intValue > 100)
 			Cvar_SetValue ("fraglimit", 0);
-		if (fraglimit->value < 0)
+		if (fraglimit->intValue < 0)
 			Cvar_SetValue ("fraglimit", 100);
 		break;
 
 	case 6:
-		Cvar_SetValue ("timelimit", timelimit->value + dir*5);
-		if (timelimit->value > 60)
+		Cvar_SetValue ("timelimit", timelimit->intValue + dir*5);
+		if (timelimit->intValue > 60)
 			Cvar_SetValue ("timelimit", 0);
-		if (timelimit->value < 0)
+		if (timelimit->intValue < 0)
 			Cvar_SetValue ("timelimit", 60);
 		break;
 
@@ -3533,7 +3533,7 @@ void M_Menu_Extended_f(void)
 
 }
 
-void M_Extended_Draw()
+void M_Extended_Draw (void)
 {
 	int		y = 32;
 	float	r;
@@ -3556,19 +3556,19 @@ void M_Extended_Draw()
 	M_DrawCheckbox (220, y, cl_unbindall_protection->intValue);
 
 	M_Print (16, y = y + Y_SPACE,  "           Show Uptime");
-	if (show_uptime->value < 1 )
+	if (show_uptime->intValue < 1 )
 		M_Print (220, y, "off");
-	else if (show_uptime->value == 1)
+	else if (show_uptime->intValue == 1)
 		M_Print (220, y, "Server");
-	else if (show_uptime->value >= 2)
+	else if (show_uptime->intValue >= 2)
 		M_Print (220, y, "Total");
 
 	M_Print (16, y = y + Y_SPACE,  "             Show Time");
-	if (show_time->value < 1 )
+	if (show_time->intValue < 1 )
 		M_Print (220, y, "off");
-	else if (show_time->value == 1)
+	else if (show_time->intValue == 1)
 		M_Print (220, y, "Military");
-	else if (show_time->value >= 2)
+	else if (show_time->intValue >= 2)
 		M_Print (220, y, "AM/PM");
 
 	M_Print (16, y = y + Y_SPACE,  "        Show Framerate");
@@ -3712,42 +3712,42 @@ void M_Extended_Key(int k)
 		switch (extended_cursor)
 		{
 		case 0:
-			Cvar_SetValue ("v_contentblend", !v_contentblend->value);
+			Cvar_SetValue ("v_contentblend", !v_contentblend->intValue);
 			break;
 		case 1:
-			Cvar_SetValue ("pq_fullpitch", !pq_fullpitch->value);
-			Cvar_SetValue ("cl_fullpitch", pq_fullpitch->value);
+			Cvar_SetValue ("pq_fullpitch", !pq_fullpitch->intValue);
+			Cvar_SetValue ("cl_fullpitch", pq_fullpitch->intValue);
 			break;
 		case 2:
-			Cvar_SetValue ("cl_demos", !cl_demos->value);
+			Cvar_SetValue ("cl_demos", !cl_demos->intValue);
 			break;
 		case 3:
-			Cvar_SetValue ("cl_unbindall_protection", !cl_unbindall_protection->value);
+			Cvar_SetValue ("cl_unbindall_protection", !cl_unbindall_protection->intValue);
 			break;
 		case 4:
-			if (show_uptime->value >= 2)
+			if (show_uptime->intValue >= 2)
 				Cvar_SetValue ("show_uptime", 0);
-			else if (show_uptime->value <= 0)
+			else if (show_uptime->intValue <= 0)
 				Cvar_SetValue ("show_uptime", 1);
-			else if (show_uptime->value == 1)
+			else if (show_uptime->intValue == 1)
 				Cvar_SetValue ("show_uptime", 2);
 			break;
 		case 5:
-			if (show_time->value >= 2)
+			if (show_time->intValue >= 2)
 				Cvar_SetValue ("show_time", 0);
-			else if (show_time->value <= 0)
+			else if (show_time->intValue <= 0)
 				Cvar_SetValue ("show_time", 1);
-			else if (show_time->value == 1)
+			else if (show_time->intValue == 1)
 				Cvar_SetValue ("show_time", 2);
 			break;
 		case 6:
-			Cvar_SetValue ("show_fps", !show_fps->value);
+			Cvar_SetValue ("show_fps", !show_fps->intValue);
 			break;
 		case 7:
-			Cvar_SetValue ("in_freelook", !in_freelook->value);
+			Cvar_SetValue ("in_freelook", !in_freelook->intValue);
 			break;
 		case 8:
-			Cvar_SetValue ("r_waterwarp", !r_waterwarp->value);
+			Cvar_SetValue ("r_waterwarp", !r_waterwarp->intValue);
 			break;
 		case 9:
 			M_AdjustSliders_Extended(1);

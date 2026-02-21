@@ -319,7 +319,7 @@ void SV_SendServerinfo (client_t *client)
 	MSG_WriteLong (&client->message, sv.protocol); //johnfitz -- sv.protocol instead of PROTOCOL_VERSION
 	MSG_WriteByte (&client->message, svs.maxclients);
 
-	if (!coop->value && deathmatch->value)
+	if (!coop->intValue && deathmatch->intValue)
 		MSG_WriteByte (&client->message, GAME_DEATHMATCH);
 	else
 		MSG_WriteByte (&client->message, GAME_COOP);
@@ -1342,7 +1342,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	//
 	// make cvars consistant
 	//
-	if (coop->value)
+	if (coop->intValue)
 		Cvar_SetValue ("deathmatch", 0);
 
 	current_skill = (int)(skill->value + 0.5);
@@ -1368,7 +1368,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	PR_LoadProgs ();
 
 	// allocate server memory
-	sv.max_edicts = CLAMP (MIN_EDICTS,(int)max_edicts->value,MAX_EDICTS); //johnfitz -- max_edicts cvar
+	sv.max_edicts = CLAMP (MIN_EDICTS, max_edicts->intValue, MAX_EDICTS); //johnfitz -- max_edicts cvar
 	sv.edicts = Z_TagMalloc(sv.max_edicts * pr_edict_size, TAG_LEVEL);
 
 	sv.datagram.maxsize = sizeof(sv.datagram_buf);
@@ -1438,10 +1438,10 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	ent->v.solid = SOLID_BSP;
 	ent->v.movetype = MOVETYPE_PUSH;
 
-	if (coop->value)
-		pr_global_struct->coop = coop->value;
+	if (coop->intValue)
+		pr_global_struct->coop = coop->intValue;
 	else
-		pr_global_struct->deathmatch = deathmatch->value;
+		pr_global_struct->deathmatch = deathmatch->intValue;
 
 	pr_global_struct->mapname = sv.name - pr_strings;
 

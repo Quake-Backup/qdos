@@ -208,10 +208,10 @@ void R_Init (void)
 	gl_smoothmodels = Cvar_Get("gl_smoothmodels", "1", 0);
 	Cvar_Set_Description("gl_smoothmodels", "Smooth textures on models.  Recommended to leave enabled as it can cause visual artifacts if disabled.");
 	gl_affinemodels = Cvar_Get("gl_affinemodels", "0", 0);
-	gl_polyblend = Cvar_Get("gl_polyblend","1", CVAR_ARCHIVE);
+	gl_polyblend = Cvar_Get("gl_polyblend", "1", CVAR_ARCHIVE);
 	Cvar_Set_Description("gl_polyblend", "Show palette blends i.e. screen turning red from damage.");
-	gl_flashblend = Cvar_Get("gl_flashblend","1", CVAR_ARCHIVE);
-	Cvar_Set_Description("gl_flashblend", "Set to 0 to use fake dynamic lights that have a mushroom cloud effect.  Can improve performance on slower machines.");
+	gl_flashblend = Cvar_Get("gl_flashblend", "0", CVAR_ARCHIVE);
+	Cvar_Set_Description("gl_flashblend", "Set to 1 to use fake dynamic lights that have a mushroom cloud effect.  Can improve performance on slower machines.");
 	gl_playermip = Cvar_Get("gl_playermip", "0", 0);
 	gl_nocolors = Cvar_Get("gl_nocolors", "0", 0);
 	Cvar_Set_Description("gl_nocolors", "Don't use top/bottom colours for players.");

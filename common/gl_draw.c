@@ -83,7 +83,7 @@ int			numgltextures;
 
 void GL_Bind (int texnum)
 {
-	if (gl_nobind->value)
+	if (gl_nobind->intValue)
 		texnum = char_texture;
 	if (currenttexture == texnum)
 		return;
@@ -574,7 +574,7 @@ void Draw_Crosshair(void)
 	extern vrect_t		scr_vrect;
 	unsigned char *pColor;
 
-	if (crosshair->value == 2) {
+	if (crosshair->intValue == 2) {
 		x = scr_vrect.x + scr_vrect.width/2 - 3 + cl_crossx->value; 
 		y = scr_vrect.y + scr_vrect.height/2 - 3 + cl_crossy->value;
 
@@ -595,7 +595,7 @@ void Draw_Crosshair(void)
 		glEnd_fp ();
 		
 		glTexEnvf_fp ( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-	} else if (crosshair->value)
+	} else if (crosshair->intValue)
 		Draw_Character (scr_vrect.x + scr_vrect.width/2-4 + cl_crossx->value, 
 			scr_vrect.y + scr_vrect.height/2-4 + cl_crossy->value, 
 			'+');

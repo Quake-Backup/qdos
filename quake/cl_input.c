@@ -120,7 +120,7 @@ void IN_KLookUp (void) {KeyUp(&in_klook);}
 void IN_MLookDown (void) {KeyDown(&in_mlook);}
 void IN_MLookUp (void) {
 KeyUp(&in_mlook);
-if ( (!(in_mlook.state&1) &&  lookspring->value) || (!in_freelook->value && lookspring->value))
+if ( (!(in_mlook.state&1) &&  lookspring->intValue) || (!in_freelook->intValue && lookspring->intValue))
 	V_StartPitchDrift();
 }
 void IN_UpDown(void) {KeyDown(&in_up);}
@@ -272,7 +272,7 @@ void CL_AdjustAngles (void)
 	if (up || down)
 		V_StopPitchDrift ();
 
-	if (pq_fullpitch->value) /* FS: ProQuake Shit */
+	if (pq_fullpitch->intValue) /* FS: ProQuake Shit */
 	{
 		if (cl.viewangles[PITCH] > 90)
 			cl.viewangles[PITCH] = 90;

@@ -357,7 +357,7 @@ void V_ParseDamage (void)
 	if (cl.cshifts[CSHIFT_DAMAGE].percent > 150)
 		cl.cshifts[CSHIFT_DAMAGE].percent = 150;
 
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_DAMAGE].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_DAMAGE].destcolor[1] = 0;
@@ -411,7 +411,7 @@ V_cshift_f
 */
 void V_cshift_f (void)
 {
-	if(!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if(!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cshift_empty.destcolor[0] = 0;
 		cshift_empty.destcolor[1] = 0;
@@ -437,7 +437,7 @@ When you run over an item, the server sends this command
 */
 void V_BonusFlash_f (void)
 {
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_BONUS].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_BONUS].destcolor[1] = 0;
@@ -462,7 +462,7 @@ Underwater, lava, etc each has a color shift
 */
 void V_SetContentsColor (int contents)
 {
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_CONTENTS] = cshift_empty;
 		return;
@@ -494,7 +494,7 @@ V_CalcPowerupCshift
 */
 void V_CalcPowerupCshift (void)
 {
-	if (!v_contentblend->value)
+	if (!v_contentblend->intValue)
 	{
 		cl.cshifts[CSHIFT_POWERUP].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[1] = 0;
@@ -551,7 +551,7 @@ void V_CalcBlend (void)
 
 	for (j=0 ; j<NUM_CSHIFTS ; j++)	
 	{
-		if (!gl_cshiftpercent->value)
+		if (!gl_cshiftpercent->intValue)
 			continue;
 
 		a2 = ((cl.cshifts[j].percent * gl_cshiftpercent->value) / 100.0) / 255.0;
@@ -995,13 +995,13 @@ void V_CalcRefdef (void)
 // fudge position around to keep amount of weapon visible
 // roughly equal with different FOV
 
-	if (scr_viewsize->value == 110)
+	if (scr_viewsize->intValue == 110)
 		view->origin[2] += 1;
-	else if (scr_viewsize->value == 100)
+	else if (scr_viewsize->intValue == 100)
 		view->origin[2] += 2;
-	else if (scr_viewsize->value == 90)
+	else if (scr_viewsize->intValue == 90)
 		view->origin[2] += 1;
-	else if (scr_viewsize->value == 80)
+	else if (scr_viewsize->intValue == 80)
 		view->origin[2] += 0.5;
 
 	view->model = cl.model_precache[cl.stats[STAT_WEAPON]];
@@ -1032,7 +1032,7 @@ if (cl.onground && ent->origin[2] - oldz > 0)
 else
 	oldz = ent->origin[2];
 
-	if (chase_active->value)
+	if (chase_active->intValue)
 		Chase_Update ();
 }
 
@@ -1071,7 +1071,7 @@ void V_RenderView (void)
 
 	R_PushDlights ();
 
-	if (lcd_x->value)
+	if (lcd_x->intValue)
 	{
 		//
 		// render two interleaved views
@@ -1108,7 +1108,7 @@ void V_RenderView (void)
 	}
 
 #ifndef GLQUAKE
-        if (crosshair->value)
+        if (crosshair->intValue)
                 Draw_Crosshair();
 #endif
 }

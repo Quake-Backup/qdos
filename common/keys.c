@@ -315,7 +315,7 @@ void Key_Console (int key)
 		key_linepos = 1;
 
 #ifdef QUAKEWORLD
-		if (key_dest == key_console && net_broadcast_chat->value) /* FS: EZQ Chat */
+		if (key_dest == key_console && net_broadcast_chat->intValue) /* FS: EZQ Chat */
 			Cmd_ChatInfo(EZQ_CHAT_AFK);/* FS: EZQ Chat */
 #endif
 

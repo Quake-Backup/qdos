@@ -674,7 +674,7 @@ void IN_MouseMove (usercmd_t *cmd)
 		my_accum = 0;
 	}
 
-	if (m_filter->value)
+	if (m_filter->intValue)
 	{
 		mouse_x = (mx + old_mouse_x) * 0.5;
 		mouse_y = (my + old_mouse_y) * 0.5;
@@ -688,24 +688,24 @@ void IN_MouseMove (usercmd_t *cmd)
 	old_mouse_x = mx;
 	old_mouse_y = my;
 
-	mouse_x *= sensitivity->value;
-	mouse_y *= sensitivity->value;
+	mouse_x *= sensitivity->intValue;
+	mouse_y *= sensitivity->intValue;
 
 // add mouse X/Y movement to cmd
-	if ( (in_strafe.state & 1) || (lookstrafe->value && ((in_mlook.state & 1) || in_freelook->value ))) /* FS: mlook */
+	if ( (in_strafe.state & 1) || (lookstrafe->intValue && ((in_mlook.state & 1) || in_freelook->intValue))) /* FS: mlook */
 		cmd->sidemove += m_side->value * mouse_x;
 	else
 		cl.viewangles[YAW] -= m_yaw->value * mouse_x;
 	
-	if (in_mlook.state & 1 || in_freelook->value) /* FS: mlook */
+	if (in_mlook.state & 1 || in_freelook->intValue) /* FS: mlook */
 		V_StopPitchDrift ();
 		
-	if ( ((in_mlook.state & 1) && !(in_strafe.state & 1)) || (in_freelook->value && !(in_strafe.state & 1))) /* FS: mlook */
+	if ( ((in_mlook.state & 1) && !(in_strafe.state & 1)) || (in_freelook->intValue && !(in_strafe.state & 1))) /* FS: mlook */
 	{
 		cl.viewangles[PITCH] += m_pitch->value * mouse_y;
 
 #ifdef QUAKE1
-		if (pq_fullpitch->value || cl_fullpitch->value) /* FS: ProQuake shit */
+		if (pq_fullpitch->intValue || cl_fullpitch->intValue) /* FS: ProQuake shit */
 		{
 			if (cl.viewangles[PITCH] > 90)
 				cl.viewangles[PITCH] = 90;
@@ -906,7 +906,7 @@ void Joy_AdvancedUpdate_f (void)
 		pdwRawValue[i] = RawValuePointer(i);
 	}
 
-	if( joy_advanced->value == 0.0)
+	if( joy_advanced->intValue == 0)
 	{
 		// default joystick initialization
 		// 2 axes only with joystick control
@@ -1044,7 +1044,7 @@ qboolean IN_ReadJoystick (void)
 		// this is a hack -- there is a bug in the Logitech WingMan Warrior DirectInput Driver
 		// rather than having 32768 be the zero point, they have the zero point at 32668
 		// go figure -- anyway, now we get the full resolution out of the device
-		if (joy_wwhack1->value != 0.0)
+		if (joy_wwhack1->intValue != 0)
 		{
 			ji.dwUpos += 100;
 		}
@@ -1082,7 +1082,7 @@ void IN_JoyMove (usercmd_t *cmd)
 	}
 
 	// verify joystick is available and that the user wants to use it
-	if (!joy_avail || !in_joystick->value)
+	if (!joy_avail || !in_joystick->intValue)
 	{
 		return; 
 	}
@@ -1107,7 +1107,7 @@ void IN_JoyMove (usercmd_t *cmd)
 		// move centerpoint to zero
 		fAxisValue -= 32768.0;
 
-		if (joy_wwhack2->value != 0.0)
+		if (joy_wwhack2->intValue != 0)
 		{
 			if (dwAxisMap[i] == AxisTurn)
 			{
@@ -1129,7 +1129,7 @@ void IN_JoyMove (usercmd_t *cmd)
 		switch (dwAxisMap[i])
 		{
 		case AxisForward:
-			if ((joy_advanced->value == 0.0) && (in_mlook.state & 1))
+			if ((joy_advanced->intValue == 0) && (in_mlook.state & 1))
 			{
 				// user wants forward control to become look control
 				if (fabs(fAxisValue) > joy_pitchthreshold->value)
@@ -1152,7 +1152,7 @@ void IN_JoyMove (usercmd_t *cmd)
 					// disable pitch return-to-center unless requested by user
 					// *** this code can be removed when the lookspring bug is fixed
 					// *** the bug always has the lookspring feature on
-					if(lookspring->value == 0.0)
+					if(lookspring->intValue == 0)
 						V_StopPitchDrift();
 				}
 			}
@@ -1174,7 +1174,7 @@ void IN_JoyMove (usercmd_t *cmd)
 			break;
 
 		case AxisTurn:
-			if ((in_strafe.state & 1) || (lookstrafe->value && (in_mlook.state & 1)))
+			if ((in_strafe.state & 1) || (lookstrafe->intValue && (in_mlook.state & 1)))
 			{
 				// user wants turn control to become side control
 				if (fabs(fAxisValue) > joy_sidethreshold->value)
@@ -1222,7 +1222,7 @@ void IN_JoyMove (usercmd_t *cmd)
 					// disable pitch return-to-center unless requested by user
 					// *** this code can be removed when the lookspring bug is fixed
 					// *** the bug always has the lookspring feature on
-					if(lookspring->value == 0.0)
+					if(lookspring->intValue == 0)
 						V_StopPitchDrift();
 				}
 			}

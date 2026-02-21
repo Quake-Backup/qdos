@@ -713,7 +713,7 @@ void	Cmd_ExecuteString (char *text, cmd_source_t src)
 	}
 	
 // check cvars
-	if (!Cvar_Command () && (cl_warncmd->value || developer->value)) /* FS: from QW */
+	if (!Cvar_Command () && (cl_warncmd->intValue || developer->intValue)) /* FS: from QW */
 	{
 		if(!strncmp(Cmd_Argv(0), "init", 4))
 			Com_DPrintf(DEVELOPER_MSG_VERBOSE, "Unknown Command init hack for some servers\n");
@@ -779,7 +779,7 @@ int Cmd_CheckParm (char *parm)
 void Cmd_ChatInfo (int val)
 {
 #ifdef QUAKEWORLD
-	if(net_broadcast_chat->value && chat->value != val)
+	if (net_broadcast_chat->intValue && chat->intValue != val)
 	{
 		switch (val)
 		{

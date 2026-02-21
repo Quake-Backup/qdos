@@ -95,17 +95,17 @@ Max_Edicts_f -- johnfitz
 */
 void Max_Edicts_f (void)
 {
-	static float oldval = 1024; //must match the default value for max_edicts
+	static int oldval = 1024; //must match the default value for max_edicts
 
 	//TODO: clamp it here?
 
-	if (max_edicts->value == oldval)
+	if (max_edicts->intValue == oldval)
 		return;
 
 	if (cls.state == ca_connected || sv.active)
 		Com_Printf ("changes will not take effect until the next level load.\n");
 
-	oldval = max_edicts->value;
+	oldval = max_edicts->intValue;
 }
 
 /*
@@ -814,12 +814,12 @@ void _Host_Frame (float time)
 	}
 
 // update video
-	if (host_speeds->value)
+	if (host_speeds->intValue)
 		time1 = Sys_DoubleTime();
 
 	SCR_UpdateScreen ();
 
-	if (host_speeds->value)
+	if (host_speeds->intValue)
 		time2 = Sys_DoubleTime();
 
 // update audio
@@ -833,7 +833,7 @@ void _Host_Frame (float time)
 
 	CDAudio_Update();
 
-	if (host_speeds->value)
+	if (host_speeds->intValue)
 	{
 		pass1 = (time1 - time3)*1000;
 		time3 = Sys_DoubleTime();
@@ -854,7 +854,7 @@ void Host_Frame (float time)
 	static int	  timecount;
 	int		i, c, m;
 
-	if (!serverprofile->value)
+	if (!serverprofile->intValue)
 	{
 		_Host_Frame (time);
 		return;

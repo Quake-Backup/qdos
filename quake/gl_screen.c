@@ -79,7 +79,8 @@ int			scr_copyeverything;
 float		scr_con_current;
 float		scr_conlines;		// lines of console to display
 
-float		oldscreensize, oldfov;
+int			oldscreensize;
+float		oldfov;
 
 cvar_t		*scr_viewsize;
 cvar_t		*scr_fov;
@@ -260,7 +261,7 @@ Internal use only
 */
 static void SCR_CalcRefdef (void)
 {
-	float		size;
+	int			size;
 	int			h;
 	qboolean	full = false;
 
@@ -274,9 +275,9 @@ static void SCR_CalcRefdef (void)
 //========================================
 	
 // bound viewsize
-	if (scr_viewsize->value < 30)
+	if (scr_viewsize->intValue < 30)
 		Cvar_Set ("viewsize","30");
-	if (scr_viewsize->value > 120)
+	if (scr_viewsize->intValue > 120)
 		Cvar_Set ("viewsize","120");
 
 // bound field of view
@@ -289,7 +290,7 @@ static void SCR_CalcRefdef (void)
 	if (cl.intermission)
 		size = 120;
 	else
-		size = scr_viewsize->value;
+		size = scr_viewsize->intValue;
 
 	if (size >= 120)
 		sb_lines = 0;		// no status bar at all
@@ -298,25 +299,25 @@ static void SCR_CalcRefdef (void)
 	else
 		sb_lines = 24+16+8;
 
-	if (scr_viewsize->value >= 100.0) {
+	if (scr_viewsize->intValue >= 100) {
 		full = true;
-		size = 100.0;
+		size = 100;
 	} else
-		size = scr_viewsize->value;
+		size = scr_viewsize->intValue;
 	if (cl.intermission)
 	{
 		full = true;
-		size = 100.0;
+		size = 100;
 		sb_lines = 0;
 	}
-	size /= 100.0;
+	size /= 100;
 
 	h = vid.height - sb_lines;
 
 	r_refdef.vrect.width = vid.width * size;
 	if (r_refdef.vrect.width < 96)
 	{
-		size = 96.0 / r_refdef.vrect.width;
+		size = 96 / r_refdef.vrect.width;
 		r_refdef.vrect.width = 96; // min for icons
 	}
 
@@ -347,7 +348,7 @@ Keybinding command
 */
 void SCR_SizeUp_f (void)
 {
-	Cvar_SetValue ("viewsize",scr_viewsize->value+10);
+	Cvar_SetValue ("viewsize",scr_viewsize->intValue + 10);
 	vid.recalc_refdef = 1;
 }
 
@@ -361,7 +362,7 @@ Keybinding command
 */
 void SCR_SizeDown_f (void)
 {
-	Cvar_SetValue ("viewsize",scr_viewsize->value-10);
+	Cvar_SetValue ("viewsize",scr_viewsize->intValue - 10);
 	vid.recalc_refdef = 1;
 }
 
@@ -415,7 +416,7 @@ SCR_DrawRam
 */
 void SCR_DrawRam (void)
 {
-	if (!scr_showram->value)
+	if (!scr_showram->intValue)
 		return;
 
 	if (!r_cache_thrash)
@@ -433,7 +434,7 @@ void SCR_DrawTurtle (void)
 {
 	static int	count;
 	
-	if (!scr_showturtle->value)
+	if (!scr_showturtle->intValue)
 		return;
 
 	if (host_frametime < 0.1)
@@ -479,7 +480,7 @@ void SCR_DrawFPS (void)
 	static	double	lastframetime;
 	extern	int		fps_count;
 
-	if (!show_fps->value)
+	if (!show_fps->intValue)
 		return;
 
 	t = Sys_DoubleTime();
@@ -503,11 +504,11 @@ void SCR_DrawUptime (void) /* FS: Connection time */
 	int		minutes, seconds, tens, units;
 	int		x, y;
 
-	if (!show_uptime->value)
+	if (!show_uptime->intValue)
 		return;
 
 	// time
-	if (show_uptime->value == 1) /* FS: Map time or total time playing quake time */
+	if (show_uptime->intValue == 1) /* FS: Map time or total time playing quake time */
 	{
 		minutes = cl.time / 60;
 		seconds = cl.time - 60*minutes;
@@ -535,15 +536,15 @@ void SCR_DrawTime (void) /* FS: show_time */
 	const char *timefmt = NULL;
 	char		st[80];
 
-	if (!show_time->value)
+	if (!show_time->intValue)
 		return;
 
 	utc = time (NULL);
 	local = localtime (&utc);
 
-	if (show_time->value == 1)
+	if (show_time->intValue == 1)
 		timefmt = "%H:%M:%S %p";
-	else if (show_time->value > 1)
+	else
 		timefmt = "%I:%M:%S %p";
 
 	strftime (st, sizeof (st), timefmt, local);
@@ -562,7 +563,7 @@ void SCR_DrawPause (void)
 {
 	qpic_t	*pic;
 
-	if (!scr_showpause->value)		// turn off for screenshots
+	if (!scr_showpause->intValue)		// turn off for screenshots
 		return;
 
 	if (!cl.paused)
@@ -922,7 +923,7 @@ void SCR_UpdateScreen (void)
 	if (block_drawing)
 		return;
 
-	vid.numpages = 2 + gl_triplebuffer->value;
+	vid.numpages = 2 + gl_triplebuffer->intValue;
 
 	scr_copytop = 0;
 	scr_copyeverything = 0;
@@ -953,9 +954,9 @@ void SCR_UpdateScreen (void)
 		vid.recalc_refdef = true;
 	}
 
-	if (oldscreensize != scr_viewsize->value)
+	if (oldscreensize != scr_viewsize->intValue)
 	{
-		oldscreensize = scr_viewsize->value;
+		oldscreensize = scr_viewsize->intValue;
 		vid.recalc_refdef = true;
 	}
 
@@ -999,7 +1000,7 @@ void SCR_UpdateScreen (void)
 	}
 	else
 	{
-		if (crosshair->value)
+		if (crosshair->intValue)
 			Draw_Crosshair();
 		
 		SCR_DrawRam ();
