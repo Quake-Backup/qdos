@@ -13,15 +13,15 @@ call "%VS80COMNTOOLS%vsvars32.bat"
 
 :startcopy
 cd /d "%QDOSDEVBASE%\quake\"
-devenv "%QDOSDEVBASE%\quake\winquake.sln" /Build "%QDOSBINDIR%|Win32" /Project "winquake"
-devenv "%QDOSDEVBASE%\quake\winquake.sln" /Build "GL %QDOSBINDIR%|Win32" /Project "winquake"
+devenv "%QDOSDEVBASE%\quake\winquake.sln" /Rebuild "%QDOSBINDIR%|Win32" /Project "winquake"
 copy /y "%QDOSDEVBASE%\quake\%QDOSBINDIR%\WQDOS.exe" "%QDOSDEVBASE%\"
+devenv "%QDOSDEVBASE%\quake\winquake.sln" /Rebuild "GL %QDOSBINDIR%|Win32" /Project "winquake"
 copy /y "%QDOSDEVBASE%\quake\%QDOSBINDIR%_gl\glquake2.exe" "%QDOSDEVBASE%\"
 
 cd /d "%QDOSDEVBASE%\qw\"
-devenv "%QDOSDEVBASE%\qw\qwcl.sln" /Build "%QDOSBINDIR%|Win32" /Project "qwcl"
-devenv "%QDOSDEVBASE%\qw\qwcl.sln" /Build "GL QW %QDOSBINDIR%|Win32" /Project "qwcl"
+devenv "%QDOSDEVBASE%\qw\qwcl.sln" /Rebuild "%QDOSBINDIR%|Win32" /Project "qwcl"
 copy /y "%QDOSDEVBASE%\qw\%QDOSBINDIR%\WQWDOS.EXE" "%QDOSDEVBASE%\"
+devenv "%QDOSDEVBASE%\qw\qwcl.sln" /Rebuild "GL QW %QDOSBINDIR%|Win32" /Project "qwcl"
 copy /y "%QDOSDEVBASE%\qw\%QDOSBINDIR%_gl\glqw2.exe" "%QDOSDEVBASE%\"
 
 cd /d "%QDOSDEVBASE%"
