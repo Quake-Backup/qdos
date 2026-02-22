@@ -524,7 +524,8 @@ void Cvar_GetLatchedVars (void)
 		if (!var->latched_string)
 			continue;
 		free (var->string);
-		var->string = var->latched_string;
+		var->string = strdup(var->latched_string);
+		free(var->latched_string);
 		var->latched_string = NULL;
 		var->value = atof(var->string);
 		var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
