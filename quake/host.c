@@ -897,13 +897,13 @@ void Host_Init (quakeparms_t *parms)
 	else
 		minimum_memory = MINIMUM_MEMORY_LEVELPAK;
 
-	if (COM_CheckParm ("-minmemory"))
-		parms->memsize = minimum_memory;
-
 	host_parms = *parms;
 
 	if (parms->memsize < minimum_memory)
+	{
 		Sys_Error ("Only %4.1f megs of memory available, can't execute game", parms->memsize / (float)0x100000);
+		return;
+	}
 
 	z_chain.next = z_chain.prev = &z_chain;
 
@@ -941,7 +941,7 @@ void Host_Init (quakeparms_t *parms)
 	SV_Init ();
 
 	Com_Printf ("Exe: "__TIME__" "__DATE__"\n");
-	Com_Printf ("%4.1f megabyte heap\n",parms->memsize/ (1024*1024.0));
+	Com_Printf ("%4.1f MB RAM available\n",parms->memsize/ (1024*1024.0));
 
 	R_InitTextures ();		// needed even for dedicated servers
 

@@ -1800,9 +1800,6 @@ void Host_Init (quakeparms_t *parms)
 
 	Sys_mkdir("qw");
 
-	if (COM_CheckParm ("-minmemory"))
-		parms->memsize = MINIMUM_MEMORY;
-
 	host_parms = *parms;
 
 	if (parms->memsize < MINIMUM_MEMORY)
@@ -1848,7 +1845,7 @@ void Host_Init (quakeparms_t *parms)
 	M_Init ();  
 	Mod_Init ();
    
-	Com_Printf ("%4.1f megs RAM used.\n",parms->memsize/ (1024*1024.0));
+	Com_Printf ("%4.1f MB RAM available.\n", parms->memsize / (1024*1024.0));
    
 	R_InitTextures ();
  

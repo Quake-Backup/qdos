@@ -606,7 +606,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	global_hInstance = hInstance;
 	global_nCmdShow = nCmdShow;
 
-	lpBuffer.dwLength = sizeof(MEMORYSTATUS);
+	lpBuffer.dwLength = sizeof(MEMORYSTATUSEX);
 	GlobalMemoryStatusEx (&lpBuffer);
 
 	if (!GetCurrentDirectory (sizeof(cwd), cwd))
@@ -689,9 +689,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	if (parms.memsize < (lpBuffer.ullTotalPhys >> 1))
 		parms.memsize = lpBuffer.ullTotalPhys >> 1;
-
-	if (parms.memsize > MAXIMUM_WIN_MEMORY)
-		parms.memsize = MAXIMUM_WIN_MEMORY;
 
 	tevent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
