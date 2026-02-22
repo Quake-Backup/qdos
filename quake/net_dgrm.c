@@ -136,8 +136,8 @@ void NET_Ban_f (void)
 		case 1:
 			if (((struct in_addr *)&banAddr)->s_addr)
 			{
-				Q_strcpy(addrStr, inet_ntoa(*(struct in_addr *)&banAddr));
-				Q_strcpy(maskStr, inet_ntoa(*(struct in_addr *)&banMask));
+				Q_strlcpy(addrStr, inet_ntoa(*(struct in_addr *)&banAddr), sizeof(addrStr));
+				Q_strlcpy(maskStr, inet_ntoa(*(struct in_addr *)&banMask), sizeof(maskStr));
 				print("Banning %s [%s]\n", addrStr, maskStr);
 			}
 			else
@@ -562,11 +562,11 @@ static void Test_Poll(void)
 			Sys_Error("Unexpected repsonse to Player Info request\n");
 
 		playerNumber = MSG_ReadByte();
-		Q_strcpy(name, MSG_ReadString());
+		Q_strlcpy(name, MSG_ReadString(), sizeof(name));
 		colors = MSG_ReadLong();
 		frags = MSG_ReadLong();
 		connectTime = MSG_ReadLong();
-		Q_strcpy(address, MSG_ReadString());
+		Q_strlcpy(address, MSG_ReadString(), sizeof(address));
 
 		Com_Printf("[%u]%s\n  frags:%3i  colors:%u %u  time:%u\n  %s\n", playerNumber, name, frags, colors >> 4, colors & 0x0f, connectTime / 60, address);
 	}
@@ -683,10 +683,10 @@ static void Test2_Poll(void)
 	if (MSG_ReadByte() != CCREP_RULE_INFO)
 		goto Error;
 
-	Q_strcpy(name, MSG_ReadString());
+	Q_strlcpy(name, MSG_ReadString(), sizeof(name));
 	if (name[0] == 0)
 		goto Done;
-	Q_strcpy(value, MSG_ReadString());
+	Q_strlcpy(value, MSG_ReadString(), sizeof(value));
 
 	Com_Printf("%-16.16s  %-16.16s\n", name, value);
 
@@ -814,8 +814,8 @@ static void Test3_Poll(void)
 		dfunc.GetAddrFromName(MSG_ReadString(), &clientaddr);
 
 		// add it
-		Q_strcpy(name, MSG_ReadString());
-		Q_strcpy(map, MSG_ReadString());
+		Q_strlcpy(name, MSG_ReadString(), sizeof(name));
+		Q_strlcpy(map, MSG_ReadString(), sizeof(map));
 		users = MSG_ReadByte();
 		maxusers = MSG_ReadByte();
 
@@ -1205,7 +1205,7 @@ static qsocket_t *_Datagram_CheckNewConnections (void)
 	sock->socket = newsock;
 	sock->landriver = net_landriverlevel;
 	sock->addr = clientaddr;
-	Q_strcpy(sock->address, dfunc.AddrToString(&clientaddr));
+	Q_strlcpy(sock->address, dfunc.AddrToString(&clientaddr), sizeof(sock->address));
 
 	// send him back the info about the server connection he has been allocated
 	SZ_Clear(&net_message);
@@ -1296,21 +1296,21 @@ static void _Datagram_SearchForHosts (qboolean xmit)
 
 		// add it
 		hostCacheCount++;
-		Q_strcpy(hostcache[n].name, MSG_ReadString());
-		Q_strcpy(hostcache[n].map, MSG_ReadString());
+		Q_strlcpy(hostcache[n].name, MSG_ReadString(), sizeof(hostcache[n].name));
+		Q_strlcpy(hostcache[n].map, MSG_ReadString(), sizeof(hostcache[n].map));
 		hostcache[n].users = MSG_ReadByte();
 		hostcache[n].maxusers = MSG_ReadByte();
 		if (MSG_ReadByte() != NET_PROTOCOL_VERSION)
 		{
-			Q_strcpy(hostcache[n].cname, hostcache[n].name);
+			Q_strlcpy(hostcache[n].cname, hostcache[n].name, sizeof(hostcache[n].cname));
 			hostcache[n].cname[14] = 0;
-			Q_strcpy(hostcache[n].name, "*");
-			Q_strcat(hostcache[n].name, hostcache[n].cname);
+			Q_strlcpy(hostcache[n].name, "*", sizeof(hostcache[n].name));
+			Q_strlcat(hostcache[n].name, hostcache[n].cname, sizeof(hostcache[n].name));
 		}
 		memcpy(&hostcache[n].addr, &readaddr, sizeof(struct qsockaddr));
 		hostcache[n].driver = net_driverlevel;
 		hostcache[n].ldriver = net_landriverlevel;
-		Q_strcpy(hostcache[n].cname, dfunc.AddrToString(&readaddr));
+		Q_strlcpy(hostcache[n].cname, dfunc.AddrToString(&readaddr), sizeof(hostcache[n].cname));
 
 		// check for a name conflict
 		for (i = 0; i < hostCacheCount; i++)
@@ -1448,7 +1448,7 @@ static qsocket_t *_Datagram_Connect (char *host)
 	{
 		reason = "No Response";
 		Com_Printf("%s\n", reason);
-		Q_strcpy(m_return_reason, reason);
+		Q_strlcpy(m_return_reason, reason, sizeof(m_return_reason));
 		goto ErrorReturn;
 	}
 
@@ -1456,7 +1456,7 @@ static qsocket_t *_Datagram_Connect (char *host)
 	{
 		reason = "Network Error";
 		Com_Printf("%s\n", reason);
-		Q_strcpy(m_return_reason, reason);
+		Q_strlcpy(m_return_reason, reason, sizeof(m_return_reason));
 		goto ErrorReturn;
 	}
 
@@ -1478,11 +1478,11 @@ static qsocket_t *_Datagram_Connect (char *host)
 	{
 		reason = "Bad Response";
 		Com_Printf("%s\n", reason);
-		Q_strcpy(m_return_reason, reason);
+		Q_strlcpy(m_return_reason, reason, sizeof(m_return_reason));
 		goto ErrorReturn;
 	}
 
-	dfunc.GetNameFromAddr (&sendaddr, sock->address);
+	dfunc.GetNameFromAddr (&sendaddr, sock->address, sizeof(sock->address));
 
 	Com_Printf ("Connection accepted\n");
 	sock->lastMessageTime = SetNetTime();
@@ -1492,7 +1492,7 @@ static qsocket_t *_Datagram_Connect (char *host)
 	{
 		reason = "Connect to Game failed";
 		Com_Printf("%s\n", reason);
-		Q_strcpy(m_return_reason, reason);
+		Q_strlcpy(m_return_reason, reason, sizeof(m_return_reason));
 		goto ErrorReturn;
 	}
 

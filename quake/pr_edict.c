@@ -261,7 +261,7 @@ eval_t *GetEdictFieldValue(edict_t *ed, char *field)
 	if (strlen(field) < MAX_FIELD_LEN)
 	{
 		gefvCache[rep].pcache = def;
-		strcpy (gefvCache[rep].field, field);
+		Q_strlcpy (gefvCache[rep].field, field, sizeof(gefvCache[rep].field));
 		rep ^= 1;
 	}
 
@@ -666,17 +666,26 @@ void ED_ParseGlobals (char *data)
 		if (com_token[0] == '}')
 			break;
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return;
+		}
 
-		strcpy (keyname, com_token);
+		Q_strlcpy (keyname, com_token, sizeof(keyname));
 
 	// parse value	
 		data = COM_Parse (data);
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return;
+		}
 
 		if (com_token[0] == '}')
+		{
 			Sys_Error ("ED_ParseEntity: closing brace without data");
+			return;
+		}
 
 		key = ED_FindGlobal (keyname);
 		if (!key)
@@ -686,7 +695,10 @@ void ED_ParseGlobals (char *data)
 		}
 
 		if (!ED_ParseEpair ((void *)pr_globals, key, com_token))
+		{
 			Host_Error ("ED_ParseGlobals: parse error");
+			return;
+		}
 	}
 }
 
@@ -755,7 +767,7 @@ qboolean	ED_ParseEpair (void *base, ddef_t *key, char *s)
 		break;
 		
 	case ev_vector:
-		strcpy (string, s);
+		Q_strlcpy (string, s, sizeof(string));
 		v = string;
 		w = string;
 		for (i=0 ; i<3 ; i++)
@@ -826,28 +838,32 @@ char *ED_ParseEdict (char *data, edict_t *ent)
 // go through all the dictionary pairs
 	while (1)
 	{	
-	// parse key
+		// parse key
 		data = COM_Parse (data);
 		if (com_token[0] == '}')
 			break;
+
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return NULL;
+		}
 		
-// anglehack is to allow QuakeEd to write single scalar angles
-// and allow them to be turned into vectors. (FIXME...)
-if (!strcmp(com_token, "angle"))
-{
-	strcpy (com_token, "angles");
-	anglehack = true;
-}
-else
-	anglehack = false;
+		// anglehack is to allow QuakeEd to write single scalar angles
+		// and allow them to be turned into vectors. (FIXME...)
+		if (!strcmp(com_token, "angle"))
+		{
+			Q_strlcpy (com_token, "angles", sizeof(com_token));
+			anglehack = true;
+		}
+		else
+			anglehack = false;
 
-// FIXME: change light to _light to get rid of this hack
-if (!strcmp(com_token, "light"))
-	strcpy (com_token, "light_lev");	// hack for single light def
+		// FIXME: change light to _light to get rid of this hack
+		if (!strcmp(com_token, "light"))
+			Q_strlcpy (com_token, "light_lev", sizeof(com_token));	// hack for single light def
 
-		strcpy (keyname, com_token);
+		Q_strlcpy (keyname, com_token, sizeof(keyname));
 
 		// another hack to fix heynames with trailing spaces
 		n = strlen(keyname);
@@ -857,18 +873,24 @@ if (!strcmp(com_token, "light"))
 			n--;
 		}
 
-	// parse value	
+		// parse value
 		data = COM_Parse (data);
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return NULL;
+		}
 
 		if (com_token[0] == '}')
+		{
 			Sys_Error ("ED_ParseEntity: closing brace without data");
+			return NULL;
+		}
 
-		init = true;	
+		init = true;
 
-// keynames with a leading underscore are used for utility comments,
-// and are immediately discarded by quake
+		// keynames with a leading underscore are used for utility comments,
+		// and are immediately discarded by quake
 		if (keyname[0] == '_')
 			continue;
 
@@ -886,15 +908,18 @@ if (!strcmp(com_token, "light"))
 			continue;
 		}
 
-if (anglehack)
-{
-char	temp[32];
-strcpy (temp, com_token);
-sprintf (com_token, "0 %s 0", temp);
-}
+		if (anglehack)
+		{
+			char	temp[32];
+			Q_strlcpy (temp, com_token, sizeof(temp));
+			Com_sprintf (com_token, sizeof(com_token), "0 %s 0", temp);
+		}
 
 		if (!ED_ParseEpair ((void *)&ent->v, key, com_token))
+		{
 			Host_Error ("ED_ParseEdict: parse error");
+			return NULL;
+		}
 	}
 
 	if (!init)

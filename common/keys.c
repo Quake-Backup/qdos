@@ -222,7 +222,7 @@ void CompleteCommand (void)
 	if (cmd)
 	{
 		key_lines[edit_line][1] = '/';
-		Q_strcpy (key_lines[edit_line]+2, cmd);
+		Q_strlcpy (key_lines[edit_line]+2, cmd, sizeof(key_lines[edit_line]));
 		key_linepos = Q_strlen(cmd)+2;
 		key_lines[edit_line][key_linepos] = ' ';
 		key_linepos++;
@@ -382,7 +382,7 @@ void Key_Console (int key)
 				&& !key_lines[history_line][1]);
 		if (history_line == edit_line)
 			history_line = (edit_line+1)&31;
-		Q_strcpy(key_lines[edit_line], key_lines[history_line]);
+		Q_strlcpy(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
 		key_linepos = Q_strlen(key_lines[edit_line]);
 		return;
 	}
@@ -403,7 +403,7 @@ void Key_Console (int key)
 		}
 		else
 		{
-			Q_strcpy(key_lines[edit_line], key_lines[history_line]);
+			Q_strlcpy(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
 			key_linepos = Q_strlen(key_lines[edit_line]);
 		}
 		return;
@@ -446,9 +446,16 @@ void Key_Console (int key)
 				clipText = GlobalLock(th);
 				if (clipText)
 				{
-					textCopied = malloc(GlobalSize(th)+1);
-					strcpy(textCopied, clipText);
-	/* Substitutes a NULL for every token */strtok(textCopied, "\n\r\b");
+					size_t len = GlobalSize(th);
+					textCopied = malloc(len+1);
+					if (!textCopied)
+					{
+						Sys_Error("Key_Console: out of memory");
+						return;
+					}
+					Q_strlcpy(textCopied, clipText, len);
+					/* Substitutes a NULL for every token */
+					strtok(textCopied, "\n\r\b");
 					i = strlen(textCopied);
 					if (i+key_linepos>=MAXCMDLINE)
 						i=MAXCMDLINE-key_linepos;
@@ -510,7 +517,7 @@ void Key_Message (int key)
 		key_dest = key_game;
 
 		/* Taniwha's chat ring array */
-		strcpy (chat_buffer_array[chat_head], chat_buffer);
+		Q_strlcpy (chat_buffer_array[chat_head], chat_buffer, sizeof(chat_buffer_array[chat_head]));
 		chat_head = (chat_head + 1) % MAX_CHAT;
 
 		if (chat_head == chat_tail)
@@ -533,7 +540,7 @@ void Key_Message (int key)
 		if (chat_index != chat_tail) 
 		{
 			chat_index = (chat_index + MAX_CHAT - 1) % MAX_CHAT;
-			strcpy (chat_buffer, chat_buffer_array[chat_index]);
+			Q_strlcpy (chat_buffer, chat_buffer_array[chat_index], sizeof(chat_buffer));
 		}
 
 		chat_bufferlen = (strlen(chat_buffer));
@@ -546,7 +553,7 @@ void Key_Message (int key)
 		
 		if (chat_index != chat_head) {
 			chat_index = (chat_index + 1) % MAX_CHAT;
-			strcpy (chat_buffer, chat_buffer_array[chat_index]);
+			Q_strlcpy (chat_buffer, chat_buffer_array[chat_index], sizeof(chat_buffer));
 		}
 
 		chat_bufferlen = (strlen(chat_buffer));
@@ -651,7 +658,7 @@ Key_SetBinding
 void Key_SetBinding (int keynum, char *binding)
 {
 	char	*new;
-	int		l;
+	size_t	l;
 			
 	if (keynum == -1)
 		return;
@@ -664,11 +671,11 @@ void Key_SetBinding (int keynum, char *binding)
 	}
 			
 // allocate memory for new binding
-	l = Q_strlen (binding);	
+	l = strlen (binding);
 	new = Z_Malloc (l+1);
-	Q_strcpy (new, binding);
+	Q_strlcpy (new, binding, l);
 	new[l] = 0;
-	keybindings[keynum] = new;	
+	keybindings[keynum] = new;
 }
 
 /*

@@ -177,25 +177,6 @@ void InsertLinkAfter (link_t *l, link_t *after)
 ============================================================================
 */
 
-void Q_strcpy (char *dest, char *src)
-{
-	while (*src)
-	{
-		*dest++ = *src++;
-	}
-	*dest++ = 0;
-}
-
-void Q_strncpy (char *dest, char *src, int count)
-{
-	while (*src && count--)
-	{
-		*dest++ = *src++;
-	}
-	if (count)
-		*dest++ = 0;
-}
-
 int Q_strlen (char *str)
 {
 	int             count;
@@ -205,21 +186,6 @@ int Q_strlen (char *str)
 		count++;
 
 	return count;
-}
-
-char *Q_strrchr(char *s, char c)
-{
-    int len = Q_strlen(s);
-    s += len;
-    while (len--)
-	if (*--s == c) return s;
-    return 0;
-}
-
-void Q_strcat (char *dest, char *src)
-{
-	dest += Q_strlen(dest);
-	Q_strcpy (dest, src);
 }
 
 int Q_strcmp (char *s1, char *s2)
@@ -1149,7 +1115,7 @@ void COM_InitArgv (int argc, char **argv)
 COM_Init
 ================
 */
-void COM_Init (const char *basedir)
+void COM_Init (void)
 {
 	byte    swaptest[2] = {1,0};
 
@@ -1512,7 +1478,9 @@ int COM_FindFile (const char *filename, int *handle, FILE **file)
 				
 		// see if the file needs to be updated in the cache
 			if (!com_cachedir[0])
-				strcpy (cachepath, netpath);
+			{
+				Q_strlcpy (cachepath, netpath, sizeof(cachepath));
+			}
 			else
 			{	
 #if defined(_WIN32)
@@ -1528,8 +1496,8 @@ int COM_FindFile (const char *filename, int *handle, FILE **file)
 			
 				if (cachetime < findtime)
 					COM_CopyFile (netpath, cachepath);
-				strcpy (netpath, cachepath);
-			}	
+				Q_strlcpy (netpath, cachepath, sizeof(netpath));
+			}
 
 			Sys_Printf ("FindFile: %s\n",netpath);
 			com_filesize = Sys_FileOpenRead (netpath, &i);
@@ -1712,13 +1680,13 @@ pack_t *COM_LoadPackFile (char *packfile)
 	// parse the directory
 	for (i = 0; i < numpackfiles ; i++)
 	{
-		strcpy (newfiles[i].name, info[i].name);
+		Q_strlcpy (newfiles[i].name, info[i].name, sizeof(newfiles[i].name));
 		newfiles[i].filepos = LittleLong(info[i].filepos);
 		newfiles[i].filelen = LittleLong(info[i].filelen);
 	}
 
 	pack = Z_Malloc (sizeof (pack_t));
-	strcpy (pack->filename, packfile);
+	Q_strlcpy (pack->filename, packfile, sizeof(pack->filename));
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
@@ -1851,7 +1819,7 @@ void COM_Dir_f (void)
 
 	if ( Cmd_Argc() != 1 )
 	{
-		strcpy( wildcard, Cmd_Argv( 1 ) );
+		Q_strlcpy( wildcard, Cmd_Argv( 1 ), sizeof(wildcard) );
 	}
 
 	while ( ( path = COM_NextPath( path ) ) != NULL )
@@ -1900,11 +1868,11 @@ void COM_AddGameDirectory (char *dir)
 	pack_t	*pak;
 	char	pakfile[MAX_OSPATH];
 
-	strcpy (com_gamedir, dir);
+	Q_strlcpy (com_gamedir, dir, sizeof(com_gamedir));
 
 	// add the directory to the search path
 	search = Z_Malloc(sizeof(searchpath_t));
-	strcpy (search->filename, dir);
+	Q_strlcpy (search->filename, dir, sizeof(search->filename));
 	search->next = com_searchpaths;
 	com_searchpaths = search;
 
@@ -1946,9 +1914,9 @@ void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 //
 	i = COM_CheckParm ("-basedir");
 	if (i && i < com_argc-1)
-		strcpy (basedir, com_argv[i+1]);
+		Q_strlcpy (basedir, com_argv[i+1], sizeof(basedir));
 	else
-		strcpy (basedir, host_parms.basedir);
+		Q_strlcpy (basedir, host_parms.basedir, sizeof(basedir));
 
 	j = strlen (basedir);
 
@@ -1969,10 +1937,10 @@ void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 		if (com_argv[i+1][0] == '-')
 			com_cachedir[0] = 0;
 		else
-			strcpy (com_cachedir, com_argv[i+1]);
+			Q_strlcpy (com_cachedir, com_argv[i+1], sizeof(com_cachedir));
 	}
 	else if (host_parms.cachedir)
-		strcpy (com_cachedir, host_parms.cachedir);
+		Q_strlcpy (com_cachedir, host_parms.cachedir, sizeof(com_cachedir));
 	else
 		com_cachedir[0] = 0;
 
@@ -1980,7 +1948,7 @@ void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 // start up with GAMENAME by default (id1)
 //
 	COM_AddGameDirectory (va("%s/"GAMENAME, basedir) );
-	strcpy (com_gamedir, va("%s/"GAMENAME, basedir));
+	Q_strlcpy (com_gamedir, va("%s/"GAMENAME, basedir), sizeof(com_gamedir));
 
 	//johnfitz -- track number of mission packs added
 	//since we don't want to allow the "game" command to strip them away
@@ -2052,10 +2020,13 @@ void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 			{
 				search->pack = COM_LoadPackFile (com_argv[i]);
 				if (!search->pack)
+				{
 					Sys_Error ("Couldn't load packfile: %s", com_argv[i]);
+					return;
+				}
 			}
 			else
-				strcpy (search->filename, com_argv[i]);
+				Q_strlcpy (search->filename, com_argv[i], sizeof(search->filename));
 			search->next = com_searchpaths;
 			com_searchpaths = search;
 		}

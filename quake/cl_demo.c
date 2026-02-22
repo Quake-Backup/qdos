@@ -295,7 +295,7 @@ void CL_PlayDemo_f (void)
 //
 // open the demo file
 //
-	strcpy (name, Cmd_Argv(1)); /* FS: FIXME: Q_strncypz. */
+	Q_strlcpy (name, Cmd_Argv(1), sizeof(name));
 
 	COM_DefaultExtension (name, ".dem");
 

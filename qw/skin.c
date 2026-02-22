@@ -50,18 +50,18 @@ void Skin_Find (player_info_t *sc)
 
 
 	if (allskins[0])
-		strcpy (name, allskins);
+		Q_strlcpy (name, allskins, sizeof(name));
 	else
 	{
 		s = Info_ValueForKey (sc->userinfo, "skin");
 		if (s && s[0])
-			strcpy (name, s);
+			Q_strlcpy (name, s, sizeof(name));
 		else
-		strcpy (name, baseskin->string);
+			Q_strlcpy (name, baseskin->string, sizeof(name));
 	}
 
 	if (strstr (name, "..") || *name == '.')
-		strcpy (name, "base");
+		Q_strlcpy (name, "base", sizeof(name));
 	COM_StripExtension (name, name);
 
 	for (i=0 ; i<numskins ; i++)
@@ -85,7 +85,7 @@ void Skin_Find (player_info_t *sc)
 	numskins++;
 
 	memset (skin, 0, sizeof(*skin));
-	strncpy(skin->name, name, sizeof(skin->name) - 1);
+	Q_strlcpy(skin->name, name, sizeof(skin->name));
 }
 
 
@@ -238,7 +238,7 @@ void Skin_CheckQueue (char *name) /* FS: Check if we already queued this for dow
 	if(!name)
 		return;
 
-	strcpy(queued_skins[cls.downloadnumber].name, name);
+	Q_strlcpy(queued_skins[cls.downloadnumber].name, name, sizeof(queued_skins[cls.downloadnumber].name));
 
 	for(i = 0; i <= cls.downloadnumber; i++)
 	{
@@ -382,6 +382,6 @@ Sets all skins to one specific one
 */
 void	Skin_AllSkins_f (void)
 {
-	strcpy (allskins, Cmd_Argv(1));
+	Q_strlcpy (allskins, Cmd_Argv(1), sizeof(allskins));
 	Skin_Skins_f ();
 }

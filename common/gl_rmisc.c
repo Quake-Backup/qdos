@@ -419,7 +419,7 @@ void R_TranslatePlayerSkin (int playernum)
 	if (!player->name[0])
 		return;
 
-	strcpy(s, Info_ValueForKey(player->userinfo, "skin"));
+	Q_strlcpy(s, Info_ValueForKey(player->userinfo, "skin"), sizeof(s));
 	COM_StripExtension(s, s);
 	if (player->skin && !stricmp(s, player->skin->name))
 		player->skin = NULL;

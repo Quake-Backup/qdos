@@ -596,7 +596,7 @@ void Con_LogCenterPrint (char *str)
 		return; //don't log in deathmatch
 #endif
 
-	strcpy(con_lastcenterstring, str);
+	Q_strlcpy(con_lastcenterstring, str, sizeof(con_lastcenterstring));
 
 	if (con_logcenterprint->intValue)
 	{
@@ -819,13 +819,14 @@ void Con_DrawConsole (int lines)
 		if (strlen(text) > i)
 		{
 			y = x - i - 11;
-			strncpy(dlbar, text, i);
-			dlbar[i] = 0;
-			strcat(dlbar, "...");
+			Q_strlcpy(dlbar, text, i);
+			Q_strlcat(dlbar, "...", sizeof(dlbar));
 		}
 		else
-			strcpy(dlbar, text);
-		strcat(dlbar, ": ");
+		{
+			Q_strlcpy(dlbar, text, sizeof(dlbar));
+		}
+		Q_strlcat(dlbar, ": ", sizeof(dlbar));
 		i = strlen(dlbar);
 		dlbar[i++] = '\x80';
 		// where's the dot go?
@@ -866,13 +867,14 @@ void Con_DrawConsole (int lines)
 		if (strlen(text) > i)
 		{
 			y = x - i - 11;
-			strncpy(dlbar, text, i);
-			dlbar[i] = 0;
-			strcat(dlbar, "...");
+			Q_strlcpy(dlbar, text, i);
+			Q_strlcat(dlbar, "...", sizeof(dlbar));
 		}
 		else
-			strcpy(dlbar, text);
-		strcat(dlbar, ": ");
+		{
+			Q_strlcpy(dlbar, text, sizeof(dlbar));
+		}
+		Q_strlcat(dlbar, ": ", sizeof(dlbar));
 
 		i = strlen(dlbar);
 		dlbar[i++] = '\x80';

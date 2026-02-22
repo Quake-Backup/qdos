@@ -257,7 +257,7 @@ qpic_t	*Draw_CachePic (char *path)
 		return NULL;
 	}
 	menu_numcachepics++;
-	strcpy (pic->name, path);
+	Q_strlcpy (pic->name, path, sizeof(pic->name));
 
 //
 // load the pic from disk
@@ -1357,7 +1357,7 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 	// whoever at id or threewave must've been half asleep...
 	glt = &gltextures[numgltextures++];
 	glt->texnum = texture_extension_number++;
-	strcpy (glt->identifier, identifier);
+	Q_strlcpy (glt->identifier, identifier, sizeof(glt->identifier));
 
 // LordHavoc: label to drop out of the loop into the setup code
 GL_LoadTexture_setup:

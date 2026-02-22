@@ -111,8 +111,8 @@ int WIPX_Init (void)
 	((struct sockaddr_ipx *)&broadcastaddr)->sa_socket = htons((unsigned short)net_hostport);
 
 	WIPX_GetSocketAddr (net_controlsocket, &addr);
-	Q_strcpy(my_ipx_address,  WIPX_AddrToString (&addr));
-	p = Q_strrchr (my_ipx_address, ':');
+	Q_strlcpy(my_ipx_address,  WIPX_AddrToString (&addr), sizeof(my_ipx_address));
+	p = strrchr (my_ipx_address, ':');
 	if (p)
 		*p = 0;
 
@@ -366,9 +366,9 @@ int WIPX_GetSocketAddr (int handle, struct qsockaddr *addr)
 
 //=============================================================================
 
-int WIPX_GetNameFromAddr (struct qsockaddr *addr, char *name)
+int WIPX_GetNameFromAddr (struct qsockaddr *addr, char *name, size_t namelen)
 {
-	Q_strcpy(name, WIPX_AddrToString(addr));
+	Q_strlcpy(name, WIPX_AddrToString(addr), namelen);
 	return 0;
 }
 

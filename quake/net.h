@@ -174,7 +174,7 @@ typedef struct
 	char *		(*AddrToString) (struct qsockaddr *addr);
 	int 		(*StringToAddr) (char *string, struct qsockaddr *addr);
 	int 		(*GetSocketAddr) (int socket, struct qsockaddr *addr);
-	int 		(*GetNameFromAddr) (struct qsockaddr *addr, char *name);
+	int 		(*GetNameFromAddr) (struct qsockaddr *addr, char *name, size_t namelen);
 	int 		(*GetAddrFromName) (char *name, struct qsockaddr *addr);
 	int		(*AddrCompare) (struct qsockaddr *addr1, struct qsockaddr *addr2);
 	int		(*GetSocketPort) (struct qsockaddr *addr);
@@ -330,7 +330,7 @@ extern	char		my_ipx_address[NET_NAMELEN];
 extern	char		my_tcpip_address[NET_NAMELEN];
 extern void (*GetComPortConfig) (int portNumber, int *port, int *irq, int *baud, qboolean *useModem);
 extern void (*SetComPortConfig) (int portNumber, int port, int irq, int baud, qboolean useModem);
-extern void (*GetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
+extern void (*GetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup, size_t clearlen, size_t initlen, size_t hanguplen);
 extern void (*SetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
 
 extern	qboolean	slistInProgress;

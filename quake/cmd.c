@@ -565,7 +565,7 @@ void Cmd_TokenizeString (char *text)
 				Sys_Error("Cmd_TokenizeString: out of memory");
 				return;
 			}
-			Q_strcpy (cmd_argv[cmd_argc], com_token);
+			Q_strlcpy (cmd_argv[cmd_argc], com_token, sizeof(cmd_argv[cmd_argc]));
 			cmd_argc++;
 		}
 	}

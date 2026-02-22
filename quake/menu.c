@@ -666,7 +666,7 @@ void M_ScanSaves (void)
 
 	for (i=0 ; i<MAX_SAVEGAMES ; i++)
 	{
-		strcpy (m_filenames[i], "--- UNUSED SLOT ---");
+		Q_strlcpy (m_filenames[i], "--- UNUSED SLOT ---", sizeof(m_filenames[i]));
 		loadable[i] = false;
 		if (i == AUTOSAVE_POS)
 		{
@@ -932,8 +932,8 @@ void M_Menu_Setup_f (void)
 	key_dest = key_menu;
 	m_state = m_setup;
 	m_entersound = true;
-	Q_strcpy(setup_myname, cl_name->string);
-	Q_strcpy(setup_hostname, hostname->string);
+	Q_strlcpy(setup_myname, cl_name->string, sizeof(setup_myname));
+	Q_strlcpy(setup_hostname, hostname->string, sizeof(setup_hostname));
 	setup_top = setup_oldtop = (cl_color->intValue) >> 4;
 	setup_bottom = setup_oldbottom = (cl_color->intValue) & 15;
 }
@@ -2271,9 +2271,8 @@ void M_Menu_ModemConfig_f (void)
 	key_dest = key_menu;
 	m_state = m_modemconfig;
 	m_entersound = true;
-	(*GetModemConfig) (0, &modemConfig_dialing, modemConfig_clear, modemConfig_init, modemConfig_hangup);
+	(*GetModemConfig) (0, &modemConfig_dialing, modemConfig_clear, modemConfig_init, modemConfig_hangup, sizeof(modemConfig_clear), sizeof(modemConfig_init), sizeof(modemConfig_hangup));
 }
-
 
 void M_ModemConfig_Draw (void)
 {
@@ -4144,9 +4143,9 @@ static void SearchGamespyGames (void)
 
 	m_num_gamespy_servers = 0;
 
-	for (i=0 ; i<=MAX_GAMESPY_MENU_SERVERS ; i++)
+	for (i=0 ; i< MAX_GAMESPY_MENU_SERVERS ; i++)
 	{
-		strcpy (gamespy_server_names[i], NO_SERVER_STRING);
+		Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 	}
 
 	// send out info packets
@@ -4231,9 +4230,9 @@ void M_Gamespy_Draw(void)
 
 	if(gamespyInit)
 	{
-		for (i = 0; i <= MAX_GAMESPY_MENU_SERVERS; i++)
+		for (i = 0; i < MAX_GAMESPY_MENU_SERVERS; i++)
 		{
-			strcpy (gamespy_server_names[i], NO_SERVER_STRING);
+			Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 			memset (&gamespy_connect_string, 0, sizeof(gamespy_connect_string));
 		}
 

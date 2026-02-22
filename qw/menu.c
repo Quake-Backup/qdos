@@ -1967,7 +1967,7 @@ static void SearchGamespyGames (void)
 
 	for (i=0 ; i<=MAX_GAMESPY_MENU_SERVERS ; i++)
 	{
-		strcpy (gamespy_server_names[i], NO_SERVER_STRING);
+		Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 	}
 
 	// send out info packets
@@ -2054,7 +2054,7 @@ void M_Gamespy_Draw(void)
 	{
 		for (i = 0; i <= MAX_GAMESPY_MENU_SERVERS; i++)
 		{
-			strcpy (gamespy_server_names[i], NO_SERVER_STRING);
+			Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 			memset (&gamespy_connect_string, 0, sizeof(gamespy_connect_string));
 		}
 

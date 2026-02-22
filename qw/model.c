@@ -206,7 +206,7 @@ model_t *Mod_FindName (char *name)
 			Sys_Error ("mod_numknown == MAX_MOD_KNOWN");
 			return NULL;
 		}
-		strcpy (mod->name, name);
+		Q_strlcpy (mod->name, name, sizeof(mod->name));
 		mod->registration_sequence = 666; /* FS: FIXME */
 		mod_numknown++;
 	}
@@ -277,7 +277,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		}
 		mod_numknown++;
 	}
-	strcpy (mod->name, name);
+	Q_strlcpy (mod->name, name, sizeof(mod->name));
 
 //
 // load the file
@@ -1291,7 +1291,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 			Com_sprintf (name, sizeof(name), "*%i", i+1);
 			loadmodel = Mod_FindName (name);
 			*loadmodel = *mod;
-			strcpy (loadmodel->name, name);
+			Q_strlcpy (loadmodel->name, name, sizeof(loadmodel->name));
 			mod = loadmodel;
 		}
 	}
@@ -1310,8 +1310,8 @@ ALIAS MODELS
 Mod_LoadAliasFrame
 =================
 */
-void * Mod_LoadAliasFrame (void * pin, int *pframeindex, int numv,
-	trivertx_t *pbboxmin, trivertx_t *pbboxmax, aliashdr_t *pheader, char *name)
+void *Mod_LoadAliasFrame (void * pin, int *pframeindex, int numv,
+	trivertx_t *pbboxmin, trivertx_t *pbboxmax, aliashdr_t *pheader, char *name, size_t namelen)
 {
 	trivertx_t              *pframe, *pinframe;
 	int                             i, j;
@@ -1319,7 +1319,7 @@ void * Mod_LoadAliasFrame (void * pin, int *pframeindex, int numv,
 
 	pdaliasframe = (daliasframe_t *)pin;
 
-	strcpy (name, pdaliasframe->name);
+	Q_strlcpy (name, pdaliasframe->name, sizeof(namelen));
 
 	for (i=0 ; i<3 ; i++)
 	{
@@ -1359,7 +1359,7 @@ Mod_LoadAliasGroup
 =================
 */
 void * Mod_LoadAliasGroup (void * pin, int *pframeindex, int numv,
-	trivertx_t *pbboxmin, trivertx_t *pbboxmax, aliashdr_t *pheader, char *name)
+	trivertx_t *pbboxmin, trivertx_t *pbboxmax, aliashdr_t *pheader, char *name, size_t namelen)
 {
 	daliasgroup_t           *pingroup;
 	maliasgroup_t           *paliasgroup;
@@ -1410,7 +1410,7 @@ void * Mod_LoadAliasGroup (void * pin, int *pframeindex, int numv,
 									numv,
 									&paliasgroup->frames[i].bboxmin,
 									&paliasgroup->frames[i].bboxmax,
-									pheader, name);
+									pheader, name, namelen);
 	}
 
 	return ptemp;
@@ -1747,7 +1747,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 										pmodel->numverts,
 										&pheader->frames[i].bboxmin,
 										&pheader->frames[i].bboxmax,
-										pheader, pheader->frames[i].name);
+										pheader, pheader->frames[i].name, sizeof(pheader->frames[i].name));
 		}
 		else
 		{
@@ -1757,7 +1757,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 										pmodel->numverts,
 										&pheader->frames[i].bboxmin,
 										&pheader->frames[i].bboxmax,
-										pheader, pheader->frames[i].name);
+										pheader, pheader->frames[i].name, sizeof(pheader->frames[i].name));
 		}
 	}
 

@@ -1804,9 +1804,15 @@ void	VID_Init (unsigned char *palette)
 
     baseRC = wglCreateContext( maindc );
 	if (!baseRC)
+	{
 		Sys_Error ("Could not initialize GL (wglCreateContext failed).\n\nMake sure you in are 65535 color mode, and try running -window.");
-    if (!wglMakeCurrent( maindc, baseRC ))
+		return;
+	}
+	if (!wglMakeCurrent(maindc, baseRC))
+	{
 		Sys_Error ("wglMakeCurrent failed");
+		return;
+	}
 
 	GL_Init();
 
@@ -1821,7 +1827,7 @@ void	VID_Init (unsigned char *palette)
 	vid_menudrawfn = VID_MenuDraw;
 	vid_menukeyfn = VID_MenuKey;
 
-	strcpy (badmode.modedesc, "Bad mode");
+	Q_strlcpy (badmode.modedesc, "Bad mode", sizeof(badmode.modedesc));
 	vid_canalttab = true;
 
 	if (COM_CheckParm("-fullsbar"))

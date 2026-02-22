@@ -161,7 +161,7 @@ void Host_Game_f (void)
 			return;
 		}
 
-		strcpy (pakfile, va("%s/%s", host_parms.basedir, Cmd_Argv(1)));
+		Q_strlcpy (pakfile, va("%s/%s", host_parms.basedir, Cmd_Argv(1)), sizeof(pakfile));
 		if (!stricmp(pakfile, com_gamedir)) //no change
 		{
 			Com_Printf("\"game\" is already \"%s\"\n", COM_SkipPath(com_gamedir));
@@ -181,12 +181,12 @@ void Host_Game_f (void)
 		if (NumGames(com_searchpaths) > 1 + com_nummissionpacks)
 			KillGameDir(com_searchpaths);
 
-		strcpy (com_gamedir, pakfile);
+		Q_strlcpy (com_gamedir, pakfile, sizeof(com_gamedir));
 
 		if (stricmp(Cmd_Argv(1), GAMENAME)) //game is not id1
 		{
 			search = Z_Malloc(sizeof(searchpath_t));
-			strcpy (search->filename, pakfile);
+			Q_strlcpy (search->filename, pakfile, sizeof(search->filename));
 			search->next = com_searchpaths;
 			com_searchpaths = search;
 
@@ -235,7 +235,7 @@ void ExtraMaps_Add (char *name)
 			return;
 
 	level = Z_Malloc(sizeof(extralevel_t));
-	strcpy (level->name, name);
+	Q_strlcpy (level->name, name, sizeof(level->name));
 
 	//insert each entry in alphabetical order
     if (extralevels == NULL || stricmp(level->name, extralevels->name) < 0) //insert at front
@@ -360,7 +360,7 @@ void Modlist_Add (char *name)
 			return;
 
 	mod = Z_Malloc(sizeof(mod_t));
-	strcpy (mod->name, name);
+	Q_strlcpy (mod->name, name, sizeof(mod->name));
 
 	//insert each entry in alphabetical order
     if (modlist == NULL || _stricmp(mod->name, modlist->name) < 0) //insert at front
@@ -807,7 +807,7 @@ void Host_Map_f (void)
 	strcat (cls.mapstring, "\n");
 
 	svs.serverflags = 0;			// haven't completed an episode yet
-	strcpy (name, Cmd_Argv(1));
+	Q_strlcpy (name, Cmd_Argv(1), sizeof(name));
 
 	SV_SpawnServer (name, false);
 
@@ -816,12 +816,12 @@ void Host_Map_f (void)
 	
 	if (cls.state != ca_dedicated)
 	{
-		strcpy (cls.spawnparms, "");
+		Q_strlcpy (cls.spawnparms, "", sizeof(cls.spawnparms));
 
 		for (i=2 ; i<Cmd_Argc() ; i++)
 		{
-			strcat (cls.spawnparms, Cmd_Argv(i));
-			strcat (cls.spawnparms, " ");
+			Q_strlcat (cls.spawnparms, Cmd_Argv(i), sizeof(cls.spawnparms));
+			Q_strlcat (cls.spawnparms, " ", sizeof(cls.spawnparms));
 		}
 		
 		Cmd_ExecuteString ("connect local", src_command);
@@ -859,7 +859,7 @@ void Host_Changelevel_f (void)
 	//johnfitz
 
 	SV_SaveSpawnparms ();
-	strcpy (level, Cmd_Argv(1));
+	Q_strlcpy (level, Cmd_Argv(1), sizeof(level));
 	SV_SpawnServer (level, false);
 	// also issue an error if spawn failed -- O.S.
 	if (!sv.active)
@@ -882,7 +882,7 @@ void Host_Restart_f (void)
 
 	if (cmd_source != src_command)
 		return;
-	strcpy (mapname, sv.name);	// mapname gets cleared in spawnserver
+	Q_strlcpy (mapname, sv.name, sizeof(mapname));	// mapname gets cleared in spawnserver
 	SV_SpawnServer (mapname, true);
 	if (!sv.active)
 		Host_Error ("cannot restart map %s", mapname);
@@ -1164,7 +1164,7 @@ void Host_Loadgame_f (void)
 	{
 		fscanf (f, "%s\n", str);
 		sv.lightstyles[i] = Z_TagMalloc (strlen(str)+1, TAG_LEVEL);
-		strcpy (sv.lightstyles[i], str);
+		Q_strlcpy (sv.lightstyles[i], str, strlen(str));
 	}
 
 // load the edicts out of the savegame file
@@ -1268,7 +1268,7 @@ void Host_Name_f (void)
 	if (host_client->name[0] && strcmp(host_client->name, "unconnected") )
 		if (Q_strcmp(host_client->name, newName) != 0)
 			Com_Printf ("%s renamed to %s\n", host_client->name, newName);
-	Q_strcpy (host_client->name, newName);
+	Q_strlcpy (host_client->name, newName, sizeof(host_client->name));
 	host_client->edict->v.netname = host_client->name - pr_strings;
 	
 // send notification to all clients
@@ -1381,8 +1381,8 @@ void Host_Tell_f(void)
 	if (Cmd_Argc () < 3)
 		return;
 
-	Q_strcpy(text, host_client->name);
-	Q_strcat(text, ": ");
+	Q_strlcpy(text, host_client->name, sizeof(text));
+	Q_strlcat(text, ": ", sizeof(text));
 
 	p = Cmd_Args();
 

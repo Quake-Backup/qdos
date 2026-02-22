@@ -433,7 +433,7 @@ void Sbar_SortTeams (void)
 			}
 		if (j == scoreboardteams) { // must add him
 			j = scoreboardteams++;
-			strcpy(teams[j].team, t);
+			Q_strlcpy(teams[j].team, t, sizeof(teams[j].team));
 			teams[j].frags = s->frags;
 			teams[j].players = 1;
 addpinginfo:

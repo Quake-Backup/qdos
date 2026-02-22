@@ -358,15 +358,15 @@ void TTY_SetComPortConfig (int portNumber, int port, int irq, int baud, qboolean
 	Cvar_SetValue ("_config_com_modem", temp);
 }
 
-void TTY_GetModemConfig (int portNumber, char *dialType, char *clear, char *init, char *hangup)
+void TTY_GetModemConfig (int portNumber, char *dialType, char *clear, char *init, char *hangup, size_t clearlen, size_t initlen, size_t hanguplen)
 {
 	ComPort	*p;
 
 	p = handleToPort[portNumber];
 	*dialType = p->dialType;
-	Q_strcpy(clear, p->clear);
-	Q_strcpy(init, p->startup);
-	Q_strcpy(hangup, p->shutdown);
+	Q_strlcpy(clear, p->clear, clearlen);
+	Q_strlcpy(init, p->startup, initlen);
+	Q_strlcpy(hangup, p->shutdown, hanguplen);
 }
 
 void TTY_SetModemConfig (int portNumber, char *dialType, char *clear, char *init, char *hangup)
@@ -375,9 +375,9 @@ void TTY_SetModemConfig (int portNumber, char *dialType, char *clear, char *init
 
 	p = handleToPort[portNumber];
 	p->dialType = dialType[0];
-	Q_strcpy(p->clear, clear);
-	Q_strcpy(p->startup, init);
-	Q_strcpy(p->shutdown, hangup);
+	Q_strlcpy(p->clear, clear, sizeof(p->clear));
+	Q_strlcpy(p->startup, init, sizeof(p->startup));
+	Q_strlcpy(p->shutdown, hangup, sizeof(p->shutdown));
 
 	p->modemInitialized = false;
 
@@ -397,9 +397,9 @@ static void ResetComPortConfig (ComPort *p)
 	p->modemStatusIgnore = MSR_CD | MSR_CTS | MSR_DSR;
 	p->baudBits = 115200 / 57600;
 	p->lineControl = LCR_DATA_BITS_8 | LCR_STOP_BITS_1 | LCR_PARITY_NONE;
-	Q_strcpy(p->clear, "ATZ");
-	Q_strcpy(p->startup, "");
-	Q_strcpy(p->shutdown, "AT H");
+	Q_strlcpy(p->clear, "ATZ", sizeof(p->clear));
+	Q_strlcpy(p->startup, "", sizeof(p->startup));
+	Q_strlcpy(p->shutdown, "AT H", sizeof(p->shutdown));
 	p->modemRang = false;
 	p->modemConnected = false;
 	p->statusUpdated = false;
@@ -651,7 +651,7 @@ failed:
 		key_dest = key_menu;
 		m_state = m_return_state;
 		m_return_onerror = false;
-		Q_strcpy(m_return_reason, "Initialization Failed");
+		Q_strlcpy(m_return_reason, "Initialization Failed", sizeof(m_return_reason));
 	}
 	return;
 }

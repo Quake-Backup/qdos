@@ -207,7 +207,6 @@ void MSG_ReadDeltaUsercmd (struct usercmd_s *from, struct usercmd_s *cmd);
 
 //============================================================================
 
-#define Q_strcpy(d, s) strcpy((d), (s))
 #define Q_strncpy(d, s, n) strncpy((d), (s), (n))
 #define Q_strlen(s) ((int)strlen(s))
 #define Q_strrchr(s, c) strrchr((s), (c))
@@ -227,8 +226,6 @@ void MSG_ReadDeltaUsercmd (struct usercmd_s *from, struct usercmd_s *cmd);
 
 #endif
 
-int	Q_atoi (char *str);
-float Q_atof (char *str);
 size_t Q_strlcpy (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 size_t Q_strlcat (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 

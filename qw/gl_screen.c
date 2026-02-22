@@ -742,7 +742,7 @@ void SCR_ScreenShot_f (void)
 // 
 // find a file name to save it to 
 // 
-	strcpy(pcxname,"quake00.tga");
+	Q_strlcpy(pcxname, "quake00.tga", sizeof(pcxname));
 		
 	for (i=0 ; i<=99 ; i++) 
 	{ 
@@ -1025,7 +1025,7 @@ void SCR_RSShot_f (void)
 	}
 
 	time(&now);
-	strcpy(st, ctime(&now));
+	Q_strlcpy(st, ctime(&now), sizeof(st));
 	st[strlen(st) - 1] = 0;
 	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 1, w);
 

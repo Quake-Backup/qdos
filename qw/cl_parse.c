@@ -1023,8 +1023,11 @@ void CL_ParseSoundlist (void)
 			break;
 		numsounds++;
 		if (numsounds == MAX_SOUNDS)
+		{
 			Host_EndGame ("Server sent too many sound_precache");
-		strcpy (cl.sound_name[numsounds], str);
+			return;
+		}
+		Q_strlcpy (cl.sound_name[numsounds], str, sizeof(cl.sound_name[numsounds]));
 	}
 
 	n = MSG_ReadByte();
@@ -1059,17 +1062,23 @@ void CL_ParseModellist (qboolean extended)
 		str = MSG_ReadString ();
 		if (!str[0])
 			break;
-		#if defined (PROTOCOL_VERSION_FTE) && defined (FTE_PEXT_MODELDBL)
+#if defined (PROTOCOL_VERSION_FTE) && defined (FTE_PEXT_MODELDBL)
 		nummodels++;
 		if (nummodels >= MAX_MODELS) //Spike: tweeked this, we still complain if the server exceeds the standard limit without using extensions.
+		{
 			Host_Error ("Server sent too many model_precache");
+			return;
+		}
 		
 		if (nummodels >= 256 && !(cls.fteprotocolextensions & FTE_PEXT_MODELDBL))
-		#else
+#else
 		if (++nummodels == MAX_MODELS)
-		#endif // PROTOCOL_VERSION_FTE
+#endif // PROTOCOL_VERSION_FTE
+		{
 			Host_EndGame ("Server sent too many model_precache");
-		strcpy (cl.model_name[nummodels], str);
+			return;
+		}
+		Q_strlcpy (cl.model_name[nummodels], str, sizeof(cl.model_name[nummodels]));
 
 		if (!strcmp(cl.model_name[nummodels],"progs/spike.mdl"))
 			cl_spikeindex = nummodels;
@@ -1319,7 +1328,7 @@ void CL_NewTranslation (int slot)
 
 	player = &cl.players[slot];
 
-	strcpy(s, Info_ValueForKey(player->userinfo, "skin"));
+	Q_strlcpy(s, Info_ValueForKey(player->userinfo, "skin"), sizeof(s));
 	COM_StripExtension(s, s);
 	if (player->skin && !stricmp(s, player->skin->name))
 		player->skin = NULL;
@@ -1682,8 +1691,11 @@ void CL_ParseServerMessage (void)
 		case svc_lightstyle:
 			i = MSG_ReadByte ();
 			if (i >= MAX_LIGHTSTYLES)
+			{
 				Sys_Error ("svc_lightstyle > MAX_LIGHTSTYLES");
-			Q_strcpy (cl_lightstyle[i].map,  MSG_ReadString());
+				return;
+			}
+			Q_strlcpy (cl_lightstyle[i].map,  MSG_ReadString(), sizeof(cl_lightstyle[i].map));
 			cl_lightstyle[i].length = Q_strlen(cl_lightstyle[i].map);
 			break;
 			
@@ -1700,21 +1712,30 @@ void CL_ParseServerMessage (void)
 			Sbar_Changed ();
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updatefrags > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].frags = MSG_ReadShort ();
 			break;			
 
 		case svc_updateping:
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updateping > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].ping = MSG_ReadShort ();
 			break;
 			
 		case svc_updatepl:
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updatepl > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].pl = MSG_ReadByte ();
 			break;
 			
@@ -1722,7 +1743,10 @@ void CL_ParseServerMessage (void)
 		// time is sent over as seconds ago
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updateentertime > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].entertime = realtime - MSG_ReadFloat ();
 			break;
 			
@@ -1778,9 +1802,7 @@ void CL_ParseServerMessage (void)
 		case svc_cdtrack:
 			/* FS: Stream from WAV or OGG if we can */
 			cl.cdtrack = MSG_ReadByte ();
-
 			CL_PlayBackgroundTrack(cl.cdtrack);
-
 			break;
 
 		case svc_intermission:
@@ -1943,14 +1965,14 @@ void CL_PlayBackgroundTrack (int track)
 	Com_sprintf (name, sizeof(name), "music/track%02i.", track);
 
 	p = name + strlen(name);
-	strcpy (p, "wav");
+	Q_strlcpy (p, "wav", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		Sys_FileClose(fakeHandle);
 		have_extmusic |= BGMUSIC_WAV;
 	}
 #ifdef OGG_SUPPORT
-	strcpy (p, "ogg");
+	Q_strlcpy (p, "ogg", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		Sys_FileClose(fakeHandle);
@@ -1961,13 +1983,13 @@ void CL_PlayBackgroundTrack (int track)
 	/* play whatever is found */
 	if ((have_extmusic&BGMUSIC_WAV) && (cl_wav_music->intValue || !(have_extmusic&BGMUSIC_OGG))) {
 		CDAudio_Stop();
-		strcpy (p, "wav");
+		Q_strlcpy (p, "wav", sizeof(name));
 		S_StartWAVBackgroundTrack(name, name);
 	}
 #ifdef OGG_SUPPORT
 	else if (have_extmusic&BGMUSIC_OGG) {
 		CDAudio_Stop();
-		strcpy (p, "ogg");
+		Q_strlcpy (p, "ogg", sizeof(name));
 		S_StartOGGBackgroundTrack(name, name);
 	}
 #endif

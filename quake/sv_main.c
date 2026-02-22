@@ -389,7 +389,7 @@ void SV_ConnectClient (int clientnum)
 	memset (client, 0, sizeof(*client));
 	client->netconnection = netconnection;
 
-	strcpy (client->name, "unconnected");
+	Q_strlcpy (client->name, "unconnected", sizeof(client->name));
 	client->active = true;
 	client->spawned = false;
 	client->edict = ent;
@@ -1360,7 +1360,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	//
 	Host_ClearMemory ();
 
-	strcpy (sv.name, server);
+	Q_strlcpy (sv.name, server, sizeof(sv.name));
 
 	sv.protocol = sv_protocol; // johnfitz
 
@@ -1397,7 +1397,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 
 	sv.time = 1.0;
    
-	strcpy (sv.name, server);
+	Q_strlcpy (sv.name, server, sizeof(sv.name));
 	sprintf (sv.modelname,"maps/%s.bsp", server);
 
 	sv.worldmodel = Mod_ForName (sv.modelname, false);

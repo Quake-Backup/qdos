@@ -283,7 +283,7 @@ static int add_section(char *instring, long offset)
 		if (field_buffers[i].section==current_section_buffer)
 			field_buffers[i].name[0]=0;
 	// Set buffer information
-	strcpy(section_buffers[current_section_buffer].name,section);
+	Q_strlcpy(section_buffers[current_section_buffer].name, section, sizeof(section_buffers[current_section_buffer].name));
 	section_buffers[current_section_buffer].offset=offset;
 	return(current_section_buffer);
 }
@@ -306,7 +306,7 @@ static void add_field(char *instring, int section, long offset)
 	if (current_field_buffer>NUM_FIELD_BUFFERS)
 		current_field_buffer=0;
 	// Set buffer information
-	strcpy(field_buffers[current_field_buffer].name,field);
+	Q_strlcpy(field_buffers[current_field_buffer].name, field, sizeof(field_buffers[current_field_buffer].name));
 	field_buffers[current_field_buffer].section=section;
 	field_buffers[current_field_buffer].offset=offset;
 }

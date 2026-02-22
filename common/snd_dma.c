@@ -368,7 +368,7 @@ sfx_t *S_FindName (char *name)
 
 	sfx = &known_sfx[i];
 	memset (sfx, 0, sizeof(*sfx));
-	strcpy (sfx->name, name);
+	Q_strlcpy (sfx->name, name, sizeof(sfx->name));
 
 	num_sfx++;
 
@@ -1000,13 +1000,15 @@ void S_Play(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+			Q_strlcat(name, ".wav", sizeof(name));
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+		{
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+		}
 		sfx = S_PrecacheSound(name);
 		S_StartSound(hash++, 0, sfx, listener_origin, 1.0, 1.0);
 		i++;
@@ -1023,13 +1025,15 @@ void S_Play2(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+			Q_strlcat(name, ".wav", sizeof(name));
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+		{
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+		}
 		sfx = S_PrecacheSound(name);
 		S_StartSound(hash++, 0, sfx, listener_origin, 1.0, 0.0);
 		i++;
@@ -1047,13 +1051,15 @@ void S_PlayVol(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+			Q_strlcat(name, ".wav", sizeof(name));
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+		{
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+		}
 		sfx = S_PrecacheSound(name);
 		vol = atof(Cmd_Argv(i+1));
 		S_StartSound(hash++, 0, sfx, listener_origin, vol, 1.0);

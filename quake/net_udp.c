@@ -120,8 +120,8 @@ int UDP_Init (void)
 	((struct sockaddr_in *)&broadcastaddr)->sin_port = htons(net_hostport);
 
 	UDP_GetSocketAddr (net_controlsocket, &addr);
-	Q_strcpy(my_tcpip_address,  UDP_AddrToString (&addr));
-	colon = Q_strrchr (my_tcpip_address, ':');
+	Q_strlcpy(my_tcpip_address,  UDP_AddrToString (&addr), sizeof(my_tcpip_address));
+	colon = strrchr (my_tcpip_address, ':');
 	if (colon)
 		*colon = 0;
 
@@ -225,7 +225,7 @@ static int PartialIPAddress (char *in, struct qsockaddr *hostaddr)
 	
 	buff[0] = '.';
 	b = buff;
-	strcpy(buff+1, in);
+	Q_strlcpy(buff+1, in, sizeof(buff));
 	if (buff[1] == '.')
 		b++;
 
@@ -395,18 +395,18 @@ int UDP_GetSocketAddr (int socket, struct qsockaddr *addr)
 
 //=============================================================================
 
-int UDP_GetNameFromAddr (struct qsockaddr *addr, char *name)
+int UDP_GetNameFromAddr (struct qsockaddr *addr, char *name, size_t namelen)
 {
 	struct hostent *hostentry;
 
 	hostentry = gethostbyaddr ((char *)&((struct sockaddr_in *)addr)->sin_addr, sizeof(struct in_addr), AF_INET);
 	if (hostentry)
 	{
-		Q_strncpy (name, (char *)hostentry->h_name, NET_NAMELEN - 1);
+		Q_strlcpy (name, (char *)hostentry->h_name, NET_NAMELEN - 1);
 		return 0;
 	}
 
-	Q_strcpy (name, UDP_AddrToString (addr));
+	Q_strlcpy (name, UDP_AddrToString (addr), NET_NAMELEN - 1);
 	return 0;
 }
 

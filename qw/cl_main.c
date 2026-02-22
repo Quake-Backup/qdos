@@ -578,7 +578,7 @@ void CL_Disconnect (void)
 		CL_Stop_f ();
 
 		final[0] = clc_stringcmd;
-		strcpy ((char *)final+1, "drop");
+		Q_strlcpy ((char *)final+1, "drop", sizeof(final));
 		Netchan_Transmit (&cls.netchan, 6, final);
 		Netchan_Transmit (&cls.netchan, 6, final);
 		Netchan_Transmit (&cls.netchan, 6, final);
@@ -724,25 +724,27 @@ Sent by server when serverinfo changes
 */
 void CL_FullServerinfo_f (void)
 {
-   char *p;
-   float v;
+	char *p;
+	float v;
 
-   if (Cmd_Argc() != 2)
-   {
-      Com_Printf ("usage: fullserverinfo <complete info string>\n");
-      return;
-   }
+	if (Cmd_Argc() != 2)
+	{
+		Com_Printf ("usage: fullserverinfo <complete info string>\n");
+		return;
+	}
 
-   strcpy (cl.serverinfo, Cmd_Argv(1));
+	Q_strlcpy (cl.serverinfo, Cmd_Argv(1), sizeof(cl.serverinfo));
 
-   if ((p = Info_ValueForKey(cl.serverinfo, "*vesion")) && *p) {
-      v = atof(p);
-      if (v) {
-         if (!server_version)
-            Com_Printf("Version %1.2f Server\n", v);
-         server_version = v;
-      }
-   }
+	if ((p = Info_ValueForKey(cl.serverinfo, "*vesion")) && *p)
+	{
+		v = atof(p);
+		if (v)
+		{
+			if (!server_version)
+				Com_Printf("Version %1.2f Server\n", v);
+			server_version = v;
+		}
+	}
 }
 
 /*

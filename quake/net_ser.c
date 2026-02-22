@@ -758,11 +758,11 @@ void Serial_SearchForHosts (qboolean xmit)
 		return;
 
 	sprintf(hostcache[hostCacheCount].name, "COM%u", n+1);
-	Q_strcpy(hostcache[hostCacheCount].map, "");
+	Q_strlcpy(hostcache[hostCacheCount].map, "", sizeof(hostcache[hostCacheCount].map));
 	hostcache[hostCacheCount].users = 0;
 	hostcache[hostCacheCount].maxusers = 0;
 	hostcache[hostCacheCount].driver = net_driverlevel;
-	Q_strcpy(hostcache[hostCacheCount].cname, "#");
+	Q_strlcpy(hostcache[hostCacheCount].cname, "#", sizeof(hostcache[hostCacheCount].cname));
 	hostCacheCount++;
 
 	return;

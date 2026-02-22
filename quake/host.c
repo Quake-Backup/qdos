@@ -921,8 +921,8 @@ void Host_Init (quakeparms_t *parms)
 	Cbuf_AddEarlyCommands (false);
 	Cbuf_Execute ();
 
-	COM_Init (parms->basedir);
-	Host_InitLocal ();
+	COM_Init();
+	Host_InitLocal();
 
 	/* FS: Read config now */
 	Cbuf_AddText("exec qdos.cfg\n");

@@ -193,7 +193,7 @@ model_t *Mod_FindName (char *name)
 		Sys_Error ("Mod_FindName: NULL name"); //johnfitz -- was "Mod_ForName"
 		return NULL;
 	}
-		
+
 //
 // search the currently loaded models
 //
@@ -208,7 +208,7 @@ model_t *Mod_FindName (char *name)
 			Sys_Error ("mod_numknown == MAX_MOD_KNOWN");
 			return NULL;
 		}
-		strcpy (mod->name, name);
+		Q_strlcpy (mod->name, name, sizeof(mod->name));
 		mod->registration_sequence = 666; /* FS: FIXME */
 		mod_numknown++;
 	}
@@ -279,7 +279,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		}
 		mod_numknown++;
 	}
-	strcpy (mod->name, name);
+	Q_strlcpy (mod->name, name, sizeof(mod->name));
 
 //
 // load the file
@@ -299,7 +299,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 //
 
 // call the apropriate loader
-	
+
 	switch (LittleLong(*(unsigned *)buf))
 	{
 	case IDPOLYHEADER:
@@ -1332,7 +1332,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 			Com_sprintf (name, sizeof(name), "*%i", i+1);
 			loadmodel = Mod_FindName (name);
 			*loadmodel = *mod;
-			strcpy (loadmodel->name, name);
+			Q_strlcpy (loadmodel->name, name, sizeof(loadmodel->name));
 			mod = loadmodel;
 		}
 	}
@@ -1363,7 +1363,7 @@ byte		player_8bit_texels[320*200];
 Mod_LoadAliasFrame
 =================
 */
-void * Mod_LoadAliasFrame (void * pin, maliasframedesc_t *frame)
+void *Mod_LoadAliasFrame (void * pin, maliasframedesc_t *frame)
 {
 	trivertx_t		*pinframe;
 	int				i;
@@ -1371,7 +1371,7 @@ void * Mod_LoadAliasFrame (void * pin, maliasframedesc_t *frame)
 	
 	pdaliasframe = (daliasframe_t *)pin;
 
-	strcpy (frame->name, pdaliasframe->name);
+	Q_strlcpy (frame->name, pdaliasframe->name, sizeof(frame->name));
 	frame->firstpose = posenum;
 	frame->numposes = 1;
 

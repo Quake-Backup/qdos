@@ -1085,8 +1085,11 @@ void CL_ParseServerMessage (void)
 			case svc_lightstyle:
 				i = MSG_ReadByte ();
 				if (i >= MAX_LIGHTSTYLES)
+				{
 					Sys_Error ("svc_lightstyle > MAX_LIGHTSTYLES");
-				Q_strcpy (cl_lightstyle[i].map,  MSG_ReadString());
+					return;
+				}
+				Q_strlcpy (cl_lightstyle[i].map,  MSG_ReadString(), sizeof(cl_lightstyle[i].map));
 				cl_lightstyle[i].length = Q_strlen(cl_lightstyle[i].map);
 				//johnfitz -- save extra info
 				if (cl_lightstyle[i].length)
@@ -1118,15 +1121,21 @@ void CL_ParseServerMessage (void)
 				Sbar_Changed ();
 				i = MSG_ReadByte ();
 				if (i >= cl.maxclients)
+				{
 					Host_Error ("CL_ParseServerMessage: svc_updatename > MAX_SCOREBOARD");
-				strcpy (cl.scores[i].name, MSG_ReadString ());
+					return;
+				}
+				Q_strlcpy (cl.scores[i].name, MSG_ReadString (), sizeof(cl.scores[i].name));
 				break;
 			
 			case svc_updatefrags:
 				Sbar_Changed ();
 				i = MSG_ReadByte ();
 				if (i >= cl.maxclients)
+				{
 					Host_Error ("CL_ParseServerMessage: svc_updatefrags > MAX_SCOREBOARD");
+					return;
+				}
 				cl.scores[i].frags = MSG_ReadShort ();
 				break;
 
@@ -1134,7 +1143,10 @@ void CL_ParseServerMessage (void)
 				Sbar_Changed ();
 				i = MSG_ReadByte ();
 				if (i >= cl.maxclients)
+				{
 					Host_Error ("CL_ParseServerMessage: svc_updatecolors > MAX_SCOREBOARD");
+					return;
+				}
 				cl.scores[i].colors = MSG_ReadByte ();
 				CL_NewTranslation (i);
 				break;
@@ -1175,14 +1187,17 @@ void CL_ParseServerMessage (void)
 			case svc_signonnum:
 				i = MSG_ReadByte ();
 				if (i <= cls.signon)
+				{
 					Host_Error ("Received signon %i when at %i", i, cls.signon);
+					return;
+				}
 				cls.signon = i;
 				//johnfitz -- if signonnum==2, signon packet has been fully parsed, so check for excessive static ents and efrags
 				if (i == 2)
 				{
 					if (cl.num_statics > 128)
 						Con_Warning ("%i static entities exceeds standard limit of 128.\n", cl.num_statics);
-//					R_CheckEfrags ();
+//					R_CheckEfrags (); /* FS: FIXME? */
 				}
 				//johnfitz
 				CL_SignonReply ();
@@ -1199,7 +1214,10 @@ void CL_ParseServerMessage (void)
 			case svc_updatestat:
 				i = MSG_ReadByte ();
 				if (i < 0 || i >= MAX_CL_STATS)
+				{
 					Sys_Error ("svc_updatestat: %i is invalid", i);
+					return;
+				}
 				cl.stats[i] = MSG_ReadLong ();;
 				break;
 			
@@ -1339,14 +1357,14 @@ void CL_PlayBackgroundTrack (int track)
 	Com_sprintf (name, sizeof(name), "music/track%02i.", track);
 
 	p = name + strlen(name);
-	strcpy (p, "wav");
+	Q_strlcpy (p, "wav", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		COM_CloseFile(fakeHandle);
 		have_extmusic |= BGMUSIC_WAV;
 	}
 #ifdef OGG_SUPPORT
-	strcpy (p, "ogg");
+	Q_strlcpy (p, "ogg", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		COM_CloseFile(fakeHandle);
@@ -1357,13 +1375,13 @@ void CL_PlayBackgroundTrack (int track)
 	/* play whatever is found */
 	if ((have_extmusic&BGMUSIC_WAV) && (cl_wav_music->intValue || !(have_extmusic&BGMUSIC_OGG))) {
 		CDAudio_Stop();
-		strcpy (p, "wav");
+		Q_strlcpy (p, "wav", sizeof(name));
 		S_StartWAVBackgroundTrack(name, name);
 	}
 #ifdef OGG_SUPPORT
 	else if (have_extmusic&BGMUSIC_OGG) {
 		CDAudio_Stop();
-		strcpy (p, "ogg");
+		Q_strlcpy (p, "ogg", sizeof(name));
 		S_StartOGGBackgroundTrack(name, name);
 	}
 #endif

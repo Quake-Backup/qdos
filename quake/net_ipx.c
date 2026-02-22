@@ -301,8 +301,8 @@ int IPX_Init(void)
 	SchedulePollProcedure(&pollProcedure, 0.01);
 
 	IPX_GetSocketAddr (net_controlsocket, &addr);
-	Q_strcpy(my_ipx_address,  IPX_AddrToString (&addr));
-	colon = Q_strrchr (my_ipx_address, ':');
+	Q_strlcpy(my_ipx_address,  IPX_AddrToString (&addr), sizeof(my_ipx_address));
+	colon = strrchr (my_ipx_address, ':');
 	if (colon)
 		*colon = 0;
 
@@ -653,9 +653,9 @@ int IPX_GetSocketAddr (int handle, struct qsockaddr *addr)
 
 //=============================================================================
 
-int IPX_GetNameFromAddr (struct qsockaddr *addr, char *name)
+int IPX_GetNameFromAddr (struct qsockaddr *addr, char *name, size_t namelen)
 {
-	Q_strcpy(name, IPX_AddrToString(addr));
+	Q_strlcpy(name, IPX_AddrToString(addr), namelen);
 	return 0;
 }
 
@@ -663,19 +663,19 @@ int IPX_GetNameFromAddr (struct qsockaddr *addr, char *name)
 
 int IPX_GetAddrFromName (char *name, struct qsockaddr *addr)
 {
-	int n;
+	size_t n;
 	char buf[32];
 
-	n = Q_strlen(name);
+	n = strlen(name);
 
 	if (n == 12)
 	{
-		sprintf(buf, "00000000:%s:%u", name, net_hostport);
+		Com_sprintf(buf, sizeof(buf), "00000000:%s:%u", name, net_hostport);
 		return IPX_StringToAddr (buf, addr);
 	}
 	if (n == 21)
 	{
-		sprintf(buf, "%s:%u", name, net_hostport);
+		Com_sprintf(buf, sizeof(buf), "%s:%u", name, net_hostport);
 		return IPX_StringToAddr (buf, addr);
 	}
 	if (n > 21 && n <= 27)

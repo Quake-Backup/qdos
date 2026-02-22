@@ -1584,7 +1584,9 @@ int COM_FindFile (const char *filename, int *handle, FILE **file)
 				
 		// see if the file needs to be updated in the cache
 			if (!com_cachedir[0])
-				strcpy (cachepath, netpath);
+			{
+				Q_strlcpy (cachepath, netpath, sizeof(cachepath));
+			}
 			else
 			{	
 #if defined(_WIN32)
@@ -1600,7 +1602,7 @@ int COM_FindFile (const char *filename, int *handle, FILE **file)
 			
 				if (cachetime < findtime)
 					COM_CopyFile (netpath, cachepath);
-				strcpy (netpath, cachepath);
+				Q_strlcpy (netpath, cachepath, sizeof(netpath));
 			}	
 
 			Sys_Printf ("FindFile: %s\n",netpath);
@@ -1831,13 +1833,13 @@ pack_t *COM_LoadPackFile (char *packfile)
 // parse the directory
 	for (i=0 ; i<numpackfiles ; i++)
 	{
-		strcpy (newfiles[i].name, info[i].name);
+		Q_strlcpy (newfiles[i].name, info[i].name, sizeof(newfiles[i].name));
 		newfiles[i].filepos = LittleLong(info[i].filepos);
 		newfiles[i].filelen = LittleLong(info[i].filelen);
 	}
 
 	pack = Z_Malloc (sizeof (pack_t));
-	strcpy (pack->filename, packfile);
+	Q_strlcpy (pack->filename, packfile, sizeof(pack->filename));
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
@@ -1857,7 +1859,7 @@ void COM_Dir_f (void)
 
 	if ( Cmd_Argc() != 1 )
 	{
-		strcpy( wildcard, Cmd_Argv( 1 ) );
+		Q_strlcpy( wildcard, Cmd_Argv( 1 ), sizeof(wildcard) );
 	}
 
 	while ( ( path = COM_NextPath( path ) ) != NULL )
@@ -1910,19 +1912,24 @@ void COM_AddGameDirectory (char *dir)
 	char			pakfile[MAX_OSPATH];
 	char			*p;
 
+	if (!dir)
+	{
+		return;
+	}
+
 	if ((p = strrchr(dir, '/')) != NULL)
-		strcpy(gamedirfile, ++p);
+		Q_strlcpy(gamedirfile, ++p, sizeof(gamedirfile));
 	else if ((p = strrchr(dir, '\\')) != NULL) /* FS: For -cddir */
-		strcpy(gamedirfile, ++p);
+		Q_strlcpy(gamedirfile, ++p, sizeof(gamedirfile));
 	else
-		strcpy(gamedirfile, p);
-	strcpy (com_gamedir, dir);
+		Q_strlcpy(gamedirfile, p, sizeof(gamedirfile));
+	Q_strlcpy (com_gamedir, dir, sizeof(com_gamedir));
 
 //
 // add the directory to the search path
 //
 	search = Z_Malloc (sizeof(searchpath_t));
-	strcpy (search->filename, dir);
+	Q_strlcpy (search->filename, dir, sizeof(search->filename));
 	search->next = com_searchpaths;
 	com_searchpaths = search;
 
@@ -1938,7 +1945,7 @@ void COM_AddGameDirectory (char *dir)
 		search = Z_Malloc (sizeof(searchpath_t));
 		search->pack = pak;
 		search->next = com_searchpaths;
-		com_searchpaths = search;		
+		com_searchpaths = search;
 	}
 
 }
@@ -1957,6 +1964,11 @@ void COM_Gamedir (char *dir)
 	pack_t			*pak;
 	char			pakfile[MAX_OSPATH];
 
+	if (!dir)
+	{
+		return;
+	}
+
 	if (strstr(dir, "..") || strchr(dir, '/')
 		|| strchr(dir, '\\') || strchr(dir, ':') )
 	{
@@ -1966,7 +1978,8 @@ void COM_Gamedir (char *dir)
 
 	if (!strcmp(gamedirfile, dir))
 		return;		// still the same
-	strcpy (gamedirfile, dir);
+
+	Q_strlcpy (gamedirfile, dir, sizeof(gamedirfile));
 
 	//
 	// free up any current game dir info
@@ -1993,7 +2006,7 @@ void COM_Gamedir (char *dir)
 	// add the directory to the search path
 	//
 	search = Z_Malloc (sizeof(searchpath_t));
-	strcpy (search->filename, com_gamedir);
+	Q_strlcpy (search->filename, com_gamedir, sizeof(search->filename));
 	search->next = com_searchpaths;
 	com_searchpaths = search;
 
@@ -2028,11 +2041,11 @@ void COM_InitFilesystem (void)
 //
 	i = COM_CheckParm ("-basedir");
 	if (i && i < com_argc-1)
-		strcpy (com_basedir, com_argv[i+1]);
+		Q_strlcpy (com_basedir, com_argv[i+1], sizeof(com_basedir));
 	else
-		strcpy (com_basedir, host_parms.basedir);
+		Q_strlcpy (com_basedir, host_parms.basedir, sizeof(com_basedir));
 
-	com_cachedir[0] = 0; /* FS */
+	com_cachedir[0] = '\0'; /* FS */
 
 //
 // start up with id1 by default

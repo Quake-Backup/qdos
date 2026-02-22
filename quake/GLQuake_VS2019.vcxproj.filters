@@ -291,6 +291,12 @@
     <ClCompile Include="net_ipx.c">
       <Filter>Source Files\DOS</Filter>
     </ClCompile>
+    <ClCompile Include="net_ser.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="net_dos.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="quake.ico">
