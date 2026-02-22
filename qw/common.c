@@ -2221,8 +2221,7 @@ void Info_RemovePrefixedKeys (char *start, char prefix)
 
 }
 
-
-void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize)
+void Info_SetValueForStarKey (char *s, char *key, const char *value, size_t maxsize)
 {
 	char	new[1024], *v;
 	int		c;
@@ -2266,9 +2265,9 @@ void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize
 	if (!value || !strlen(value))
 		return;
 
-	sprintf (new, "\\%s\\%s", key, value);
+	Com_sprintf (new, sizeof(new), "\\%s\\%s", key, value);
 
-	if ((int)(strlen(new) + strlen(s)) > maxsize)
+	if ((strlen(new) + strlen(s)) > maxsize)
 	{
 		Com_Printf ("Info string length exceeded\n");
 		return;
@@ -2304,7 +2303,7 @@ void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize
 	*s = 0;
 }
 
-void Info_SetValueForKey (char *s, char *key, char *value, int maxsize)
+void Info_SetValueForKey (char *s, char *key, char *value, size_t maxsize)
 {
 	if (key[0] == '*')
 	{

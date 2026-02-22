@@ -733,7 +733,7 @@ typedef struct _TargaHeader {
 SCR_ScreenShot_f
 ================== 
 */  
-void SCR_ScreenShot_f (void) 
+void SCR_ScreenShot_f (void)
 {
 	byte		*buffer;
 	char		pcxname[80]; 
@@ -748,7 +748,7 @@ void SCR_ScreenShot_f (void)
 	{ 
 		pcxname[5] = i/10 + '0'; 
 		pcxname[6] = i%10 + '0'; 
-		sprintf (checkname, "%s/%s", com_gamedir, pcxname);
+		Com_sprintf (checkname, sizeof(checkname), "%s/%s", com_gamedir, pcxname);
 		if (Sys_FileTime(checkname) == -1)
 			break;	// file doesn't exist
 	} 
@@ -760,6 +760,11 @@ void SCR_ScreenShot_f (void)
 
 
 	buffer = malloc(glwidth*glheight*3 + 18);
+	if (!buffer)
+	{
+		Sys_Error("SCR_ScreenShot_f: out of memory");
+		return;
+	}
 	memset (buffer, 0, 18);
 	buffer[2] = 2;		// uncompressed type
 	buffer[12] = glwidth&255;

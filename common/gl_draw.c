@@ -446,16 +446,16 @@ void Draw_Init (void)
 #ifdef QUAKE1
 	// hack the version number directly into the pic
 #if defined(__linux__)
-	sprintf (ver, "(Linux %2.2f, gl %4.2f) %4.2f", (float)LINUX_VERSION, (float)GLQUAKE_VERSION, (float)VERSION);
+	Com_sprintf (ver, sizeof(ver), "(Linux %2.2f, gl %4.2f) %4.2f", (float)LINUX_VERSION, (float)GLQUAKE_VERSION, (float)VERSION);
 #else
-	sprintf (ver, "(gl %4.2f) %4.2f", (float)GLQUAKE_VERSION, (float)VERSION);
+	Com_sprintf (ver, sizeof(ver), "(gl %4.2f) %4.2f", (float)GLQUAKE_VERSION, (float)VERSION);
 #endif // __linux__
 	dest = cb->data + 320*186 + 320 - 11 - 8*strlen(ver);
 	y = strlen(ver);
 	for (x=0 ; x<y ; x++)
 		Draw_CharToConback (ver[x], dest+(x<<3));
 #else
-	sprintf (ver, "%4.2f", VERSION);
+	Com_sprintf (ver, sizeof(ver), "%4.2f", VERSION);
 	dest = cb->data + 320 + 320*186 - 11 - 8*strlen(ver);
 	for (x=0 ; x<strlen(ver) ; x++)
 		Draw_CharToConback (ver[x], dest+(x<<3));
@@ -786,9 +786,9 @@ void Draw_ConsoleBackground (int lines)
 	y = lines-14;
 	if (!cls.download) {
 #ifdef __linux__
-		sprintf (ver, "LinuxGL (%4.2f) QuakeWorld", LINUX_VERSION);
+		Com_sprintf (ver, sizeof(ver), "LinuxGL (%4.2f) QuakeWorld", LINUX_VERSION);
 #else
-		sprintf (ver, "GL (%4.2f) QuakeWorld", GLQUAKE_VERSION);
+		Com_sprintf (ver, sizeof(ver), "GL (%4.2f) QuakeWorld", GLQUAKE_VERSION);
 #endif // __linux__
 		x = vid.conwidth - (strlen(ver)*8 + 11) - (vid.conwidth*8/320)*7;
 		for (i=0 ; i<strlen(ver) ; i++)

@@ -1541,14 +1541,14 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 		for (len = com_filesize, p = buffer; len; len--, p++)
 			CRC_ProcessByte(&crc, *p);
 	
-		sprintf(st, "%d", (int) crc);
+		Com_sprintf(st, sizeof(st), "%d", (int) crc);
 		Info_SetValueForKey (cls.userinfo, 
 			!strcmp(loadmodel->name, "progs/player.mdl") ? pmodel_name : emodel_name,
 			st, MAX_INFO_STRING);
 
 		if (cls.state >= ca_connected) {
 			MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
-			sprintf(st, "setinfo %s %d", 
+			Com_sprintf(st, sizeof(st), "setinfo %s %d", 
 				!strcmp(loadmodel->name, "progs/player.mdl") ? pmodel_name : emodel_name,
 				(int)crc);
 			SZ_Print (&cls.netchan.message, st);

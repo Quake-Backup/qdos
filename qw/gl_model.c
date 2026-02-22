@@ -976,7 +976,7 @@ void Mod_LoadLeafs (lump_t *l)
 
 	loadmodel->leafs = out;
 	loadmodel->numleafs = count;
-	sprintf(s, "maps/%s.bsp", Info_ValueForKey(cl.serverinfo,"map"));
+	Com_sprintf(s, sizeof(s), "maps/%s.bsp", Info_ValueForKey(cl.serverinfo,"map"));
 	if (!strcmp(s, loadmodel->name))
 		isnotmap = false;
 	for ( i=0 ; i<count ; i++, in++, out++)
@@ -1558,7 +1558,7 @@ void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 				}
 				memcpy (player_8bit_texels, (byte *)(pskintype + 1), s);
 			}
-			sprintf (name, "%s_%i", loadmodel->name, i);
+			Com_sprintf (name, sizeof(name), "%s_%i", loadmodel->name, i);
 			pheader->gl_texturenum[i][0] =
 			pheader->gl_texturenum[i][1] =
 			pheader->gl_texturenum[i][2] =
@@ -1578,7 +1578,7 @@ void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 			for (j=0 ; j<groupskins ; j++)
 			{
 					Mod_FloodFillSkin( skin, pheader->skinwidth, pheader->skinheight );
-					sprintf (name, "%s_%i_%i", loadmodel->name, i,j);
+					Com_sprintf (name, sizeof(name), "%s_%i_%i", loadmodel->name, i,j);
 					pheader->gl_texturenum[i][j&3] = 
 						GL_LoadTexture (name, pheader->skinwidth, 
 						pheader->skinheight, (byte *)(pskintype), true, false);
@@ -1623,14 +1623,14 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 		for (len = com_filesize, p = buffer; len; len--, p++)
 			CRC_ProcessByte(&crc, *p);
 	
-		sprintf(st, "%d", (int) crc);
+		Com_sprintf(st, sizeof(st), "%d", (int) crc);
 		Info_SetValueForKey (cls.userinfo, 
 			!strcmp(loadmodel->name, "progs/player.mdl") ? pmodel_name : emodel_name,
 			st, MAX_INFO_STRING);
 
 		if (cls.state >= ca_connected) {
 			MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
-			sprintf(st, "setinfo %s %d", 
+			Com_sprintf(st, sizeof(st), "setinfo %s %d", 
 				!strcmp(loadmodel->name, "progs/player.mdl") ? pmodel_name : emodel_name,
 				(int)crc);
 			SZ_Print (&cls.netchan.message, st);
@@ -1823,7 +1823,7 @@ void * Mod_LoadSpriteFrame (void * pin, mspriteframe_t **ppframe, int framenum)
 	pspriteframe->left = origin[0];
 	pspriteframe->right = width + origin[0];
 
-	sprintf (name, "%s_%i", loadmodel->name, framenum);
+	Com_sprintf (name, sizeof(name), "%s_%i", loadmodel->name, framenum);
 	pspriteframe->gl_texturenum = GL_LoadTexture (name, width, height, (byte *)(pinframe + 1), true, true);
 
 	return (void *)((byte *)pinframe + sizeof (dspriteframe_t) + size);

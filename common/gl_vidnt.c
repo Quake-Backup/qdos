@@ -1167,7 +1167,7 @@ char *VID_GetModeDescription (int mode)
 	}
 	else
 	{
-		sprintf (temp, "Desktop resolution (%dx%d)",
+		Com_sprintf (temp, sizeof(temp), "Desktop resolution (%dx%d)",
 				 modelist[MODE_FULLSCREEN_DEFAULT].width,
 				 modelist[MODE_FULLSCREEN_DEFAULT].height);
 		pinfo = temp;
@@ -1192,11 +1192,11 @@ char *VID_GetExtModeDescription (int mode)
 	{
 		if (!leavecurrentmode)
 		{
-			sprintf(pinfo,"%s fullscreen", pv->modedesc);
+			Com_sprintf(pinfo, sizeof(pinfo), "%s fullscreen", pv->modedesc);
 		}
 		else
 		{
-			sprintf (pinfo, "Desktop resolution (%dx%d)",
+			Com_sprintf(pinfo, sizeof(pinfo), "Desktop resolution (%dx%d)",
 					 modelist[MODE_FULLSCREEN_DEFAULT].width,
 					 modelist[MODE_FULLSCREEN_DEFAULT].height);
 		}
@@ -1204,9 +1204,9 @@ char *VID_GetExtModeDescription (int mode)
 	else
 	{
 		if (modestate == MS_WINDOWED)
-			sprintf(pinfo, "%s windowed", pv->modedesc);
+			Com_sprintf(pinfo, sizeof(pinfo), "%s windowed", pv->modedesc);
 		else
-			sprintf(pinfo, "windowed");
+			Com_sprintf(pinfo, sizeof(pinfo), "windowed");
 	}
 
 	return pinfo;
@@ -1323,7 +1323,7 @@ void VID_InitDIB (HINSTANCE hInstance)
 	if (modelist[0].height < 240)
 		modelist[0].height = 240;
 
-	sprintf (modelist[0].modedesc, "%dx%d",
+	Com_sprintf (modelist[0].modedesc, sizeof(modelist[0].modedesc, ), "%dx%d",
 			 modelist[0].width, modelist[0].height);
 
 	modelist[0].modenum = MODE_WINDOWED;
@@ -1376,7 +1376,7 @@ void VID_InitFullDIB (HINSTANCE hInstance)
 				modelist[nummodes].dib = 1;
 				modelist[nummodes].fullscreen = 1;
 				modelist[nummodes].bpp = devmode.dmBitsPerPel;
-				sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+				Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 						 devmode.dmPelsWidth, devmode.dmPelsHeight,
 						 devmode.dmBitsPerPel);
 
@@ -1388,7 +1388,7 @@ void VID_InitFullDIB (HINSTANCE hInstance)
 					{
 						modelist[nummodes].width >>= 1;
 						modelist[nummodes].halfscreen = 1;
-						sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+						Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 								 modelist[nummodes].width,
 								 modelist[nummodes].height,
 								 modelist[nummodes].bpp);
@@ -1441,7 +1441,7 @@ void VID_InitFullDIB (HINSTANCE hInstance)
 				modelist[nummodes].dib = 1;
 				modelist[nummodes].fullscreen = 1;
 				modelist[nummodes].bpp = devmode.dmBitsPerPel;
-				sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+				Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 						 devmode.dmPelsWidth, devmode.dmPelsHeight,
 						 devmode.dmBitsPerPel);
 
@@ -1654,7 +1654,13 @@ void	VID_Init (unsigned char *palette)
 				}
 
 				if (COM_CheckParm("-height"))
-					height = atoi(com_argv[COM_CheckParm("-height")+1]);
+				{
+					height = atoi(com_argv[COM_CheckParm("-height") + 1]);
+				}
+				else
+				{
+					height = 480;
+				}
 
 			// if they want to force it, add the specified mode to the list
 				if (COM_CheckParm("-force") && (nummodes < MAX_MODE_LIST))
@@ -1667,7 +1673,7 @@ void	VID_Init (unsigned char *palette)
 					modelist[nummodes].dib = 1;
 					modelist[nummodes].fullscreen = 1;
 					modelist[nummodes].bpp = bpp;
-					sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+					Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 							 devmode.dmPelsWidth, devmode.dmPelsHeight,
 							 devmode.dmBitsPerPel);
 
@@ -1816,7 +1822,7 @@ void	VID_Init (unsigned char *palette)
 
 	GL_Init();
 
-	sprintf (gldir, "%s/glquake", com_gamedir);
+	Com_sprintf (gldir, sizeof(gldir), "%s/glquake", com_gamedir);
 	Sys_mkdir (gldir);
 
 	vid_realmode = vid_modenum;

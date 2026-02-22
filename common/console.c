@@ -843,7 +843,7 @@ void Con_DrawConsole (int lines)
 		dlbar[i++] = '\x82';
 		dlbar[i] = 0;
 
-//		sprintf(dlbar + strlen(dlbar), " %02d%%", cls.downloadpercent);
+//		Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar), " %02d%%", cls.downloadpercent);
 		if (cls.downloadrate > 0.0f)
 			Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar)-strlen(dlbar), " %2d%% (%4.2fKB/s)", cls.downloadpercent, cls.downloadrate);
 		else
@@ -892,7 +892,7 @@ void Con_DrawConsole (int lines)
 		dlbar[i++] = '\x82';
 		dlbar[i] = 0;
 
-		sprintf(dlbar + strlen(dlbar), " %02d%%", cls.gamespypercent);
+		Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar), " %02d%%", cls.gamespypercent);
 
 		// draw it
 		y = con_vislines-22 + 8;
