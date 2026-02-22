@@ -402,11 +402,11 @@ int UDP_GetNameFromAddr (struct qsockaddr *addr, char *name, size_t namelen)
 	hostentry = gethostbyaddr ((char *)&((struct sockaddr_in *)addr)->sin_addr, sizeof(struct in_addr), AF_INET);
 	if (hostentry)
 	{
-		Q_strlcpy (name, (char *)hostentry->h_name, NET_NAMELEN - 1);
+		Q_strlcpy (name, (char *)hostentry->h_name, namelen);
 		return 0;
 	}
 
-	Q_strlcpy (name, UDP_AddrToString (addr), NET_NAMELEN - 1);
+	Q_strlcpy (name, UDP_AddrToString (addr), namelen);
 	return 0;
 }
 

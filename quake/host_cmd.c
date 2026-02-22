@@ -1162,9 +1162,11 @@ void Host_Loadgame_f (void)
 
 	for (i=0 ; i<MAX_LIGHTSTYLES ; i++)
 	{
+		size_t len;
 		fscanf (f, "%s\n", str);
-		sv.lightstyles[i] = Z_TagMalloc (strlen(str)+1, TAG_LEVEL);
-		Q_strlcpy (sv.lightstyles[i], str, strlen(str));
+		len = strlen(str) + 1;
+		sv.lightstyles[i] = Z_TagMalloc (len, TAG_LEVEL);
+		Q_strlcpy (sv.lightstyles[i], str, len);
 	}
 
 // load the edicts out of the savegame file

@@ -446,8 +446,8 @@ void Key_Console (int key)
 				clipText = GlobalLock(th);
 				if (clipText)
 				{
-					size_t len = GlobalSize(th);
-					textCopied = malloc(len+1);
+					size_t len = GlobalSize(th)+1;
+					textCopied = malloc(len);
 					if (!textCopied)
 					{
 						Sys_Error("Key_Console: out of memory");
