@@ -154,7 +154,7 @@ char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave)
 	if (findhandle != 0)
 		return NULL;
 	if (CompareAttributes(&finddata, musthave, canthave)) {
-		sprintf (findpath, "%s/%s", findbase, finddata.ff_name);
+		Com_sprintf (findpath, sizeof(findpath), "%s/%s", findbase, finddata.ff_name);
 		return findpath;
 	}
 	return Sys_FindNext(musthave, canthave);
@@ -167,7 +167,7 @@ char *Sys_FindNext (unsigned musthave, unsigned canthave)
 
 	while (findnext(&finddata) == 0) {
 		if (CompareAttributes(&finddata, musthave, canthave)) {
-			sprintf (findpath, "%s/%s", findbase, finddata.ff_name);
+			Com_sprintf (findpath, sizeof(findpath), "%s/%s", findbase, finddata.ff_name);
 			return findpath;
 		}
 	}

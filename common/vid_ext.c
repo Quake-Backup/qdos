@@ -360,13 +360,13 @@ void VID_InitExtra (void)
 			{
 				if (modeinfo.height > 999)
 				{
-					sprintf (&names[nummodes][0], "%4dx%4d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%4dx%4d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][9] = 0;
 				}
 				else
 				{
-					sprintf (&names[nummodes][0], "%4dx%3d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%4dx%3d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][8] = 0;
 				}
@@ -375,13 +375,13 @@ void VID_InitExtra (void)
 			{
 				if (modeinfo.height > 999)
 				{
-					sprintf (&names[nummodes][0], "%3dx%4d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%3dx%4d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][8] = 0;
 				}
 				else
 				{
-					sprintf (&names[nummodes][0], "%3dx%3d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%3dx%3d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][7] = 0;
 				}

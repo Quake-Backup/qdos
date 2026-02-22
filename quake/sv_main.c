@@ -147,7 +147,7 @@ void SV_Init (void)
 	Cmd_AddCommand ("sv_protocol", &SV_Protocol_f); //johnfitz
 
 	for (i=0 ; i<MAX_MODELS ; i++)
-		sprintf (localmodels[i], "*%i", i);
+		Com_sprintf (localmodels[i], sizeof(localmodels[i]), "*%i", i);
 }
 
 /*
@@ -324,7 +324,7 @@ void SV_SendServerinfo (client_t *client)
 	else
 		MSG_WriteByte (&client->message, GAME_COOP);
 
-	sprintf (message, "%s", pr_strings + sv.edicts->v.message);
+	Com_sprintf (message, sizeof(message), "%s", pr_strings + sv.edicts->v.message);
 
 	MSG_WriteString (&client->message,message);
 
@@ -1354,7 +1354,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 		current_skill = 3;
 
 	Cvar_SetValue ("skill", (float)current_skill);
-   
+
 	//
 	// set up the new server
 	//
@@ -1374,15 +1374,15 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	sv.datagram.maxsize = sizeof(sv.datagram_buf);
 	sv.datagram.cursize = 0;
 	sv.datagram.data = sv.datagram_buf;
-   
+
 	sv.reliable_datagram.maxsize = sizeof(sv.reliable_datagram_buf);
 	sv.reliable_datagram.cursize = 0;
 	sv.reliable_datagram.data = sv.reliable_datagram_buf;
-   
+
 	sv.signon.maxsize = sizeof(sv.signon_buf);
 	sv.signon.cursize = 0;
 	sv.signon.data = sv.signon_buf;
-   
+
 	// leave slots at start for clients only
 	sv.num_edicts = svs.maxclients+1;
 
@@ -1391,14 +1391,14 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 		ent = EDICT_NUM(i+1);
 		svs.clients[i].edict = ent;
 	}
-   
+
 	sv.state = ss_loading;
 	sv.paused = false;
 
 	sv.time = 1.0;
-   
+
 	Q_strlcpy (sv.name, server, sizeof(sv.name));
-	sprintf (sv.modelname,"maps/%s.bsp", server);
+	Com_sprintf (sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", server);
 
 	sv.worldmodel = Mod_ForName (sv.modelname, false);
 
@@ -1410,12 +1410,12 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	}
 
 	sv.models[1] = sv.worldmodel;
-   
+
 	//
 	// clear world interaction links
 	//
 	SV_ClearWorld ();
-   
+
 	sv.sound_precache[0] = pr_strings;
 
 	sv.model_precache[0] = pr_strings;
@@ -1484,7 +1484,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 
 	// all setup is completed, any further precache statements are errors
 	sv.state = ss_active;
-   
+
 	// run two frames to allow everything to settle
 	host_frametime = 0.1;
 	SV_Physics ();
@@ -1502,7 +1502,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	for (i=0,host_client = svs.clients ; i<svs.maxclients ; i++, host_client++)
 		if (host_client->active)
 			SV_SendServerinfo (host_client);
-   
+
 	Com_DPrintf(DEVELOPER_MSG_SERVER, "Server spawned.\n");
 
 	if (!loadgame && svs.maxclients == 1 && !deathmatch->intValue && !coop->intValue)

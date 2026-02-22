@@ -1323,7 +1323,7 @@ void VID_InitDIB (HINSTANCE hInstance)
 	if (modelist[0].height < 240)
 		modelist[0].height = 240;
 
-	Com_sprintf (modelist[0].modedesc, sizeof(modelist[0].modedesc, ), "%dx%d",
+	Com_sprintf (modelist[0].modedesc, sizeof(modelist[0].modedesc), "%dx%d",
 			 modelist[0].width, modelist[0].height);
 
 	modelist[0].modenum = MODE_WINDOWED;

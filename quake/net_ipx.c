@@ -588,7 +588,7 @@ char *IPX_AddrToString (struct qsockaddr *addr)
 {
 	static char buf[28];
 
-	sprintf(buf, "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%u",
+	Com_sprintf(buf, sizeof(buf), "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%u",
 		((struct sockaddr_ipx *)addr)->sipx_addr.network[0],
 		((struct sockaddr_ipx *)addr)->sipx_addr.network[1],
 		((struct sockaddr_ipx *)addr)->sipx_addr.network[2],
