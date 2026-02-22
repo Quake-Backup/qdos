@@ -461,7 +461,7 @@ void Key_Console (int key)
 						i=MAXCMDLINE-key_linepos;
 					if (i>0) {
 						textCopied[i]=0;
-						strcat(key_lines[edit_line], textCopied);
+						Q_strlcat(key_lines[edit_line], textCopied, sizeof(key_lines[edit_line]));
 						key_linepos+=i;;
 					}
 					free(textCopied);
@@ -757,9 +757,9 @@ void Key_Bind_f (void)
 	cmd[0] = 0;		// start out with a null string
 	for (i=2 ; i< c ; i++)
 	{
-		strcat (cmd, Cmd_Argv(i));
+		Q_strlcat (cmd, Cmd_Argv(i), sizeof(cmd));
 		if (i != (c-1))
-			strcat (cmd, " ");
+			Q_strlcat (cmd, " ", sizeof(cmd));
 	}
 
 	Key_SetBinding (b, cmd);

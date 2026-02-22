@@ -801,10 +801,10 @@ void Host_Map_f (void)
 
 	for (i=0 ; i<Cmd_Argc() ; i++)
 	{
-		strcat (cls.mapstring, Cmd_Argv(i));
-		strcat (cls.mapstring, " ");
+		Q_strlcat (cls.mapstring, Cmd_Argv(i), sizeof(cls.mapstring));
+		Q_strlcat (cls.mapstring, " ", sizeof(cls.mapstring));
 	}
-	strcat (cls.mapstring, "\n");
+	Q_strlcat (cls.mapstring, "\n", sizeof(cls.mapstring));
 
 	svs.serverflags = 0;			// haven't completed an episode yet
 	Q_strlcpy (name, Cmd_Argv(1), sizeof(name));
@@ -1042,7 +1042,7 @@ void Host_Savegame_f (void)
 	}
 
 	Com_sprintf (name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
-	COM_DefaultExtension (name, ".sav");
+	COM_DefaultExtension (name, ".sav", sizeof(name));
 	
 	Com_Printf ("Saving game to %s...\n", name);
 	f = fopen (name, "w");
@@ -1113,7 +1113,7 @@ void Host_Loadgame_f (void)
 	cls.demonum = -1;		// stop demo loop in case this fails
 
 	Com_sprintf (name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
-	COM_DefaultExtension (name, ".sav");
+	COM_DefaultExtension (name, ".sav", sizeof(name));
 	
 // we can't call SCR_BeginLoadingPlaque, because too much stack space has
 // been used.  The menu calls it before stuffing loadgame command
@@ -1336,8 +1336,8 @@ void Host_Say(qboolean teamonly)
 	if (Q_strlen(p) > j)
 		p[j] = 0;
 
-	strcat (text, p);
-	strcat (text, "\n");
+	Q_strlcat (text, p, sizeof(text));
+	Q_strlcat (text, "\n", sizeof(text));
 
 	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
 	{
@@ -1400,8 +1400,8 @@ void Host_Tell_f(void)
 	if (Q_strlen(p) > j)
 		p[j] = 0;
 
-	strcat (text, p);
-	strcat (text, "\n");
+	Q_strlcat (text, p, sizeof(text));
+	Q_strlcat (text, "\n", sizeof(text));
 
 	save = host_client;
 	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)

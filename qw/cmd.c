@@ -213,6 +213,7 @@ void Cmd_StuffCmds_f (void)
 	int		i, j;
 	int		s;
 	char	*text, *build, c;
+	size_t	len;
 		
 // build the combined string to parse from
 	s = 0;
@@ -225,19 +226,21 @@ void Cmd_StuffCmds_f (void)
 	if (!s)
 		return;
 		
-	text = Z_Malloc (s+1);
+	len = s + 1;
+
+	text = Z_Malloc (len);
 	text[0] = 0;
 	for (i=1 ; i<com_argc ; i++)
 	{
 		if (!com_argv[i])
 			continue;		// NEXTSTEP nulls out -NXHost
-		Q_strcat (text,com_argv[i]);
+		Q_strlcat (text, com_argv[i], len);
 		if (i != com_argc-1)
-			Q_strcat (text, " ");
+			Q_strlcat (text, " ", len);
 	}
 	
 // pull out the commands
-	build = Z_Malloc (s+1);
+	build = Z_Malloc (len);
 	build[0] = 0;
 	
 	for (i=0 ; i<s-1 ; i++)
@@ -252,8 +255,8 @@ void Cmd_StuffCmds_f (void)
 			c = text[j];
 			text[j] = 0;
 			
-			Q_strcat (build, text+i);
-			Q_strcat (build, "\n");
+			Q_strlcat (build, text+i, len);
+			Q_strlcat (build, "\n", len);
 			text[j] = c;
 			i = j-1;
 		}
@@ -392,11 +395,11 @@ void Cmd_Alias_f (void)
 		c = Cmd_Argc();
 		for (i=2 ; i< c ; i++)
 		{
-			strcat (cmd, Cmd_Argv(i));
+			Q_strlcat (cmd, Cmd_Argv(i), sizeof(cmd));
 			if (i != c)
-				strcat (cmd, " ");
+				Q_strlcat (cmd, " ", sizeof(cmd));
 		}
-		strcat (cmd, "\n");
+		Q_strlcat (cmd, "\n", sizeof(cmd));
 
 		a->value = strdup (cmd);
 		if (!a->value)

@@ -363,7 +363,7 @@ void CL_SendConnectPacket (
 		char tmp[128];
 		Com_sprintf(tmp, sizeof(tmp), "0x%x 0x%x\n", PROTOCOL_VERSION_FTE, cls.fteprotocolextensions);
 		Com_DPrintf(DEVELOPER_MSG_NET, "0x%x is fte protocol ver and 0x%x is fteprotocolextensions\n", PROTOCOL_VERSION_FTE, cls.fteprotocolextensions);
-		strcat(data, tmp);
+		Q_strlcat(data, tmp, sizeof(data));
 	}
 #endif // PROTOCOL_VERSION_FTE 
 	NET_SendPacket (strlen(data), data, adr);
@@ -460,51 +460,51 @@ CL_Rcon_f
 */
 void CL_Rcon_f (void)
 {
-   char  message[1024];
-   int      i;
-   netadr_t to;
+	char		message[1024];
+	int			i;
+	netadr_t	to;
 
-   if (!rcon_password->string)
-   {
-      Com_Printf ("You must set 'rcon_password' before\n"
-               "issuing an rcon command.\n");
-      return;
-   }
+	if (!rcon_password->string)
+	{
+		Com_Printf ("You must set 'rcon_password' before\n"
+				"issuing an rcon command.\n");
+		return;
+	}
 
-   message[0] = 255;
-   message[1] = 255;
-   message[2] = 255;
-   message[3] = 255;
-   message[4] = 0;
+	message[0] = 255;
+	message[1] = 255;
+	message[2] = 255;
+	message[3] = 255;
+	message[4] = 0;
 
-   strcat (message, "rcon ");
+	Q_strlcat (message, "rcon ", sizeof(message));
 
-   strcat (message, rcon_password->string);
-   strcat (message, " ");
+	Q_strlcat (message, rcon_password->string, sizeof(message));
+	Q_strlcat (message, " ", sizeof(message));
 
-   for (i=1 ; i<Cmd_Argc() ; i++)
-   {
-      strcat (message, Cmd_Argv(i));
-      strcat (message, " ");
-   }
+	for (i=1 ; i<Cmd_Argc() ; i++)
+	{
+		Q_strlcat (message, Cmd_Argv(i), sizeof(message));
+		Q_strlcat (message, " ", sizeof(message));
+	}
 
-   if (cls.state >= ca_connected)
-      to = cls.netchan.remote_address;
-   else
-   {
-      if (!strlen(rcon_address->string))
-      {
-         Com_Printf ("You must either be connected,\n"
-                  "or set the 'rcon_address' cvar\n"
-                  "to issue rcon commands\n");
+	if (cls.state >= ca_connected)
+		to = cls.netchan.remote_address;
+	else
+	{
+		if (!strlen(rcon_address->string))
+		{
+			Com_Printf ("You must either be connected,\n"
+					"or set the 'rcon_address' cvar\n"
+					"to issue rcon commands\n");
 
-         return;
-      }
-      NET_StringToAdr (rcon_address->string, &to);
-   }
-   
-   NET_SendPacket (strlen(message)+1, message
-      , to);
+			return;
+		}
+		NET_StringToAdr (rcon_address->string, &to);
+	}
+
+	NET_SendPacket (strlen(message)+1, message
+		, to);
 }
 
 

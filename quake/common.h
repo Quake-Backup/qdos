@@ -186,7 +186,7 @@ void COM_InitArgv (int argc, char **argv);
 char *COM_SkipPath (char *pathname);
 void COM_StripExtension (char *in, char *out);
 void COM_FilePath (char *in, char *out);
-void COM_DefaultExtension (char *path, const char *extension);
+void COM_DefaultExtension (char *path, const char *extension, size_t pathlen);
 
 // does a varargs printf into a temp buffer
 char	*va(const char *format, ...) ATTRIBUTE_PRINTF(1, 2);
