@@ -594,7 +594,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 {
 	quakeparms_t	parms;
 	double			time, oldtime, newtime;
-	MEMORYSTATUSEX	lpBuffer;
+	MEMORYSTATUS	lpBuffer;
 	static	char	cwd[1024];
 	RECT			rect;
 	int	t = 0;
@@ -606,8 +606,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	global_hInstance = hInstance;
 	global_nCmdShow = nCmdShow;
 
-	lpBuffer.dwLength = sizeof(MEMORYSTATUSEX);
-	GlobalMemoryStatusEx (&lpBuffer);
+	lpBuffer.dwLength = sizeof(MEMORYSTATUS);
+	GlobalMemoryStatus (&lpBuffer);
 
 	if (!GetCurrentDirectory (sizeof(cwd), cwd))
 		Sys_Error ("Couldn't determine current directory");
@@ -682,13 +682,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 // take the greater of all the available memory or half the total memory,
 // but at least 8 Mb and no more than 16 Mb, unless they explicitly
 // request otherwise
-	parms.memsize = lpBuffer.ullAvailPhys;
+	parms.memsize = lpBuffer.dwAvailPhys;
 
 	if (parms.memsize < MINIMUM_WIN_MEMORY)
 		parms.memsize = MINIMUM_WIN_MEMORY;
 
-	if (parms.memsize < (lpBuffer.ullTotalPhys >> 1))
-		parms.memsize = lpBuffer.ullTotalPhys >> 1;
+	if (parms.memsize < (lpBuffer.dwTotalPhys >> 1))
+		parms.memsize = lpBuffer.dwTotalPhys >> 1;
 
 	tevent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
