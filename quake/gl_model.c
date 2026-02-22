@@ -773,7 +773,12 @@ void Mod_LoadTexinfo (lump_t *l)
 			if (out->flags & TEX_SPECIAL)
 				out->texture = loadmodel->textures[loadmodel->numtextures-1];
 			else
-				out->texture = loadmodel->textures[loadmodel->numtextures-2];
+			{
+				if (loadmodel->numtextures > 1)
+					out->texture = loadmodel->textures[loadmodel->numtextures-2];
+				else
+					out->texture = loadmodel->textures[0]; /* FS: Crashes on QD100QST2's blank.bsp. */
+			}
 			out->flags |= TEX_MISSING;
 			missing++;
 		}
