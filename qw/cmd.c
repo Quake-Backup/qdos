@@ -560,13 +560,14 @@ void Cmd_TokenizeString (char *text)
 
 		if (cmd_argc < MAX_ARGS)
 		{
-			cmd_argv[cmd_argc] = malloc (Q_strlen(com_token)+1);
+			size_t len = Q_strlen(com_token)+1;
+			cmd_argv[cmd_argc] = malloc (len);
 			if (!cmd_argv[cmd_argc])
 			{
 				Sys_Error("Cmd_TokenizeString: out of memory");
 				return;
 			}
-			Q_strlcpy (cmd_argv[cmd_argc], com_token, sizeof(cmd_argv[cmd_argc]));
+			Q_strlcpy (cmd_argv[cmd_argc], com_token, len);
 			cmd_argc++;
 		}
 	}
