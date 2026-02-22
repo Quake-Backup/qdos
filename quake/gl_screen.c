@@ -261,7 +261,7 @@ Internal use only
 */
 static void SCR_CalcRefdef (void)
 {
-	int			size;
+	float		size;
 	int			h;
 	qboolean	full = false;
 
