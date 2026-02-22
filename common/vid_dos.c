@@ -291,7 +291,7 @@ VID_SetPalette
 void    VID_SetPalette (unsigned char *palette)
 {
 	if (palette != vid_current_palette)
-		Q_memcpy(vid_current_palette, palette, 768);
+		memcpy(vid_current_palette, palette, 768);
 	(*pcurrentmode->setpalette)(&vid, pcurrentmode, vid_current_palette);
 }
 
@@ -405,7 +405,7 @@ void VID_DescribeMode_f (void)
 {
 	int		modenum;
 	
-	modenum = Q_atoi (Cmd_Argv(1));
+	modenum = atoi (Cmd_Argv(1));
 
 	Com_Printf ("%s\n", VID_ModeInfo (modenum, NULL));
 }
@@ -489,12 +489,12 @@ void VID_TestMode_f (void)
 
 	if (!vid_testingmode)
 	{
-		modenum = Q_atoi (Cmd_Argv(1));
+		modenum = atoi (Cmd_Argv(1));
 
 		if (VID_SetMode (modenum, vid_current_palette))
 		{
 			vid_testingmode = 1;
-			testduration = Q_atof (Cmd_Argv(2));
+			testduration = atof (Cmd_Argv(2));
 			if (testduration == 0)
 				testduration = 5.0;
 			vid_testendtime = realtime + testduration;

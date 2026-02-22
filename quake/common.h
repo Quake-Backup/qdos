@@ -28,6 +28,7 @@ typedef unsigned char 		byte;
 #define BYTE_DEFINED 1
 #endif
 
+// KJB Undefined true and false defined in SciTech's DEBUG.H header
 #undef true
 #undef false
 
@@ -109,18 +110,6 @@ void InsertLinkAfter (link_t *l, link_t *after);
 #define NULL ((void *)0)
 #endif
 
-#define Q_MAXCHAR	((char)0x7f)
-#define Q_MAXSHORT	((short)0x7fff)
-#define Q_MAXINT	((int)0x7fffffff)
-#define Q_MAXLONG	((int)0x7fffffff)
-#define Q_MAXFLOAT	((int)0x7fffffff)
-
-#define Q_MINCHAR	((char)0x80)
-#define Q_MINSHORT	((short)0x8000)
-#define Q_MININT	((int)0x80000000)
-#define Q_MINLONG	((int)0x80000000)
-#define Q_MINFLOAT	((int)0x7fffffff)
-
 //============================================================================
 
 extern	qboolean	bigendien;
@@ -165,9 +154,6 @@ float MSG_ReadAngle16 (void); //johnfitz
 
 //============================================================================
 
-void Q_memset (void *dest, int fill, int count);
-void Q_memcpy (void *dest, void *src, int count);
-int Q_memcmp (void *m1, void *m2, int count);
 void Q_strcpy (char *dest, char *src);
 void Q_strncpy (char *dest, char *src, int count);
 int Q_strlen (char *str);
@@ -177,8 +163,6 @@ int Q_strcmp (char *s1, char *s2);
 int Q_strncmp (char *s1, char *s2, int count);
 int Q_strcasecmp (char *s1, char *s2);
 int Q_strncasecmp (char *s1, char *s2, int n);
-int	Q_atoi (char *str);
-float Q_atof (char *str);
 size_t Q_strlcpy (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 size_t Q_strlcat (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 
@@ -200,7 +184,7 @@ int COM_Argc (void);
 char *COM_Argv (int arg);
 void COM_ClearArgv (int arg);
 
-void COM_Init (const char *basedir);
+void COM_Init (void);
 void COM_InitArgv (int argc, char **argv);
 
 char *COM_SkipPath (char *pathname);
@@ -243,6 +227,5 @@ extern	qboolean	warpspasm, nehahra, extended_mod; /* FS: For Nehara */
 
 void CompleteCommand (void); /* FS: Autocomplete commands */
 void Com_sprintf (char *dest, size_t size, char *fmt, ...); /* FS: Added */
-void Com_strcpy (char *dest, size_t destSize, const char *src); /* FS: Added */
 
 #endif // __COMMON_H

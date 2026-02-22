@@ -359,7 +359,7 @@ void Draw_Pic (int x, int y, qpic_t *pic)
 
 		for (v=0 ; v<pic->height ; v++)
 		{
-			Q_memcpy (dest, source, pic->width);
+			memcpy (dest, source, pic->width);
 			dest += vid.rowbytes;
 			source += pic->width;
 		}
@@ -410,7 +410,7 @@ void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int h
 
 		for (v=0 ; v<height ; v++)
 		{
-			Q_memcpy (dest, source, width);
+			memcpy (dest, source, width);
 			dest += vid.rowbytes;
 			source += pic->width;
 		}

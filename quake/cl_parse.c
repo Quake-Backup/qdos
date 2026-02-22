@@ -358,7 +358,7 @@ void CL_ParseServerInfo (void)
 		{
 			Host_Error ("Server sent too many model precaches");
 		}
-		Com_strcpy (model_precache[nummodels], sizeof(model_precache[nummodels]), str);
+		Q_strlcpy (model_precache[nummodels], str, sizeof(model_precache[nummodels]));
 		Mod_ForName(str, false);
 	}
 
@@ -380,8 +380,8 @@ void CL_ParseServerInfo (void)
 			Host_Error ("Server sent too many sound precaches");
 			return;
 		}
-		Com_strcpy(sound_precache[numsounds], sizeof(sound_precache[numsounds]), str);
-		Com_strcpy(cl.sound_precache_str[numsounds], sizeof(cl.sound_precache_str[numsounds]), str); /* FS: Save a copy of the name for snd_restart. */
+		Q_strlcpy(sound_precache[numsounds], str, sizeof(sound_precache[numsounds]));
+		Q_strlcpy(cl.sound_precache_str[numsounds], str, sizeof(cl.sound_precache_str[numsounds])); /* FS: Save a copy of the name for snd_restart. */
 		S_TouchSound (str);
 	}
 	cl.numsounds = numsounds;

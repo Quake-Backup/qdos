@@ -279,6 +279,18 @@
     <ClCompile Include="..\common\vregset.c">
       <Filter>Source Files\DOS</Filter>
     </ClCompile>
+    <ClCompile Include="net_udp.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\cd_audio.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\in_dos.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="net_ipx.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="quake.ico">

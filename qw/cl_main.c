@@ -736,7 +736,7 @@ void CL_FullServerinfo_f (void)
    strcpy (cl.serverinfo, Cmd_Argv(1));
 
    if ((p = Info_ValueForKey(cl.serverinfo, "*vesion")) && *p) {
-      v = Q_atof(p);
+      v = atof(p);
       if (v) {
          if (!server_version)
             Com_Printf("Version %1.2f Server\n", v);
@@ -1225,7 +1225,7 @@ void CL_Download_f (void)
 			break;
 	}
 
-	Com_strcpy(cls.downloadtempname, sizeof(cls.downloadtempname), cls.downloadname);
+	Q_strlcpy(cls.downloadtempname, cls.downloadname, sizeof(cls.downloadtempname));
 	cls.download = fopen (cls.downloadname, "wb");
 	cls.downloadtype = dl_single;
 

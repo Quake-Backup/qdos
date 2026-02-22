@@ -486,7 +486,7 @@ static void Check_Gamma (unsigned char *pal)
 	vid_gamma = v_gamma->value;
 
 	if ((i = COM_CheckParm("-gamma")) > 0)
-		vid_gamma = Q_atof(com_argv[i+1]);
+		vid_gamma = atof(com_argv[i+1]);
 
 	for (i=0 ; i<768 ; i++)
 	{
@@ -551,7 +551,7 @@ void VID_Init(unsigned char *palette)
 
 	if ((i = COM_CheckParm("-bpp")) != 0) /* FS: Force BPP */
 	{
-		int x = Q_atoi(com_argv[i+1]);
+		int x = atoi(com_argv[i+1]);
 		if ((x == 15) || (x == 32))
 			bpp = x;
 	}
@@ -567,7 +567,7 @@ void VID_Init(unsigned char *palette)
 	else
 	{
 		if ((i = COM_CheckParm("-conwidth")) != 0)
-			vid.conwidth = Q_atoi(com_argv[i+1]);
+			vid.conwidth = atoi(com_argv[i+1]);
 		else
 			vid.conwidth = 640;
 
@@ -580,7 +580,7 @@ void VID_Init(unsigned char *palette)
 		vid.conheight = vid.conwidth*3 / 4;
 
 		if ((i = COM_CheckParm("-conheight")) != 0)
-			vid.conheight = Q_atoi(com_argv[i+1]);
+			vid.conheight = atoi(com_argv[i+1]);
 		if (vid.conheight < 200)
 			vid.conheight = 200;
 	}

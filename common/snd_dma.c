@@ -838,8 +838,8 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 		/* FS: FIXME: Use s_rawsamples stuff instead of this crap hack */
 		if (warpspasm && (strstr(ch->sfx->name, "music/warp")) ) /* FS: Fucks up tunes if we allow spatial */
 		{
-			ch->leftvol = ch->master_vol;
-			ch->rightvol = ch->master_vol;
+			ch->leftvol = ch->master_vol * s_musicvolume->value;
+			ch->rightvol = ch->master_vol * s_musicvolume->value;
 			continue;
 		}
 #endif
@@ -1055,7 +1055,7 @@ void S_PlayVol(void)
 		else
 			Q_strcpy(name, Cmd_Argv(i));
 		sfx = S_PrecacheSound(name);
-		vol = Q_atof(Cmd_Argv(i+1));
+		vol = atof(Cmd_Argv(i+1));
 		S_StartSound(hash++, 0, sfx, listener_origin, vol, 1.0);
 		i+=2;
 	}

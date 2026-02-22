@@ -141,139 +141,6 @@ void InsertLinkAfter (link_t *l, link_t *after)
 ============================================================================
 */
 
-int Q_atoi (char *str)
-{
-	int val;
-	int sign;
-	int c;
-	
-	if (*str == '-')
-	{
-		sign = -1;
-		str++;
-	}
-	else
-		sign = 1;
-		
-	val = 0;
-
-//
-// check for hex
-//
-	if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X') )
-	{
-		str += 2;
-		while (1)
-		{
-			c = *str++;
-			if (c >= '0' && c <= '9')
-				val = (val<<4) + c - '0';
-			else if (c >= 'a' && c <= 'f')
-				val = (val<<4) + c - 'a' + 10;
-			else if (c >= 'A' && c <= 'F')
-				val = (val<<4) + c - 'A' + 10;
-			else
-				return val*sign;
-		}
-	}
-	
-//
-// check for character
-//
-	if (str[0] == '\'')
-	{
-		return sign * str[1];
-	}
-	
-//
-// assume decimal
-//
-	while (1)
-	{
-		c = *str++;
-		if (c <'0' || c > '9')
-			return val*sign;
-		val = val*10 + c - '0';
-	}
-	
-	return 0;
-}
-
-
-float Q_atof (char *str)
-{
-	double	val;
-	int		sign;
-	int		c;
-	int		decimal, total;
-	
-	if (*str == '-')
-	{
-		sign = -1;
-		str++;
-	}
-	else
-		sign = 1;
-		
-	val = 0;
-
-//
-// check for hex
-//
-	if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X') )
-	{
-		str += 2;
-		while (1)
-		{
-			c = *str++;
-			if (c >= '0' && c <= '9')
-				val = (val*16) + c - '0';
-			else if (c >= 'a' && c <= 'f')
-				val = (val*16) + c - 'a' + 10;
-			else if (c >= 'A' && c <= 'F')
-				val = (val*16) + c - 'A' + 10;
-			else
-				return val*sign;
-		}
-	}
-	
-//
-// check for character
-//
-	if (str[0] == '\'')
-	{
-		return sign * str[1];
-	}
-	
-//
-// assume decimal
-//
-	decimal = -1;
-	total = 0;
-	while (1)
-	{
-		c = *str++;
-		if (c == '.')
-		{
-			decimal = total;
-			continue;
-		}
-		if (c <'0' || c > '9')
-			break;
-		val = val*10 + c - '0';
-		total++;
-	}
-
-	if (decimal == -1)
-		return val*sign;
-	while (total > decimal)
-	{
-		val /= 10;
-		total--;
-	}
-	
-	return val*sign;
-}
 
 /* FS: From OpenBSD */
 size_t Q_strlcpy (char *dst, const char *src, size_t siz)
@@ -913,7 +780,7 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 
 void SZ_Write (sizebuf_t *buf, void *data, int length)
 {
-	Q_memcpy (SZ_GetSpace(buf,length),data,length);
+	memcpy (SZ_GetSpace(buf,length),data,length);
 }
 
 void SZ_Print (sizebuf_t *buf, char *data)
@@ -923,9 +790,9 @@ void SZ_Print (sizebuf_t *buf, char *data)
 	len = Q_strlen(data)+1;
 
 	if (!buf->cursize || buf->data[buf->cursize-1])
-		Q_memcpy ((byte *)SZ_GetSpace(buf, len),data,len); // no trailing 0
+		memcpy ((byte *)SZ_GetSpace(buf, len),data,len); // no trailing 0
 	else
-		Q_memcpy ((byte *)SZ_GetSpace(buf, len-1)-1,data,len); // write over trailing 0
+		memcpy ((byte *)SZ_GetSpace(buf, len-1)-1,data,len); // write over trailing 0
 }
 
 
@@ -1014,7 +881,7 @@ void COM_FilePath (char *in, char *out)
 COM_DefaultExtension
 ==================
 */
-void COM_DefaultExtension (char *path, char *extension)
+void COM_DefaultExtension (char *path, const char *extension)
 {
 	char    *src;
 //
@@ -1222,8 +1089,7 @@ void COM_InitArgv (int argc, char **argv)
 
 	safe = false;
 
-	for (com_argc=0 ; (com_argc<MAX_NUM_ARGVS) && (com_argc < argc) ;
-		 com_argc++)
+	for (com_argc=0 ; (com_argc<MAX_NUM_ARGVS) && (com_argc < argc) ; com_argc++)
 	{
 		largv[com_argc] = argv[com_argc];
 		if (!Q_strcmp ("-safe", argv[com_argc]))
@@ -1290,7 +1156,7 @@ void COM_Init (void)
 	}
 
 	registered = Cvar_Get("registered","0", CVAR_NOSET);
-	registered->description = "Special internal CVAR for setting Registered game.";
+	Cvar_Set_Description("registered", "Special internal CVAR for setting Registered game.");
 
 	Cmd_AddCommand ("path", COM_Path_f);
 	Cmd_AddCommand ("dir", COM_Dir_f); /* FS: From Quake 2 */
@@ -1445,7 +1311,7 @@ COM_WriteFile
 The filename will be prefixed by the current game directory
 ============
 */
-void COM_WriteFile (char *filename, void *data, int len)
+void COM_WriteFile (const char *filename, void *data, int len)
 {
 	FILE	*f;
 	char	name[MAX_OSPATH];
@@ -1649,7 +1515,7 @@ Finds the file in the search path.
 Sets com_filesize and one of handle or file
 ===========
 */
-int COM_FindFile (char *filename, int *handle, FILE **file)
+int COM_FindFile (const char *filename, int *handle, FILE **file)
 {
 	searchpath_t    *search;
 	char            netpath[MAX_OSPATH];
@@ -1771,8 +1637,7 @@ returns a handle and a length
 it may actually be inside a pak file
 ===========
 */
-/* FS: From Q1 */
-int COM_OpenFile (char *filename, int *handle)
+int COM_OpenFile (const char *filename, int *handle)
 {
 	return COM_FindFile (filename, handle, NULL);
 }
@@ -1787,7 +1652,7 @@ Sets com_filesize and one of handle or file
 */
 int file_from_pak; // global indicating file came from pack file ZOID
 
-int COM_FOpenFile (char *filename, FILE **file)
+int COM_FOpenFile (const char *filename, FILE **file)
 {
 	searchpath_t	*search;
 	char	netpath[MAX_OSPATH];
@@ -2692,24 +2557,4 @@ void Com_sprintf (char *dest, size_t size, char *fmt, ...)
 	if (len < 0 || len >= size) {
 		Com_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
 	}
-}
-
-// Knightmare added
-void Com_strcpy (char *dest, size_t destSize, const char *src)
-{
-	if (!dest) {
-		Com_Printf ("Com_strcpy: NULL dst\n");
-		return;
-	}
-	if (!src) {
-		Com_Printf ("Com_strcpy: NULL src\n");
-		return;
-	}
-	if (destSize < 1) {
-		Com_Printf ("Com_strcpy: dstSize < 1\n");
-		return;
-	}
-
-	strncpy(dest, src, destSize-1);
-	dest[destSize-1] = 0;
 }

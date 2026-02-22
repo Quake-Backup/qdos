@@ -319,7 +319,7 @@ int WIPX_StringToAddr (char *string, struct qsockaddr *addr)
 	char buf[3];
 
 	buf[2] = 0;
-	Q_memset(addr, 0, sizeof(struct qsockaddr));
+	memset(addr, 0, sizeof(struct qsockaddr));
 	addr->sa_family = AF_IPX;
 
 #define DO(src,dest)	\
@@ -354,7 +354,7 @@ int WIPX_GetSocketAddr (int handle, struct qsockaddr *addr)
 	int socket = ipxsocket[handle];
 	int addrlen = sizeof(struct qsockaddr);
 
-	Q_memset(addr, 0, sizeof(struct qsockaddr));
+	memset(addr, 0, sizeof(struct qsockaddr));
 	if(pgetsockname(socket, (struct sockaddr *)addr, &addrlen) != 0)
 	{
 		int errno;

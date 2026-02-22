@@ -203,7 +203,7 @@ float	Cvar_VariableValue (char *var_name)
 	var = Cvar_FindVar (var_name);
 	if (!var)
 		return 0;
-	return Q_atof (var->string);
+	return atof (var->string);
 }
 
 
@@ -306,6 +306,7 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 	var = malloc (sizeof(cvar_t));
 	if (var == NULL)
 	{
+		Sys_Error("Cvar_Get: out of memory");
 		return NULL;
 	}
 

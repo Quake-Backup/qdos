@@ -1115,7 +1115,7 @@ qboolean GUS_Init(void)
 
 		if (rc)
 		{
-			dma.speed = Q_atoi(com_argv[rc+1]);
+			dma.speed = atoi(com_argv[rc+1]);
 	
 			// Make sure rate not too high
 			if (dma.speed>48000)
@@ -1191,7 +1191,7 @@ qboolean GUS_Init(void)
 
 		if (rc)
 		{
-			dma.speed = Q_atoi(com_argv[rc+1]);
+			dma.speed = atoi(com_argv[rc+1]);
 
 			// Make sure rate not too high
 			if (dma.speed>44100)

@@ -2647,7 +2647,7 @@ void M_LanConfig_Key (int key)
 			lanConfig_cursor = 0;
 	}
 
-	l =  Q_atoi(lanConfig_portname);
+	l =  atoi(lanConfig_portname);
 
 	if (l > 65535)
 		l = lanConfig_port;
@@ -3208,9 +3208,9 @@ void M_ServerList_Draw (void)
 				for (j = i+1; j < hostCacheCount; j++)
 					if (strcmp(hostcache[j].name, hostcache[i].name) < 0)
 					{
-						Q_memcpy(&temp, &hostcache[j], sizeof(hostcache_t));
-						Q_memcpy(&hostcache[j], &hostcache[i], sizeof(hostcache_t));
-						Q_memcpy(&hostcache[i], &temp, sizeof(hostcache_t));
+						memcpy(&temp, &hostcache[j], sizeof(hostcache_t));
+						memcpy(&hostcache[j], &hostcache[i], sizeof(hostcache_t));
+						memcpy(&hostcache[i], &temp, sizeof(hostcache_t));
 					}
 		}
 		slist_sorted = true;

@@ -23,9 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __COMMON_H
 #define __COMMON_H
 
-
-typedef unsigned char           byte;
-#define _DEF_BYTE_
+#if !defined BYTE_DEFINED
+typedef unsigned char 		byte;
+#define BYTE_DEFINED 1
+#endif
 
 // KJB Undefined true and false defined in SciTech's DEBUG.H header
 #undef true
@@ -115,18 +116,6 @@ void InsertLinkAfter (link_t *l, link_t *after);
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
-
-#define Q_MAXCHAR	((char)0x7f)
-#define Q_MAXSHORT	((short)0x7fff)
-#define Q_MAXINT	((int)0x7fffffff)
-#define Q_MAXLONG	((int)0x7fffffff)
-#define Q_MAXFLOAT	((int)0x7fffffff)
-
-#define Q_MINCHAR	((char)0x80)
-#define Q_MINSHORT	((short)0x8000)
-#define Q_MININT	((int)0x80000000)
-#define Q_MINLONG	((int)0x80000000)
-#define Q_MINFLOAT	((int)0x7fffffff)
 
 //============================================================================
 
@@ -218,9 +207,6 @@ void MSG_ReadDeltaUsercmd (struct usercmd_s *from, struct usercmd_s *cmd);
 
 //============================================================================
 
-#define Q_memset(d, f, c) memset((d), (f), (c))
-#define Q_memcpy(d, s, c) memcpy((d), (s), (c))
-#define Q_memcmp(m1, m2, c) memcmp((m1), (m2), (c))
 #define Q_strcpy(d, s) strcpy((d), (s))
 #define Q_strncpy(d, s, n) strncpy((d), (s), (n))
 #define Q_strlen(s) ((int)strlen(s))
@@ -270,7 +256,7 @@ void COM_InitArgv (int argc, char **argv);
 char *COM_SkipPath (char *pathname);
 void COM_StripExtension (char *in, char *out);
 void COM_FilePath (char *in, char *out);
-void COM_DefaultExtension (char *path, char *extension);
+void COM_DefaultExtension (char *path, const char *extension);
 
 // does a varargs printf into a temp buffer
 char	*va(const char *format, ...) ATTRIBUTE_PRINTF(1, 2);
@@ -282,9 +268,9 @@ struct cache_user_s;
 
 extern	char	com_gamedir[MAX_OSPATH];
 
-void COM_WriteFile (char *filename, void *data, int len);
-int COM_OpenFile (char *filename, int *hndl); /* FS: From Q1 */
-int COM_FOpenFile (char *filename, FILE **file);
+void COM_WriteFile (const char *filename, void *data, int len);
+int COM_OpenFile (const char *filename, int *hndl);
+int COM_FOpenFile (const char *filename, FILE **file);
 
 byte *COM_LoadFile (char *path);
 void COM_CreatePath (char *path);
@@ -319,6 +305,5 @@ byte    COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
 int build_number( void );
 void CompleteCommand (void); /* FS: Autocomplete commands */
 void Com_sprintf (char *dest, size_t size, char *fmt, ...); /* FS: Added */
-void Com_strcpy (char *dest, size_t destSize, const char *src); /* FS: Added */
 
 #endif // __COMMON_H

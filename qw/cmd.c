@@ -110,7 +110,7 @@ void Cbuf_InsertText (char *text)
 	if (templen)
 	{
 		temp = Z_Malloc (templen);
-		Q_memcpy (temp, cmd_text.data, templen);
+		memcpy (temp, cmd_text.data, templen);
 		SZ_Clear (&cmd_text);
 	}
 	else
@@ -377,10 +377,15 @@ void Cmd_Alias_f (void)
 		if (!a)
 		{
 			a = malloc (sizeof(cmdalias_t));
+			if (!a)
+			{
+				Sys_Error("Cmd_Alias_f: out of memory");
+				return;
+			}
 			a->next = cmd_alias;
 			cmd_alias = a;
 		}
-		Com_strcpy (a->name, sizeof(a->name), s);
+		Q_strlcpy (a->name, s, sizeof(a->name));
 
 		// copy the rest of the command line
 		cmd[0] = 0;		// start out with a null string
@@ -394,6 +399,11 @@ void Cmd_Alias_f (void)
 		strcat (cmd, "\n");
 
 		a->value = strdup (cmd);
+		if (!a->value)
+		{
+			Sys_Error("Cmd_Alias_f: out of memory");
+			return;
+		}
 		break;
 	}
 }
@@ -516,8 +526,10 @@ void Cmd_TokenizeString (char *text)
 	int		i;
 	
 // clear the args from the last string
-	for (i=0 ; i<cmd_argc ; i++)
+	for (i = 0; i < cmd_argc; i++)
+	{
 		free (cmd_argv[i]);
+	}
 		
 	cmd_argc = 0;
 	cmd_args = NULL;
@@ -549,6 +561,11 @@ void Cmd_TokenizeString (char *text)
 		if (cmd_argc < MAX_ARGS)
 		{
 			cmd_argv[cmd_argc] = malloc (Q_strlen(com_token)+1);
+			if (!cmd_argv[cmd_argc])
+			{
+				Sys_Error("Cmd_TokenizeString: out of memory");
+				return;
+			}
 			Q_strcpy (cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -584,7 +601,17 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	}
 
 	cmd = malloc(sizeof(cmd_function_t));
+	if (!cmd)
+	{
+		Sys_Error("Cmd_AddCommand: out of memory");
+		return;
+	}
 	cmd->name = strdup(cmd_name);
+	if (!cmd->name)
+	{
+		Sys_Error("Cmd_AddCommand: out of memory");
+		return;
+	}
 	cmd->function = function;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
@@ -807,7 +834,7 @@ int Cmd_CheckParm (char *parm)
 void Cmd_ChatInfo (int val)
 {
 #ifdef QUAKEWORLD
-	if(net_broadcast_chat->value && chat->value != val)
+	if (net_broadcast_chat->intValue && chat->intValue != val)
 	{
 		switch (val)
 		{

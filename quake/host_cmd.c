@@ -550,7 +550,7 @@ void Host_God_f (void)
 			SV_ClientPrintf ("godmode ON\n");
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			sv_player->v.flags = (int)sv_player->v.flags | FL_GODMODE;
 			SV_ClientPrintf ("godmode ON\n");
@@ -595,7 +595,7 @@ void Host_Notarget_f (void)
 			SV_ClientPrintf ("notarget ON\n");
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			sv_player->v.flags = (int)sv_player->v.flags | FL_NOTARGET;
 			SV_ClientPrintf ("notarget ON\n");
@@ -649,7 +649,7 @@ void Host_Noclip_f (void)
 		}
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			noclip_anglehack = true;
 			sv_player->v.movetype = MOVETYPE_NOCLIP;
@@ -703,7 +703,7 @@ void Host_Fly_f (void)
 		}
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			sv_player->v.movetype = MOVETYPE_FLY;
 			SV_ClientPrintf ("flymode ON\n");
@@ -939,7 +939,7 @@ void Host_Connect_f (void)
 	}
 	else
 	{
-		net_hostport = Q_atoi(port);
+		net_hostport = atoi(port);
 	}
 
 	Q_strlcpy(name, Cmd_Argv(1), sizeof(name));
@@ -1727,7 +1727,7 @@ void Host_Kick_f (void)
 
 	if (Cmd_Argc() > 2 && Q_strcmp(Cmd_Argv(1), "#") == 0)
 	{
-		i = Q_atof(Cmd_Argv(2)) - 1;
+		i = atof(Cmd_Argv(2)) - 1;
 		if (i < 0 || i >= svs.maxclients)
 			return;
 		if (!svs.clients[i].active)

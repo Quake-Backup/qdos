@@ -360,7 +360,7 @@ static int PartialIPAddress (char *in, struct qsockaddr *hostaddr)
 	}
 	
 	if (*b++ == ':')
-		port = Q_atoi(b);
+		port = atoi(b);
 	else
 		port = net_hostport;
 
@@ -499,7 +499,7 @@ int WINS_GetSocketAddr (int socket, struct qsockaddr *addr)
 	int addrlen = sizeof(struct qsockaddr);
 	unsigned int a;
 
-	Q_memset(addr, 0, sizeof(struct qsockaddr));
+	memset(addr, 0, sizeof(struct qsockaddr));
 	pgetsockname(socket, (struct sockaddr *)addr, &addrlen);
 	a = ((struct sockaddr_in *)addr)->sin_addr.s_addr;
 	if (a == 0 || a == inet_addr("127.0.0.1"))

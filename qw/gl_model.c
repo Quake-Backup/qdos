@@ -1809,7 +1809,7 @@ void * Mod_LoadSpriteFrame (void * pin, mspriteframe_t **ppframe, int framenum)
 
 	pspriteframe = Hunk_Alloc (sizeof (mspriteframe_t));
 
-	Q_memset (pspriteframe, 0, sizeof (mspriteframe_t));
+	memset (pspriteframe, 0, sizeof (mspriteframe_t));
 
 	*ppframe = pspriteframe;
 

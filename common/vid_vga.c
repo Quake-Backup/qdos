@@ -237,7 +237,7 @@ void VGA_ClearVideoMem (int planar)
 		outportb (SC_DATA, 0x0F);
 	}
 
-	Q_memset (VGA_pagebase, 0, VGA_rowbytes * VGA_height);
+	memset (VGA_pagebase, 0, VGA_rowbytes * VGA_height);
 }
 
 /*

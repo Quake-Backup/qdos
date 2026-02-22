@@ -246,7 +246,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\common\d_fill.c" />
+    <ClCompile Include="..\common\d_fill.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\common\d_init.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>

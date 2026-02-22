@@ -955,7 +955,7 @@ void Com_f (void)
 	int		n;
 
 	// first, determine which port they're messing with
-	portNumber = Q_atoi(Cmd_Argv (0) + 3) - 1;
+	portNumber = atoi(Cmd_Argv (0) + 3) - 1;
 	if (portNumber > 1)
 		return;
 	p = handleToPort[portNumber];
@@ -1013,7 +1013,7 @@ void Com_f (void)
 				Com_Printf("COM port must be disabled to change port\n");
 				return;
 			}
-		p->uart = Q_atoi (Cmd_Argv (i+1));
+		p->uart = atoi (Cmd_Argv (i+1));
 	}
 
 	if ((i = Cmd_CheckParm ("irq")) != 0)
@@ -1023,7 +1023,7 @@ void Com_f (void)
 				Com_Printf("COM port must be disabled to change irq\n");
 				return;
 			}
-		p->irq = Q_atoi (Cmd_Argv (i+1));
+		p->irq = atoi (Cmd_Argv (i+1));
 	}
 
 	if ((i = Cmd_CheckParm ("baud")) != 0)
@@ -1033,7 +1033,7 @@ void Com_f (void)
 				Com_Printf("COM port must be disabled to change baud\n");
 				return;
 			}
-		n = Q_atoi (Cmd_Argv (i+1));
+		n = atoi (Cmd_Argv (i+1));
 		if (n == 0)
 			Com_Printf("Invalid baud rate specified\n");
 		else

@@ -177,7 +177,7 @@ int Loop_SendMessage (qsocket_t *sock, sizebuf_t *data)
 	buffer++;
 
 	// message
-	Q_memcpy(buffer, data->data, data->cursize);
+	memcpy(buffer, data->data, data->cursize);
 	*bufferLength = IntAlign(*bufferLength + data->cursize + 4);
 
 	sock->canSend = false;
@@ -211,7 +211,7 @@ int Loop_SendUnreliableMessage (qsocket_t *sock, sizebuf_t *data)
 	buffer++;
 
 	// message
-	Q_memcpy(buffer, data->data, data->cursize);
+	memcpy(buffer, data->data, data->cursize);
 	*bufferLength = IntAlign(*bufferLength + data->cursize + 4);
 	return 1;
 }

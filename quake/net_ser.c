@@ -480,7 +480,7 @@ int Serial_SendMessage (qsocket_t *sock, sizebuf_t *message)
 
 	// mark sock as busy and save the message for possible retransmit
 	sock->canSend = false;
-	Q_memcpy(sock->sendMessage, message->data, message->cursize);
+	memcpy(sock->sendMessage, message->data, message->cursize);
 	sock->sendMessageLength = message->cursize;
 	sock->lastSendTime = net_time;
 
@@ -692,7 +692,7 @@ static int _Serial_GetMessage (SerialLine *p)
 	p->sock->receiveMessageLength -= length;
 
 	if (p->sock->receiveMessageLength + p->lengthFound)
-		Q_memcpy(p->sock->receiveMessage, &p->sock->receiveMessage[length], p->sock->receiveMessageLength + p->lengthFound);
+		memcpy(p->sock->receiveMessage, &p->sock->receiveMessage[length], p->sock->receiveMessageLength + p->lengthFound);
 
 	return ret;
 }
