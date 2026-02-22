@@ -24,6 +24,9 @@ devenv "%QDOSDEVBASE%\qw\qwcl.sln" /Build "GL QW %QDOSBINDIR%|Win32" /Project "q
 copy /y "%QDOSDEVBASE%\qw\%QDOSBINDIR%\WQWDOS.EXE" "%QDOSDEVBASE%\"
 copy /y "%QDOSDEVBASE%\qw\%QDOSBINDIR%_gl\glqw2.exe" "%QDOSDEVBASE%\"
 
+cd /d "%QDOSDEVBASE%"
+call mvd.bat
+
 :buildzip
 del /q "%QDOSDEVBASE%\DWQDOS_EXE_LATEST.7Z"
 del /q "%QDOSDEVBASE%\DWQWDOS_EXE_LATEST.7Z"
