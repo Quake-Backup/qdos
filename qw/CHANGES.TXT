@@ -143,3 +143,5 @@ Additional code from sezero, taniwha, spoike, LordHavoc,
    (Thanks Spoike)
 * Sys_FloatTime->Sys_DoubleTime -- Fixes many errors related to timing.
    640x400 and above now playable! (Thanks LordHavoc)
+* Switched memory manager to Quake 2.  This means you no longer have to
+  mess with -zone and -mem parameters.
