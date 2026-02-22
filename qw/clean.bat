@@ -15,12 +15,14 @@ rd Debug /S /Q
 rd debug_gl /S /Q
 rd Release /S /Q
 rd release_gl /S /Q
+rd x64 /S /Q
 
 @echo Trying BASH RM -RF
 rm -rf Debug
 rm -rf debug_gl
 rm -rf Release
 rm -rf release_gl
+rm -rf x64
 
 cd gas2masm
 rd Debug /S /Q
