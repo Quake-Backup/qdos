@@ -913,6 +913,7 @@ void Host_Init (quakeparms_t *parms)
 	Cbuf_Init ();
 	Cmd_Init ();
 	Cvar_Init();
+	Con_Init ();
 
 	// we need to add the early commands twice, because
 	// a basedir or cddir needs to be set before execing
@@ -933,7 +934,6 @@ void Host_Init (quakeparms_t *parms)
 	Chase_Init ();
 	W_LoadWadFile ("gfx.wad");
 	Key_Init ();
-	Con_Init ();
 	M_Init ();  
 	PR_Init ();
 	Mod_Init ();

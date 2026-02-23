@@ -295,8 +295,6 @@ void Con_Init (void)
 	con_linewidth = -1;
 	Con_CheckResize ();
 	
-	Com_Printf ("Console initialized.\n");
-
 //
 // register our commands
 //
@@ -314,6 +312,8 @@ void Con_Init (void)
 	Cmd_AddCommand ("clear", Con_Clear_f);
 
 	con_initialized = true;
+
+	Com_Printf ("Console initialized.\n");
 }
 
 
