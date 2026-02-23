@@ -411,7 +411,7 @@ V_cshift_f
 */
 void V_cshift_f (void)
 {
-	if(!v_contentblend->intValue) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cshift_empty.destcolor[0] = 0;
 		cshift_empty.destcolor[1] = 0;
@@ -465,6 +465,10 @@ void V_SetContentsColor (int contents)
 	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_CONTENTS] = cshift_empty;
+		cl.cshifts[CSHIFT_CONTENTS].destcolor[0] = 0;
+		cl.cshifts[CSHIFT_CONTENTS].destcolor[1] = 0;
+		cl.cshifts[CSHIFT_CONTENTS].destcolor[2] = 0;
+		cl.cshifts[CSHIFT_CONTENTS].percent = 0;
 		return;
 	}
 
