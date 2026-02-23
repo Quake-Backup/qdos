@@ -861,7 +861,7 @@ keypress.
 */
 int SCR_ModalMessage (char *text)
 {
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		return true;
 
 	scr_notifystring = text;
@@ -945,7 +945,7 @@ void SCR_UpdateScreen (void)
 			return;
 	}
 
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		return;				// stdout only
 
 	if (!scr_initialized || !con_initialized)

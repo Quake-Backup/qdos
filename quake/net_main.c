@@ -738,9 +738,9 @@ void NET_Init (void)
 	net_hostport = DEFAULTnet_hostport;
 
 	net_numsockets = svs.maxclientslimit;
-	if (cls.state != ca_dedicated)
+	if (!dedicated->intValue)
 		net_numsockets++;
-	if (COM_CheckParm("-listen") || cls.state == ca_dedicated)
+	if (COM_CheckParm("-listen") || dedicated->intValue)
 		listening = true;
 
 	SetNetTime();
@@ -787,9 +787,7 @@ void NET_Init (void)
 
 	/* Loop_Init() returns -1 for dedicated server case,
 	 * therefore the i == 0 check is correct */
-	if (i == 0
-			&& cls.state == ca_dedicated
-	   )
+	if (i == 0 && dedicated->intValue)
 	{
 		Sys_Error("Network not available!");
 	}

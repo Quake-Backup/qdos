@@ -19,3 +19,5 @@
   into /common to prevent more code duplication.
 
 * Asynchronous rendering support.
+
+* Dedicated server is broken.  Listen probably is too, but I never tested it.

@@ -84,6 +84,8 @@ cvar_t	*con_show_description;
 cvar_t	*con_show_dev_flags;
 cvar_t	*timestamp; /* FS: Timestamp */
 
+cvar_t	*dedicated;
+
 extern cvar_t *sv_autosave;
 
 extern char *entitystring;
@@ -126,7 +128,7 @@ void Host_EndGame (const char *message, ...)
 	if (sv.active)
 		Host_ShutdownServer (false);
 
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		Sys_Error ("Host_EndGame: %s\n",string);  // dedicated servers exit
 
 	if (cls.demonum != -1)
@@ -164,7 +166,7 @@ void Host_Error (const char *error, ...)
 	if (sv.active)
 		Host_ShutdownServer (false);
 
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		Sys_Error ("Host_Error: %s\n",string); // dedicated servers exit
 
 	CL_Disconnect ();
@@ -187,30 +189,22 @@ void  Host_FindMaxClients (void)
 
 	svs.maxclients = 1;
 
-	i = COM_CheckParm ("-dedicated");
-	if (i)
+	if (dedicated->intValue)
 	{
-		cls.state = ca_dedicated;
-		if (i != (com_argc - 1))
-		{
-			svs.maxclients = atoi (com_argv[i+1]);
-		}
-		else
-			svs.maxclients = 8;
+		svs.maxclients = 8; /* FS: FIXME: Make maxclients CVAR. */
 	}
-	else
-		cls.state = ca_disconnected;
 
 	i = COM_CheckParm ("-listen");
 	if (i)
 	{
-		if (cls.state == ca_dedicated)
+		if (dedicated->intValue)
 			Sys_Error ("Only one of -dedicated or -listen can be specified");
 		if (i != (com_argc - 1))
 			svs.maxclients = atoi (com_argv[i+1]);
 		else
 			svs.maxclients = 8;
 	}
+
 	if (svs.maxclients < 1)
 		svs.maxclients = 8;
 	else if (svs.maxclients > MAX_SCOREBOARD)
@@ -288,7 +282,6 @@ Host_WriteConfiguration
 Writes key bindings and archived cvars to config.cfg
 ===============
 */
-extern qboolean	isDedicated;
 
 /* FS: There is some slight stupidity in quake.rc executing config.cfg so a hack would
        be needed for allowing alternate non-default configs.
@@ -304,7 +297,7 @@ void Host_WriteConfiguration (const char *cfgName)
 
 // dedicated servers initialize the host but don't parse and set the
 // config.cfg cvars
-	if (host_initialized && !isDedicated)
+	if (host_initialized && !dedicated->intValue)
 	{
 		if(!(cfgName) || (cfgName[0] == 0)) /* FS: Sanity check */
 			Com_sprintf (path, sizeof(path),"%s/qdos.cfg", com_gamedir);
@@ -750,14 +743,16 @@ void _Host_Frame (float time)
 		return;		  // don't run too fast, or packets will flood out
 
 #ifdef GAMESPY /* FS: Gamespy Stuff */
-	GameSpy_Async_Think();
+	if (!dedicated->intValue)
+		GameSpy_Async_Think();
 #endif
 
 // get new key events
 	Sys_SendKeyEvents ();
 
 // allow mice or other external controllers to add commands
-	IN_Commands ();
+	if (!dedicated->intValue)
+		IN_Commands ();
 
 // process console commands
 	Cbuf_Execute ();
@@ -779,6 +774,13 @@ void _Host_Frame (float time)
 
 	if (sv.active)
 		Host_ServerFrame ();
+
+	if (dedicated->intValue)
+	{
+		host_time += host_frametime;
+		host_framecount++;
+		return;
+	}
 
 //-------------------
 //
@@ -922,6 +924,15 @@ void Host_Init (quakeparms_t *parms)
 	Cbuf_AddEarlyCommands (false);
 	Cbuf_Execute ();
 
+#ifdef DEDICATED_ONLY
+	dedicated = Cvar_Get ("dedicated", "1", CVAR_NOSET);
+#else
+	dedicated = Cvar_Get ("dedicated", "0", CVAR_NOSET);
+	Cvar_ForceSet("dedicated", "0"); /* FS: FIXME: dedicated has been broken for a long time. */
+	//if (COM_CheckParm("-dedicated"))
+	//	Cvar_ForceSet("dedicated", "1");
+#endif
+
 	COM_Init();
 	Host_InitLocal();
 
@@ -945,7 +956,7 @@ void Host_Init (quakeparms_t *parms)
 
 	R_InitTextures ();		// needed even for dedicated servers
 
-	if (cls.state != ca_dedicated)
+	if (!dedicated->intValue)
 	{
 		host_basepal = (byte *)COM_LoadFile ("gfx/palette.lmp");
 		if (!host_basepal)
@@ -1019,7 +1030,7 @@ void Host_Shutdown(void)
 	S_Shutdown();
 	IN_Shutdown ();
 
-	if (cls.state != ca_dedicated)
+	if (!dedicated->intValue)
 	{
 		VID_Shutdown();
 	}

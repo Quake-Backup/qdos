@@ -209,7 +209,7 @@ model_t *Mod_FindName (char *name)
 			Sys_Error ("mod_numknown == MAX_MOD_KNOWN");
 			return NULL;
 		}
-		strcpy (mod->name, name);
+		Q_strlcpy (mod->name, name, sizeof(mod->name));
 		mod->registration_sequence = 666; /* FS: FIXME */
 		mod_numknown++;
 	}
@@ -280,7 +280,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		}
 		mod_numknown++;
 	}
-	strcpy (mod->name, name);
+	Q_strlcpy (mod->name, name, sizeof(mod->name));
 
 //
 // load the file
@@ -352,6 +352,12 @@ void Mod_LoadTextures (lump_t *l)
 	texture_t	*anims[10];
 	texture_t	*altanims[10];
 	dmiptexlump_t *m;
+
+	if (dedicated->intValue)
+	{
+		loadmodel->textures = NULL;
+		return;
+	}
 
 	if (!l->filelen)
 	{
@@ -710,6 +716,11 @@ void Mod_LoadTexinfo (lump_t *l)
 	int		miptex;
 	float	len1, len2;
 
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
@@ -919,6 +930,11 @@ void Mod_LoadFaces_L2 (lump_t *l)
 	msurface_t 	*out;
 	int			i, count, surfnum;
 	int			planenum, side;
+
+	if (dedicated->intValue)
+	{
+		return;
+	}
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
@@ -1535,6 +1551,11 @@ void Mod_LoadMarksurfaces (lump_t *l, int bsp2) /* FS: BSP2 support */
 	int		i, j, count;
 	msurface_t **out;
 
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	if (bsp2)
 	{
 		unsigned int *in = (unsigned int *)(mod_base + l->fileofs);
@@ -1775,7 +1796,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 			char	name[10];
 
 			Com_sprintf (name, sizeof(name), "*%i", i+1);
-			strcpy(starmod->name, name);
+			Q_strlcpy(starmod->name, name, sizeof(starmod->name));
 		}
 	}
 #else

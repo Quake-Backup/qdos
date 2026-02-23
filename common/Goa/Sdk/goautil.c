@@ -544,9 +544,9 @@ adds \statechanged\ if statechanged != 0 */
 void send_heartbeat(int statechanged)
 {
 	char buf[256];
-	extern qboolean isDedicated;
+	extern cvar_t *dedicated;
 
-    if (isDedicated)
+	if (!dedicated || !dedicated->value)
 		return;		// only dedicated servers send heartbeats
   
 	if (!public_server->value)

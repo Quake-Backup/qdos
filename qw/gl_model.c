@@ -352,6 +352,12 @@ void Mod_LoadTextures (lump_t *l)
 	texture_t	*altanims[10];
 	dmiptexlump_t *m;
 
+	if (dedicated->intValue)
+	{
+		loadmodel->textures = NULL;
+		return;
+	}
+
 	if (!l->filelen)
 	{
 		loadmodel->textures = NULL;
@@ -418,7 +424,7 @@ void Mod_LoadTextures (lump_t *l)
 		if (!tx || tx->name[0] != '+')
 			continue;
 		if (tx->anim_next)
-			continue;	// allready sequenced
+			continue;       // allready sequenced
 
 	// find the number of frames in the animation
 		memset (anims, 0, sizeof(anims));
@@ -680,6 +686,11 @@ void Mod_LoadTexinfo (lump_t *l)
 	int		miptex;
 	float	len1, len2;
 
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
@@ -824,6 +835,11 @@ void Mod_LoadFaces (lump_t *l)
 	msurface_t 	*out;
 	int			i, count, surfnum;
 	int			planenum, side;
+
+	if (dedicated->intValue)
+	{
+		return;
+	}
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
@@ -1123,7 +1139,12 @@ void Mod_LoadMarksurfaces (lump_t *l)
 	int		i, j, count;
 	short		*in;
 	msurface_t **out;
-	
+
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{

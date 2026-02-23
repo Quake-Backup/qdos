@@ -319,6 +319,7 @@ extern	cvar_t	*timestamp; /* FS: Added */
 extern	cvar_t	*con_show_description; /* FS: Added */
 extern	cvar_t	*con_show_dev_flags; /* FS: Added */
 extern	cvar_t	*max_edicts; //johnfitz
+extern	cvar_t	*dedicated; /* FS: Added */
 
 extern  qboolean        host_initialized;               // true if into command execution
 extern	qboolean		quakerc_init; /* FS: Intercept config.cfg from quake.rc */

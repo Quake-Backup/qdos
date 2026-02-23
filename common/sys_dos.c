@@ -53,8 +53,6 @@ static int	keybuf_tail = 0;
 
 static quakeparms_t	quakeparms;
 
-qboolean                isDedicated;
-
 float			fptest_temp;
 
 extern char	start_of_memory __asm__("start");
@@ -189,7 +187,7 @@ char *Sys_ConsoleInput(void)
 	static int      len = 0;
 	char            ch;
 
-	if (!isDedicated)
+	if (!dedicated || !dedicated->value)
 		return NULL;
 
 	if (! kbhit())
@@ -242,7 +240,7 @@ void Sys_Init(void)
 
 void Sys_Shutdown(void)
 {
-	if (!isDedicated)
+	if (!dedicated || !dedicated->value)
 		dos_restoreintr(9);
 
 	if (unlockmem)
@@ -645,29 +643,24 @@ int main (int c, char **v)
 		cwd[Q_strlen(cwd)-1] = 0;
 	quakeparms.basedir = cwd; //"f:/quake";
 
-#ifdef QUAKE1
-	isDedicated = (COM_CheckParm ("-dedicated") != 0);
-#else
-	isDedicated = false;
-#endif
-
 	_crt0_startup_flags &= ~_CRT0_FLAG_UNIX_SBRK; /* FS: We walked through all the data, now remove the sbrk flag so Win9x doesn't barf. */
 
 	Sys_Init ();
 
-	if (!isDedicated)
-		dos_registerintr(9, TrapKey);
-
 	Host_Init(&quakeparms);
 
 	oldtime = Sys_DoubleTime();
+
+	if (!dedicated || !dedicated->value)
+		dos_registerintr(9, TrapKey);
+
 	while (1)
 	{
 		newtime = Sys_DoubleTime();
 		time = newtime - oldtime;
 
 #ifdef QUAKE1
-		if (cls.state == ca_dedicated && (time<sys_ticrate->value))
+		if (dedicated->intValue && (time<sys_ticrate->value))
 			continue;
 #endif
 

@@ -54,7 +54,6 @@ static double		pfreq;
 static double		curtime = 0.0;
 static double		lastcurtime = 0.0;
 static int			lowshift;
-qboolean			isDedicated;
 static HANDLE		hinput, houtput;
 
 
@@ -316,7 +315,7 @@ void Sys_Error (const char *error, ...)
 	Q_vsnprintf (errtext1, sizeof(errtext1), error, argptr);
 	va_end (argptr);
 
-	if (isDedicated)
+	if (dedicated->intValue)
 	{
 		va_start (argptr, error);
 		Q_vsnprintf (errtext1, sizeof(errtext1), error, argptr);
@@ -394,10 +393,14 @@ void Sys_Printf (const char *fmt, ...)
 {
 	va_list		argptr;
 	char	text[MAXPRINTMSG];
-	
+	DWORD		dummy;
+
 	va_start (argptr,fmt);
 	Q_vsnprintf (text, sizeof(text), fmt,argptr);
 	va_end (argptr);
+
+	WriteFile (houtput, text, strlen (text), &dummy, NULL);
+
 }
 
 void Sys_Quit (void)
@@ -410,7 +413,7 @@ void Sys_Quit (void)
 		CloseHandle (tevent);
 
 #ifdef QUAKE1
-	if (isDedicated)
+	if (dedicated->intValue)
 		FreeConsole ();
 
 // shut down QHOST hooks if necessary
@@ -457,7 +460,7 @@ char *Sys_ConsoleInput (void)
 	int		dummy;
 	int		ch, numread, numevents;
 
-	if (!isDedicated)
+	if (!dedicated || !dedicated->value)
 		return NULL;
 
 
@@ -596,7 +599,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	double			time, oldtime, newtime;
 	MEMORYSTATUS	lpBuffer;
 	static	char	cwd[1024];
-	RECT			rect;
 	int	t = 0;
 
     /* previous instances do not exist in Win32 */
@@ -650,13 +652,31 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	parms.argc = com_argc;
 	parms.argv = com_argv;
 
-#ifdef QUAKE1
-	isDedicated = (COM_CheckParm ("-dedicated") != 0);
-#else
-	isDedicated = false;
-#endif
+// take the greater of all the available memory or half the total memory,
+// but at least 8 Mb and no more than 16 Mb, unless they explicitly
+// request otherwise
+	parms.memsize = lpBuffer.dwAvailPhys;
 
-	if (!isDedicated)
+	if (parms.memsize < MINIMUM_WIN_MEMORY)
+		parms.memsize = MINIMUM_WIN_MEMORY;
+
+	if (parms.memsize < (lpBuffer.dwTotalPhys >> 1))
+		parms.memsize = lpBuffer.dwTotalPhys >> 1;
+
+	tevent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	if (!tevent)
+		Sys_Error ("Couldn't create event");
+
+	Sys_Init ();
+
+	Sys_Printf ("Host_Init\n");
+	Host_Init (&parms);
+
+	oldtime = Sys_DoubleTime();
+
+#if 0
+	if (!dedicated || !dedicated->value)
 	{
 		hwnd_dialog = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL, NULL);
 
@@ -678,25 +698,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			SetForegroundWindow (hwnd_dialog);
 		}
 	}
-
-// take the greater of all the available memory or half the total memory,
-// but at least 8 Mb and no more than 16 Mb, unless they explicitly
-// request otherwise
-	parms.memsize = lpBuffer.dwAvailPhys;
-
-	if (parms.memsize < MINIMUM_WIN_MEMORY)
-		parms.memsize = MINIMUM_WIN_MEMORY;
-
-	if (parms.memsize < (lpBuffer.dwTotalPhys >> 1))
-		parms.memsize = lpBuffer.dwTotalPhys >> 1;
-
-	tevent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-	if (!tevent)
-		Sys_Error ("Couldn't create event");
+#endif
 
 #ifdef QUAKE1
-	if (isDedicated)
+	if (dedicated->intValue)
 	{
 		if (!AllocConsole ())
 		{
@@ -729,18 +734,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	}
 #endif
 
-	Sys_Init ();
-
-	Sys_Printf ("Host_Init\n");
-	Host_Init (&parms);
-
-	oldtime = Sys_DoubleTime();
-
     /* main window message loop */
 	while (1)
 	{
 #ifdef QUAKE1
-		if (isDedicated)
+		if (dedicated->intValue)
 		{
 			newtime = Sys_DoubleTime();
 			time = newtime - oldtime;

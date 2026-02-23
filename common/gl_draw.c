@@ -1325,9 +1325,6 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 	int   i, s;
 	unsigned short crc;
 	gltexture_t *glt;
-#ifdef QUAKE1
-	extern	qboolean isDedicated; /* FS: FIXME: What the fuck was this all about? */
-#endif
 
 	// LordHavoc: do a checksum to confirm the data really is the same as previous
 	// occurances. well this isn't exactly a checksum, it's better than that but
@@ -1366,9 +1363,7 @@ GL_LoadTexture_setup:
 	glt->height = height;
 	glt->mipmap = mipmap;
 
-#ifdef QUAKE1
-	if (!isDedicated)
-#endif
+	if (!dedicated->value)
 	{
 		GL_Bind(glt->texnum);
 		GL_Upload8 (data, width, height, mipmap, alpha);

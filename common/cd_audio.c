@@ -748,6 +748,7 @@ void CDAudio_Update (void)
 
 	if ((realtime - lastUpdate) < 0.25)
 		return;
+
 	lastUpdate = realtime;
 
 	if (mediaCheck)
@@ -861,10 +862,8 @@ int CDAudio_Init (void)
 	char	*memory;
 	int		n;
 
-#ifdef QUAKE1
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		return -1;
-#endif
 
 	if (COM_CheckParm("-nocdaudio") || COM_CheckParm("-nocd")) /* FS: Added -nocd */
 		return -1;

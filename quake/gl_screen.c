@@ -840,7 +840,7 @@ keypress.
 */
 int SCR_ModalMessage (char *text)
 {
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		return true;
 
 	scr_notifystring = text;
@@ -925,6 +925,11 @@ needs almost the entire 256k of stack space!
 */
 void SCR_UpdateScreen (void)
 {
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	if (block_drawing)
 		return;
 

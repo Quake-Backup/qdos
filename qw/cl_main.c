@@ -159,6 +159,7 @@ cvar_t	*cl_autorepeat_allkeys;
 cvar_t	*net_broadcast_chat; /* FS: EZQ Chat */
 cvar_t	*cl_sleep;
 cvar_t	*allow_download_sounds;
+cvar_t	*dedicated;
 
 #ifdef USE_CURL
 cvar_t	*allow_download_http;
@@ -1821,6 +1822,7 @@ void Host_Init (quakeparms_t *parms)
 	// the settings of the config files
 	Cbuf_AddEarlyCommands (false);
 	Cbuf_Execute ();
+	dedicated = Cvar_Get("dedicated", "0", CVAR_NOSET);
 
 	COM_Init ();
 

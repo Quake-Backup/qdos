@@ -458,9 +458,6 @@ void Com_Printf (const char *fmt, ...)
 			Con_Print(st);
 	}
 
-	// also echo to debugging console
-	Sys_Printf("%s",msg); // also echo to debugging console
-
 	// log all messages to file
 	if (con_debuglog)
 		Sys_DebugLog(va("%s/qconsole.log",com_gamedir), "%s", msg);
@@ -468,27 +465,11 @@ void Com_Printf (const char *fmt, ...)
 	if (!con_initialized)
 		return;
 
-#ifdef QUAKE1
-	if (cls.state == ca_dedicated)
-		return;		// no graphics mode
-#endif
-
 	// write it to the scrollable buffer
 	Con_Print (msg);
 
-	// update the screen immediately if the console is displayed
-#if 0 /* FS: This makes scrolling painfully slow, and Quake 2 doesn't even use something like this */
-	if (cls.state != ca_active)
-	{
-		// protect against infinite loop if something in SCR_UpdateScreen calls Com_Printf
-		if (!inupdate)
-		{
-			inupdate = true;
-			SCR_UpdateScreen ();
-			inupdate = false;
-		}
-	}
-#endif
+	// also echo to debugging console
+	Sys_Printf("%s",msg); // also echo to debugging console
 }
 
 /*

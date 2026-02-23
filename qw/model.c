@@ -183,8 +183,8 @@ Mod_FindName
 */
 model_t *Mod_FindName (char *name)
 {
-	int             i;
-	model_t *mod;
+	int		i;
+	model_t	*mod;
 	
 	if (!name[0])
 	{
@@ -349,6 +349,12 @@ void Mod_LoadTextures (lump_t *l)
 	texture_t       *anims[10];
 	texture_t       *altanims[10];
 	dmiptexlump_t *m;
+
+	if (dedicated->intValue)
+	{
+		loadmodel->textures = NULL;
+		return;
+	}
 
 	if (!l->filelen)
 	{
@@ -664,6 +670,11 @@ void Mod_LoadTexinfo (lump_t *l)
 	int     i, j, count;
 	int             miptex;
 	float   len1, len2;
+
+	if (dedicated->intValue)
+	{
+		return;
+	}
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
@@ -1084,7 +1095,12 @@ void Mod_LoadMarksurfaces (lump_t *l)
 	int             i, j, count;
 	short           *in;
 	msurface_t **out;
-	
+
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{

@@ -444,10 +444,9 @@ int CDAudio_Init(void)
 	MCI_SET_PARMS	mciSetParms;
 	int				n;
 
-#ifdef QUAKE1
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		return -1;
-#endif
+
 	if (COM_CheckParm("-nocdaudio"))
 		return -1;
 

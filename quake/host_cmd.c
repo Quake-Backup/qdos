@@ -46,7 +46,7 @@ extern void M_Menu_Quit_f (void);
 
 void Host_Quit_f (void)
 {
-	if (/*key_dest != key_console &&*/ cls.state != ca_dedicated)
+	if (/*key_dest != key_console &&*/ !dedicated->intValue)
 	{
 		M_Menu_Quit_f ();
 		return;
@@ -814,7 +814,7 @@ void Host_Map_f (void)
 	if (!sv.active)
 		return;
 	
-	if (cls.state != ca_dedicated)
+	if (!dedicated->intValue)
 	{
 		Q_strlcpy (cls.spawnparms, "", sizeof(cls.spawnparms));
 
@@ -1228,7 +1228,7 @@ void Host_Loadgame_f (void)
 	for (i=0 ; i<NUM_SPAWN_PARMS ; i++)
 		svs.clients->spawn_parms[i] = spawn_parms[i];
 
-	if (cls.state != ca_dedicated)
+	if (!dedicated->intValue)
 	{
 		CL_EstablishConnection ("local");
 		Host_Reconnect_f ();
@@ -1301,7 +1301,7 @@ void Host_Say(qboolean teamonly)
 
 	if (cmd_source == src_command)
 	{
-		if (cls.state == ca_dedicated)
+		if (dedicated->intValue)
 		{
 			fromServer = true;
 			teamonly = false;
@@ -1751,7 +1751,7 @@ void Host_Kick_f (void)
 	if (i < svs.maxclients)
 	{
 		if (cmd_source == src_command)
-			if (cls.state == ca_dedicated)
+			if (dedicated->intValue)
 				who = "Console";
 			else
 				who = cl_name->string;
@@ -2180,7 +2180,7 @@ void Host_Startdemos_f (void)
 		return;
 	}
 
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 	{
 		if (!sv.active)
 			Cbuf_AddText ("map start\n");
@@ -2225,7 +2225,7 @@ void Host_Demos_f (void)
 		return;
 	}
 
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		return;
 	if (cls.demonum == -1)
 		cls.demonum = 1;
@@ -2242,7 +2242,7 @@ Return to looping demos
 */
 void Host_Stopdemo_f (void)
 {
-	if (cls.state == ca_dedicated)
+	if (dedicated->intValue)
 		return;
 	if (!cls.demoplayback)
 		return;

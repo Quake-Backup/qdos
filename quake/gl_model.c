@@ -357,6 +357,12 @@ void Mod_LoadTextures (lump_t *l)
 	texture_t	*altanims[10];
 	dmiptexlump_t *m;
 
+	if (dedicated->intValue)
+	{
+		loadmodel->textures = NULL;
+		return;
+	}
+
 	if (!l->filelen)
 	{
 		loadmodel->textures = NULL;
@@ -397,7 +403,6 @@ void Mod_LoadTextures (lump_t *l)
 		// the pixels immediately follow the structures
 		memcpy ( tx+1, mt+1, pixels);
 		
-
 		if (!Q_strncmp(mt->name,"sky",3))	
 			R_InitSky (tx);
 		else
@@ -727,6 +732,11 @@ void Mod_LoadTexinfo (lump_t *l)
 	float	len1, len2;
 	int missing = 0; //johnfitz
 
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	in = (texinfo_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
@@ -881,6 +891,11 @@ void Mod_LoadFaces_L1 (lump_t *l)
 	int			i, count, surfnum;
 	int			planenum, side;
 
+	if (dedicated->intValue)
+	{
+		return;
+	}
+
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
@@ -956,6 +971,11 @@ void Mod_LoadFaces_L2 (lump_t *l)
 	msurface_t 	*out;
 	int			i, count, surfnum;
 	int			planenum, side;
+
+	if (dedicated->intValue)
+	{
+		return;
+	}
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
@@ -1577,6 +1597,11 @@ void Mod_LoadMarksurfaces (lump_t *l, int bsp2) /* FS: BSP2 support */
 {	
 	int		i, j, count;
 	msurface_t **out;
+
+	if (dedicated->intValue)
+	{
+		return;
+	}
 
 	if (bsp2)
 	{

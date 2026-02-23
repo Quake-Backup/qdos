@@ -120,7 +120,6 @@ typedef struct
 #define	MAX_DEMONAME	16
 
 typedef enum {
-ca_dedicated, 		// a dedicated server with no ability to start a client
 ca_disconnected, 	// full screen console with no connection
 ca_connected,		// valid netcon, talking to a server
 ca_active = ca_connected	// simply an alias for quakeworld compatibility

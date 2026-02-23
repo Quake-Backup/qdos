@@ -1271,7 +1271,7 @@ void SV_SendReconnect (void)
 	MSG_WriteString (&msg, "reconnect\n");
 	NET_SendToAll (&msg, 5.0);
    
-	if (cls.state != ca_dedicated)
+	if (!dedicated->intValue)
 		Cmd_ExecuteString ("reconnect\n", src_command);
 }
 
@@ -1505,6 +1505,6 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 
 	Com_DPrintf(DEVELOPER_MSG_SERVER, "Server spawned.\n");
 
-	if (!loadgame && svs.maxclients == 1 && !deathmatch->intValue && !coop->intValue)
+	if (!dedicated->intValue && !loadgame && svs.maxclients == 1 && !deathmatch->intValue && !coop->intValue)
 		sv.doAutoSave = true;
 }
