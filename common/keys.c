@@ -634,7 +634,7 @@ char *Key_KeynumToString (int keynum)
 	static	char	tinystr[2];
 	
 	if (keynum == -1)
-		return "<KEY NOT FOUND>";
+		return "<KEY_NOT_FOUND>";
 	if (keynum > 32 && keynum < 127)
 	{	// printable ascii
 		tinystr[0] = keynum;
@@ -646,7 +646,7 @@ char *Key_KeynumToString (int keynum)
 		if (keynum == kn->keynum)
 			return kn->name;
 
-	return "<UNKNOWN KEYNUM>";
+	return "<UNKNOWN_KEYNUM>";
 }
 
 
