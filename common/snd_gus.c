@@ -1093,7 +1093,7 @@ qboolean GUS_Init(void)
 		FSVal = extCodecVoices = 0x03; /* FS: Added extCodecVoices */
 		rc = COM_CheckParm("-sspeed");
 
-		if (s_khz->intValue >= 22050) /* FS: S_KHZ */
+		if (s_khz->intValue > 11025) /* FS: S_KHZ */
 		{
 			dma.speed = s_khz->intValue;
 
@@ -1142,7 +1142,7 @@ qboolean GUS_Init(void)
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
 		if (dma_dosadr==NULL)  // sezero
 		{
-			Com_Printf("Couldn't allocate sound dma buffer");
+			Com_Printf("Couldn't allocate sound dma buffer\n");
 			return false;
 		}
 
@@ -1169,7 +1169,7 @@ qboolean GUS_Init(void)
 		Voices=extVoices=32; /* FS: Added extVoices */
 		rc = COM_CheckParm("-sspeed");
 
-		if (s_khz->intValue >= 19293) /* FS: S_KHZ */
+		if (s_khz->intValue > 19293) /* FS: S_KHZ */
 		{
 			dma.speed = s_khz->intValue;
 
@@ -1216,7 +1216,7 @@ qboolean GUS_Init(void)
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
 		if (dma_dosadr==NULL)
 		{
-			Com_Printf("Couldn't allocate sound dma buffer");
+			Com_Printf("Couldn't allocate sound dma buffer\n");
 			return false;
 		}
 
@@ -1241,6 +1241,8 @@ qboolean GUS_Init(void)
 		GUS_StartGf1(SND_BUFFER_SIZE,Voices);
 		havegus = GUS_CLASSIC; /* FS: Classic GUS */
 
+		if (s_mixahead->value <= 0.2) /* FS: GUS Classic needs 0.3 to work properly. */
+			Cvar_SetValue ("s_mixahead", 0.3);
 	}
 
 	return(true);

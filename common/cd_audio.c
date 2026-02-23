@@ -861,10 +861,8 @@ int CDAudio_Init (void)
 	char	*memory;
 	int		n;
 
-#ifdef QUAKE1
 	if (cls.state == ca_dedicated)
 		return -1;
-#endif
 
 	if (COM_CheckParm("-nocdaudio") || COM_CheckParm("-nocd")) /* FS: Added -nocd */
 		return -1;

@@ -52,6 +52,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define VRS_BYTE_RMW	2
 #define VRS_WORD_OUT	3
 
-void VideoRegisterSet (int *pregset);
+void VideoRegisterSet (const int *pregset);
 
 #endif // __VREGSET_H
