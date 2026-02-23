@@ -88,6 +88,7 @@ typedef struct sizebuf_s
 
 void SZ_InitEx (sizebuf_t *buf, byte *data, int length, qbool allowoverflow); /* FS: From EZQ */
 void SZ_Init (sizebuf_t *buf, byte *data, int length); /* FS: From EZQ */
+void SZ_Alloc (sizebuf_t *buf, int startsize);
 void SZ_Clear (sizebuf_t *buf);
 void *SZ_GetSpace (sizebuf_t *buf, int length);
 void SZ_Write (sizebuf_t *buf, void *data, int length);
@@ -267,11 +268,12 @@ extern	char	com_gamedir[MAX_OSPATH];
 void COM_WriteFile (const char *filename, void *data, int len);
 int COM_OpenFile (const char *filename, int *hndl);
 int COM_FOpenFile (const char *filename, FILE **file);
+void COM_CloseFile (int h);
 
-byte *COM_LoadFile (char *path);
+void COM_FreeFile (void *buffer);
+byte *COM_LoadFile (const char *path);
 void COM_CreatePath (char *path);
 void COM_Gamedir (char *dir);
-void COM_FreeFile (void *buffer);
 
 /* FS: New stuff */
 int Q_tolower(int c);
@@ -284,7 +286,9 @@ qboolean COM_ItemInList (char *check, int num, char **list);
 char **COM_ListFiles (char *findname, int *numfiles, unsigned musthave, unsigned canthave);
 
 extern	struct cvar_s	*registered;
-extern	qboolean		standard_quake, rogue, hipnotic;
+
+extern	qboolean	standard_quake, rogue, hipnotic;
+extern	qboolean	warpspasm, nehahra, extended_mod; /* FS: For Nehara */
 
 char *Info_ValueForKey (char *s, char *key);
 void Info_RemoveKey (char *s, char *key);

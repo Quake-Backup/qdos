@@ -41,14 +41,17 @@ void Update_Gamespy_Menu(void);
 void GameSpy_Async_Think(void); /* FS: Not static in Q1 since it is called from host.c */
 #endif
 
-typedef struct
+typedef struct usercmd_s
 {
-	vec3_t	viewangles;
-
-// intended velocities
-	float	forwardmove;
-	float	sidemove;
-	float	upmove;
+	vec3_t	angles;
+#ifdef QUAKE1
+	float	forwardmove, sidemove, upmove;
+#else
+	short	forwardmove, sidemove, upmove;
+#endif
+	byte	msec;
+	byte	buttons;
+	byte	impulse;
 } usercmd_t;
 
 typedef struct

@@ -37,21 +37,52 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #define MAX_NUM_ARGVS	50
-#define NUM_SAFE_ARGVS  7
+#define NUM_SAFE_ARGVS  8
 
 usercmd_t nullcmd; // guarenteed to be zero
 
 static char	*largv[MAX_NUM_ARGVS + NUM_SAFE_ARGVS + 1];
 static char	*argvdummy = " ";
 
-static char	*safeargvs[NUM_SAFE_ARGVS] =
-        {"-stdvid", "-nolan", "-nosound", "-nocdaudio", "-nojoy", "-nomouse", "-safevga"}; /* FS: Added safevga */
+static char	*safeargvs[NUM_SAFE_ARGVS] = {"-stdvid", "-nolan", "-nosound", "-nocdaudio", "-nojoy", "-nomouse", "-dibonly", "-safevga"}; /* FS: Added -safevga for 320x200 */
 
 cvar_t	*registered;
 
-qboolean	com_modified;	// set true if using non-id files
+#ifdef QUAKE1
+/* sending cmdline upon CCREQ_RULE_INFO is evil */
+cvar_t	*cmdline;
 
-int		static_registered = 1;	// only for startup check, then set
+/* FS: For Nehahra */
+cvar_t	*cutscene;
+cvar_t	*nehx00;
+cvar_t	*nehx01;
+cvar_t	*nehx02;
+cvar_t	*nehx03;
+cvar_t	*nehx04;
+cvar_t	*nehx05;
+cvar_t	*nehx06;
+cvar_t	*nehx07;
+cvar_t	*nehx08;
+cvar_t	*nehx09;
+cvar_t	*nehx10;
+cvar_t	*nehx11;
+cvar_t	*nehx12;
+cvar_t	*nehx13;
+cvar_t	*nehx14;
+cvar_t	*nehx15;
+cvar_t	*nehx16;
+cvar_t	*nehx17;
+cvar_t	*nehx18;
+cvar_t	*nehx19;
+
+int com_nummissionpacks; //johnfitz
+
+qboolean		proghack;
+#endif // QUAKE1
+
+qboolean        com_modified;   // set true if using non-id files
+
+int             static_registered = 1;  // only for startup check, then set
 
 qboolean		msg_suppress_1 = 0;
 
@@ -60,10 +91,27 @@ void COM_Path_f (void);
 void COM_Dir_f (void); /* FS: From Quake 2 */
 
 // if a packfile directory differs from this, it is assumed to be hacked
-#define	PAK0_COUNT		339
+#define PAK0_COUNT		339	/* id1/pak0.pak - v1.0x */
+#define PAK0_CRC_V100		13900	/* id1/pak0.pak - v1.00 */
+#define PAK0_CRC_V101		62751	/* id1/pak0.pak - v1.01 */
+#define PAK0_CRC_V106		32981	/* id1/pak0.pak - v1.06 */
+#ifdef QUAKE1
+#define PAK0_CRC	(PAK0_CRC_V106)
+#else
 #define	PAK0_CRC		52883
+#endif
+#define PAK0_COUNT_V091		308	/* id1/pak0.pak - v0.91/0.92, not supported */
+#define PAK0_CRC_V091		28804	/* id1/pak0.pak - v0.91/0.92, not supported */
 
-qboolean		standard_quake = true, rogue, hipnotic;
+char	com_token[1024];
+int		com_argc;
+char	**com_argv;
+
+#define CMDLINE_LENGTH	256 //johnfitz -- mirrored in cmd.c
+char	com_cmdline[CMDLINE_LENGTH];
+
+qboolean	standard_quake = true, rogue, hipnotic;
+qboolean	nehahra, extended_mod, warpspasm; /* FS: For Nehahra and Warpspasm */
 
 char	gamedirfile[MAX_OSPATH];
 
@@ -92,15 +140,16 @@ static const unsigned short pop[] =
 
 All of Quake's data access is through a hierchal file system, but the contents of the file system can be transparently merged from several sources.
 
-The "base directory" is the path to the directory holding the quake.exe and all game directories.  The sys_* files pass this to host_init in quakeparms_t->basedir.  This can be overridden with the "-basedir" command line parm to allow code debugging in a different directory.  The base directory is
-only used during filesystem initialization.
+The "base directory" is the path to the directory holding the quake.exe and all game directories.  The sys_* files pass this to host_init in quakeparms_t->basedir.  This can be overridden with the "-basedir" command line parm to allow code debugging
+in a different directory.  The base directory is only used during filesystem initialization.
 
-The "game directory" is the first tree on the search path and directory that all generated files (savegames, screenshots, demos, config files) will be saved to.  This can be overridden with the "-game" command line parameter.  The game directory can never be changed while quake is executing.  This is a precacution against having a malicious server instruct clients to write files over areas they shouldn't.
+The "game directory" is the first tree on the search path and directory that all generated files (savegames, screenshots, demos, config files) will be saved to.  This can be overridden with the "-game" command line parameter.  The game directory can
+never be changed while quake is executing.  This is a precacution against having a malicious server instruct clients to write files over areas they shouldn't.
 
 The "cache directory" is only used during development to save network bandwidth, especially over ISDN / T1 lines.  If there is a cache directory
 specified, when a file is found by the normal search path, it will be mirrored
 into the cache directory, then opened there.
-	
+
 */
 
 //============================================================================
@@ -458,20 +507,41 @@ void MSG_WriteString (sizebuf_t *sb, char *s)
 		SZ_Write (sb, s, Q_strlen(s)+1);
 }
 
+//johnfitz -- original behavior, 13.3 fixed point coords, max range +-4096
+void MSG_WriteCoord16 (sizebuf_t *sb, float f)
+{
+	MSG_WriteShort (sb, Q_rint(f*8));
+}
+
+//johnfitz -- 16.8 fixed point coords, max range +-32768
+void MSG_WriteCoord24 (sizebuf_t *sb, float f)
+{
+	MSG_WriteShort (sb, f);
+	MSG_WriteByte (sb, (int)(f*255)%255);
+}
+
+//johnfitz -- 32-bit float coords
+void MSG_WriteCoord32f (sizebuf_t *sb, float f)
+{
+	MSG_WriteFloat (sb, f);
+}
+
 void MSG_WriteCoord (sizebuf_t *sb, float f)
 {
-	MSG_WriteShort (sb, (int)(f*8));
+	MSG_WriteCoord16 (sb, f);
 }
 
 void MSG_WriteAngle (sizebuf_t *sb, float f)
 {
-	MSG_WriteByte (sb, (int)(f*256/360) & 255);
+	MSG_WriteByte (sb, Q_rint(f * 256.0 / 360.0) & 255); //johnfitz -- use Q_rint instead of (int)
 }
 
+//johnfitz -- for PROTOCOL_FITZQUAKE and QW
 void MSG_WriteAngle16 (sizebuf_t *sb, float f)
 {
-	MSG_WriteShort (sb, (int)(f*65536/360) & 65535);
+	MSG_WriteShort (sb, Q_rint(f * 65536.0 / 360.0) & 65535);
 }
+//johnfitz
 
 void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
 {
@@ -520,7 +590,6 @@ void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
 	    MSG_WriteByte (buf, cmd->impulse);
 	MSG_WriteByte (buf, cmd->msec);
 }
-
 
 //
 // reading functions
@@ -632,8 +701,8 @@ float MSG_ReadFloat (void)
 
 char *MSG_ReadString (void)
 {
-	static char	string[2048];
-	int		l,c;
+	static char     string[2048];
+	int             l,c;
 	
 	l = 0;
 	do
@@ -670,9 +739,27 @@ char *MSG_ReadStringLine (void)
 	return string;
 }
 
-float MSG_ReadCoord (void)
+//johnfitz -- original behavior, 13.3 fixed point coords, max range +-4096
+float MSG_ReadCoord16 (void)
 {
 	return MSG_ReadShort() * (1.0/8);
+}
+
+//johnfitz -- 16.8 fixed point coords, max range +-32768
+float MSG_ReadCoord24 (void)
+{
+	return MSG_ReadShort() + MSG_ReadByte() * (1.0/255);
+}
+
+//johnfitz -- 32-bit float coords
+float MSG_ReadCoord32f (void)
+{
+	return MSG_ReadFloat();
+}
+
+float MSG_ReadCoord (void)
+{
+	return MSG_ReadCoord16();
 }
 
 float MSG_ReadAngle (void)
@@ -680,10 +767,12 @@ float MSG_ReadAngle (void)
 	return MSG_ReadChar() * (360.0/256);
 }
 
+//johnfitz -- for PROTOCOL_FITZQUAKE and QW
 float MSG_ReadAngle16 (void)
 {
 	return MSG_ReadShort() * (360.0/65536);
 }
+//johnfitz
 
 void MSG_ReadDeltaUsercmd (usercmd_t *from, usercmd_t *move)
 {
@@ -741,6 +830,15 @@ void SZ_InitEx (sizebuf_t *buf, byte *data, int length, qbool allowoverflow) /* 
 void SZ_Init (sizebuf_t *buf, byte *data, int length) /* FS: From EZQ */
 {
 	SZ_InitEx (buf, data, length, false);
+}
+
+void SZ_Alloc (sizebuf_t *buf, int startsize)
+{
+	if (startsize < 256)
+		startsize = 256;
+	buf->data = Z_Malloc (startsize);
+	buf->maxsize = startsize;
+	buf->cursize = 0;
 }
 
 void SZ_Clear (sizebuf_t *buf)
@@ -902,10 +1000,6 @@ void COM_DefaultExtension (char *path, const char *extension, size_t pathlen)
 
 //============================================================================
 
-char	com_token[1024];
-int		com_argc;
-char	**com_argv;
-
 
 /*
 ==============
@@ -971,6 +1065,17 @@ skipwhite:
 		}
 	}
 
+#ifdef QUAKE1
+// parse single characters
+	if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
+	{
+		com_token[len] = c;
+		len++;
+		com_token[len] = 0;
+		return data+1;
+	}
+#endif // QUAKE1
+
 // parse a regular word
 	do
 	{
@@ -978,6 +1083,10 @@ skipwhite:
 		data++;
 		len++;
 		c = *data;
+#ifdef QUAKE1
+		if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
+			break;
+#endif // QUAKE1
 	} while (c>32);
 	
 	com_token[len] = 0;
@@ -1069,7 +1178,7 @@ void COM_CheckRegistered (void)
 			return;
 		}
 	}
-	
+
 	Cvar_ForceSet("registered", "1");
 	static_registered = 1;
 	Com_Printf ("Playing registered version.\n");
@@ -1123,7 +1232,6 @@ void COM_AddParm (char *parm)
 	largv[com_argc++] = parm;
 }
 
-
 /*
 ================
 COM_Init
@@ -1131,9 +1239,9 @@ COM_Init
 */
 void COM_Init (void)
 {
-	byte	swaptest[2] = {1,0};
+	byte    swaptest[2] = {1,0};
 
-// set the byte swapping variables in a portable manner	
+// set the byte swapping variables in a portable manner 
 	if ( *(short *)swaptest == 1)
 	{
 		bigendien = false;
@@ -1155,8 +1263,60 @@ void COM_Init (void)
 		LittleFloat = FloatSwap;
 	}
 
+#ifdef QUAKE1
+	if (nehahra) /* FS: For Nehara */
+	{
+		cutscene = Cvar_Get("cutscene", "1", CVAR_ARCHIVE); 
+		Cvar_Set_Description("cutscene", "Special internal CVAR for Nehara mod.");
+		nehx00 = Cvar_Get("nehx00", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx00", "Special internal CVAR for Nehara mod.");
+		nehx01 = Cvar_Get("nehx01", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx01", "Special internal CVAR for Nehara mod.");
+		nehx02 = Cvar_Get("nehx02", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx02", "Special internal CVAR for Nehara mod.");
+		nehx03 = Cvar_Get("nehx03", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx03", "Special internal CVAR for Nehara mod.");
+		nehx04 = Cvar_Get("nehx04", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx04", "Special internal CVAR for Nehara mod.");
+		nehx05 = Cvar_Get("nehx05", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx05", "Special internal CVAR for Nehara mod.");
+		nehx06 = Cvar_Get("nehx06", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx06", "Special internal CVAR for Nehara mod.");
+		nehx07 = Cvar_Get("nehx07", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx07", "Special internal CVAR for Nehara mod.");
+		nehx08 = Cvar_Get("nehx08", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx08", "Special internal CVAR for Nehara mod.");
+		nehx09 = Cvar_Get("nehx09", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx09", "Special internal CVAR for Nehara mod.");
+		nehx10 = Cvar_Get("nehx10", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx10", "Special internal CVAR for Nehara mod.");
+		nehx11 = Cvar_Get("nehx11", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx11", "Special internal CVAR for Nehara mod.");
+		nehx12 = Cvar_Get("nehx12", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx12", "Special internal CVAR for Nehara mod.");
+		nehx13 = Cvar_Get("nehx13", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx13", "Special internal CVAR for Nehara mod.");
+		nehx14 = Cvar_Get("nehx14", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx14", "Special internal CVAR for Nehara mod.");
+		nehx15 = Cvar_Get("nehx15", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx15", "Special internal CVAR for Nehara mod.");
+		nehx16 = Cvar_Get("nehx16", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx16", "Special internal CVAR for Nehara mod.");
+		nehx17 = Cvar_Get("nehx17", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx17", "Special internal CVAR for Nehara mod.");
+		nehx18 = Cvar_Get("nehx18", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx18", "Special internal CVAR for Nehara mod.");
+		nehx19 = Cvar_Get("nehx19", "0", CVAR_ARCHIVE);
+		Cvar_Set_Description("nehx19", "Special internal CVAR for Nehara mod.");
+	}
+#endif // QUAKE1
+
 	registered = Cvar_Get("registered","0", CVAR_NOSET);
 	Cvar_Set_Description("registered", "Special internal CVAR for setting Registered game.");
+#ifdef QUAKE1
+	cmdline = Cvar_Get("cmdline","", 0);
+	Cvar_Set_Description("cmdline", "Adds command line parameters as script statements\nCommands lead with a +, and continue until a - or another +\nquake +prog jctest.qp +cmd amlev1\nquake -nosound +cmd amlev1");
+#endif // QUAKE1
 
 	Cmd_AddCommand ("path", COM_Path_f);
 	Cmd_AddCommand ("dir", COM_Dir_f); /* FS: From Quake 2 */
@@ -1183,6 +1343,17 @@ char *va (const char *fmt, ...)
 	va_end (args);
 
 	return string;
+}
+
+/// just for debugging
+int memsearch (byte *start, int count, int search)
+{
+	int	i;
+	
+	for (i=0 ; i<count ; i++)
+		if (start[i] == search)
+			return i;
+	return -1;
 }
 
 /*
@@ -1396,117 +1567,6 @@ void COM_CopyFile (char *netpath, char *cachepath)
 	fclose (out);
 }
 
-/* FS: From Q2 */
-char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned canthave )
-{
-	char *s;
-	int nfiles = 0;
-	char **list = 0;
-
-	s = Sys_FindFirst( findname, musthave, canthave );
-	while ( s )
-	{
-		if ( s[strlen(s)-1] != '.' )
-			nfiles++;
-		s = Sys_FindNext( musthave, canthave );
-	}
-	Sys_FindClose ();
-
-	if ( !nfiles ) {
-		*numfiles = 0;
-		return NULL;
-	}
-
-	nfiles++; // add space for a guard
-	*numfiles = nfiles;
-
-	list = malloc( sizeof( char * ) * nfiles );
-	if (!list)
-	{
-		Sys_Error("COM_ListFiles: out of memory");
-		return NULL;
-	}
-	memset( list, 0, sizeof( char * ) * nfiles );
-
-	s = Sys_FindFirst( findname, musthave, canthave );
-	nfiles = 0;
-	while ( s )
-	{
-		if ( s[strlen(s)-1] != '.' )
-		{
-			list[nfiles] = strdup( s );
-			if (!list[nfiles])
-			{
-				Sys_Error("COM_ListFiles: out of memory");
-				return NULL;
-			}
-#if defined(_WIN32) || defined(__MSDOS__)
-			strlwr( list[nfiles] );
-#endif
-			nfiles++;
-		}
-		s = Sys_FindNext( musthave, canthave );
-	}
-	Sys_FindClose ();
-
-	return list;
-}
-
-/* FS: From Q2 */
-char *COM_NextPath (char *prevpath)
-{
-	searchpath_t	*s;
-	char			*prev;
-
-	if (!prevpath)
-		return com_gamedir;
-
-	prev = com_gamedir;
-	for (s=com_searchpaths ; s ; s=s->next)
-	{
-		if (s->pack)
-			continue;
-		if (prevpath == prev)
-			return s->filename;
-		prev = s->filename;
-	}
-
-	return NULL;
-}
-
-/* FS: From Q2 */
-void COM_FreeFileList (char **list, int n)
-{
-	int i;
-
-	for (i = 0; i < n; i++)
-	{
-		if (list && list[i])
-		{
-			free(list[i]);
-			list[i] = 0;
-		}
-	}
-	free(list);
-}
-
-/* FS: From Q2 */
-qboolean COM_ItemInList (char *check, int num, char **list)
-{
-	int		i;
-
-	if (!check || !list)
-		return false;
-	for (i=0; i<num; i++)
-	{
-		if (!list[i])
-			continue;
-		if (!Q_strcasecmp(check, list[i]))
-			return true;
-	}
-	return false;
-}
-
 /*
 ===========
 COM_FindFile
@@ -1540,6 +1600,13 @@ int COM_FindFile (const char *filename, int *handle, FILE **file)
 // search through the path, one element at a time
 //
 	search = com_searchpaths;
+#ifdef QUAKE1
+	if (proghack)
+	{	// gross hack to use quake 1 progs with quake 2 maps
+		if (!strcmp(filename, "progs.dat"))
+			search = search->next;
+	}
+#endif // QUAKE1
 
 	for ( ; search ; search = search->next)
 	{
@@ -1603,7 +1670,7 @@ int COM_FindFile (const char *filename, int *handle, FILE **file)
 				if (cachetime < findtime)
 					COM_CopyFile (netpath, cachepath);
 				Q_strlcpy (netpath, cachepath, sizeof(netpath));
-			}	
+			}
 
 			Sys_Printf ("FindFile: %s\n",netpath);
 			com_filesize = Sys_FileOpenRead (netpath, &i);
@@ -1646,7 +1713,7 @@ int COM_OpenFile (const char *filename, int *handle)
 
 /*
 ===========
-COM_FindFile
+COM_FOpenFile
 
 Finds the file in the search path.
 Sets com_filesize and one of handle or file
@@ -1727,7 +1794,7 @@ Allways appends a 0 byte to the loaded data.
 */
 byte	*loadbuf;
 int		loadsize;
-byte *COM_LoadFile (char *path)
+byte *COM_LoadFile (const char *path)
 {
 	FILE	*h;
 	byte	*buf;
@@ -1785,7 +1852,7 @@ pack_t *COM_LoadPackFile (char *packfile)
 	pack_t			*pack;
 	FILE			*packhandle;
 	dpackfile_t		info[MAX_FILES_IN_PACK];
-	unsigned short		crc;
+	unsigned short	crc;
 
 	if (COM_FileOpenRead (packfile, &packhandle) == -1)
 		return NULL;
@@ -1814,24 +1881,20 @@ pack_t *COM_LoadPackFile (char *packfile)
 		Sys_Error ("%s has %i files", packfile, numpackfiles);
 
 	if (numpackfiles != PAK0_COUNT)
-		com_modified = true;	// not the original file
+		com_modified = true;    // not the original file
 
-	newfiles = Z_Malloc (numpackfiles * sizeof(packfile_t));
+	newfiles = Z_Malloc(numpackfiles * sizeof(packfile_t));
 
 	fseek (packhandle, header.dirofs, SEEK_SET);
 	fread (&info, 1, header.dirlen, packhandle);
 
 // crc the directory to check for modifications
 	crc = CRC_Block((byte *)info, header.dirlen);
-
-//	CRC_Init (&crc);
-//	for (i=0 ; i<header.dirlen ; i++)
-//		CRC_ProcessByte (&crc, ((byte *)info)[i]);
 	if (crc != PAK0_CRC)
 		com_modified = true;
 
-// parse the directory
-	for (i=0 ; i<numpackfiles ; i++)
+	// parse the directory
+	for (i = 0; i < numpackfiles ; i++)
 	{
 		Q_strlcpy (newfiles[i].name, info[i].name, sizeof(newfiles[i].name));
 		newfiles[i].filepos = LittleLong(info[i].filepos);
@@ -1846,6 +1909,119 @@ pack_t *COM_LoadPackFile (char *packfile)
 	
 	Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
 	return pack;
+}
+
+/* FS: From Q2 */
+char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned canthave )
+{
+	char *s;
+	int nfiles = 0;
+	char **list = 0;
+
+	s = Sys_FindFirst( findname, musthave, canthave );
+	while ( s )
+	{
+		if ( s[strlen(s)-1] != '.' )
+			nfiles++;
+		s = Sys_FindNext( musthave, canthave );
+	}
+	Sys_FindClose ();
+
+	if ( !nfiles ) {
+		*numfiles = 0;
+		return NULL;
+	}
+
+	nfiles++; // add space for a guard
+	*numfiles = nfiles;
+
+	list = malloc( sizeof( char * ) * nfiles );
+	if (!list)
+	{
+		Sys_Error("COM_ListFiles: out of memory");
+		return NULL;
+	}
+
+	memset( list, 0, sizeof( char * ) * nfiles );
+
+	s = Sys_FindFirst( findname, musthave, canthave );
+	nfiles = 0;
+	while ( s )
+	{
+		if ( s[strlen(s)-1] != '.' )
+		{
+			list[nfiles] = strdup( s );
+			if (!list[nfiles])
+			{
+				free(list);
+				Sys_Error("COM_ListFiles: out of memory");
+				return NULL;
+			}
+#if defined(_WIN32) || defined(__MSDOS__)
+			strlwr( list[nfiles] );
+#endif
+			nfiles++;
+		}
+		s = Sys_FindNext( musthave, canthave );
+	}
+	Sys_FindClose ();
+
+	return list;
+}
+
+/* FS: From Q2 */
+char *COM_NextPath (char *prevpath)
+{
+	searchpath_t	*s;
+	char			*prev;
+
+	if (!prevpath)
+		return com_gamedir;
+
+	prev = com_gamedir;
+	for (s=com_searchpaths ; s ; s=s->next)
+	{
+		if (s->pack)
+			continue;
+		if (prevpath == prev)
+			return s->filename;
+		prev = s->filename;
+	}
+
+	return NULL;
+}
+
+/* FS: From Q2 */
+void COM_FreeFileList (char **list, int n)
+{
+	int i;
+
+	for (i = 0; i < n; i++)
+	{
+		if (list && list[i])
+		{
+			free(list[i]);
+			list[i] = 0;
+		}
+	}
+	free(list);
+}
+
+/* FS: From Q2 */
+qboolean COM_ItemInList (char *check, int num, char **list)
+{
+	int		i;
+
+	if (!check || !list)
+		return false;
+	for (i=0; i<num; i++)
+	{
+		if (!list[i])
+			continue;
+		if (!Q_strcasecmp(check, list[i]))
+			return true;
+	}
+	return false;
 }
 
 /* FS: From Quake 2 */
@@ -1928,7 +2104,7 @@ void COM_AddGameDirectory (char *dir)
 //
 // add the directory to the search path
 //
-	search = Z_Malloc (sizeof(searchpath_t));
+	search = Z_Malloc(sizeof(searchpath_t));
 	Q_strlcpy (search->filename, dir, sizeof(search->filename));
 	search->next = com_searchpaths;
 	com_searchpaths = search;
