@@ -61,7 +61,7 @@ void Cmd_Wait_f (void)
 */
 
 sizebuf_t	cmd_text;
-byte		cmd_text_buf[8192];
+byte		cmd_text_buf[16384]; /* FS: Was 8192.  Needed for a larger config. */
 
 /*
 ============
@@ -262,15 +262,19 @@ void Cmd_Exec_f (void)
 
 	s = Cmd_Argv(1);
 
-	if(!strncmp(s,"default.cfg",11)) /* FS: unbindall protection hack */
+	if (!strncmp(s,"default.cfg",11) || quakerc_init) /* FS: unbindall protection hack */
 	{
 		Com_DPrintf (DEVELOPER_MSG_VERBOSE, "default.cfg unbindall protection hack\n");
 		Cvar_SetValue("cl_unbindall_protection", 0); /* FS: disable the warning if it's default.cfg */
 	}
 
 	if(quakerc_init)
-		if(!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
+	{
+		if (!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
+		{
 			s = "qdos.cfg";
+		}
+	}
 
 	f = (char *)COM_LoadFile (s);
 	if (!f)
