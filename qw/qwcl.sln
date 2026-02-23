@@ -12,7 +12,7 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		GL QW Debug|Win32 = GL QW Debug|Win32
-		GL QW|Win32 = GL QW|Win32
+		GL QW Release|Win32 = GL QW Release|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -20,16 +20,16 @@ Global
 		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.Debug|Win32.Build.0 = Debug|Win32
 		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.GL QW Debug|Win32.ActiveCfg = Debug|Win32
 		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.GL QW Debug|Win32.Build.0 = Debug|Win32
-		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.GL QW|Win32.ActiveCfg = Debug|Win32
-		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.GL QW|Win32.Build.0 = Debug|Win32
+		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.GL QW Release|Win32.ActiveCfg = Release|Win32
+		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.GL QW Release|Win32.Build.0 = Release|Win32
 		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.Release|Win32.ActiveCfg = Release|Win32
 		{D974C9FE-7BE9-4529-8EE7-7944395B87F2}.Release|Win32.Build.0 = Release|Win32
 		{C89F379C-A885-428D-806A-13498CC1DC52}.Debug|Win32.ActiveCfg = Debug|Win32
 		{C89F379C-A885-428D-806A-13498CC1DC52}.Debug|Win32.Build.0 = Debug|Win32
 		{C89F379C-A885-428D-806A-13498CC1DC52}.GL QW Debug|Win32.ActiveCfg = GL QW Debug|Win32
 		{C89F379C-A885-428D-806A-13498CC1DC52}.GL QW Debug|Win32.Build.0 = GL QW Debug|Win32
-		{C89F379C-A885-428D-806A-13498CC1DC52}.GL QW|Win32.ActiveCfg = GL QW|Win32
-		{C89F379C-A885-428D-806A-13498CC1DC52}.GL QW|Win32.Build.0 = GL QW|Win32
+		{C89F379C-A885-428D-806A-13498CC1DC52}.GL QW Release|Win32.ActiveCfg = GL QW Release|Win32
+		{C89F379C-A885-428D-806A-13498CC1DC52}.GL QW Release|Win32.Build.0 = GL QW Release|Win32
 		{C89F379C-A885-428D-806A-13498CC1DC52}.Release|Win32.ActiveCfg = Release|Win32
 		{C89F379C-A885-428D-806A-13498CC1DC52}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

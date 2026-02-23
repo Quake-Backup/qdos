@@ -652,7 +652,8 @@ void M_SinglePlayer_Key (int key)
 
 int		load_cursor;		// 0 < load_cursor < MAX_SAVEGAMES
 
-#define	MAX_SAVEGAMES		12
+#define	MAX_SAVEGAMES		13
+#define AUTOSAVE_POS MAX_SAVEGAMES-1
 char	m_filenames[MAX_SAVEGAMES][SAVEGAME_COMMENT_LENGTH+1];
 int		loadable[MAX_SAVEGAMES];
 
@@ -665,9 +666,16 @@ void M_ScanSaves (void)
 
 	for (i=0 ; i<MAX_SAVEGAMES ; i++)
 	{
-		strcpy (m_filenames[i], "--- UNUSED SLOT ---");
+		Q_strlcpy (m_filenames[i], "--- UNUSED SLOT ---", sizeof(m_filenames[i]));
 		loadable[i] = false;
-		Com_sprintf (name, sizeof(name), "%s/s%i.sav", com_gamedir, i);
+		if (i == AUTOSAVE_POS)
+		{
+			Com_sprintf (name, sizeof(name), "%s/auto.sav", com_gamedir, i);
+		}
+		else
+		{
+			Com_sprintf (name, sizeof(name), "%s/s%i.sav", com_gamedir, i);
+		}
 		f = fopen (name, "r");
 		if (!f)
 			continue;
@@ -760,7 +768,14 @@ void M_Load_Key (int k)
 		SCR_BeginLoadingPlaque ();
 
 	// issue the load command
-		Cbuf_AddText (va ("deathmatch 0; coop 0;load s%i\n", load_cursor) );
+		if (load_cursor == AUTOSAVE_POS)
+		{
+			Cbuf_AddText ("deathmatch 0; coop 0;load auto\n");
+		}
+		else
+		{
+			Cbuf_AddText (va ("deathmatch 0; coop 0;load s%i\n", load_cursor) );
+		}
 		return;
 
 	case K_UPARROW:
@@ -793,7 +808,14 @@ void M_Save_Key (int k)
 	case K_ENTER:
 		m_state = m_none;
 		key_dest = key_game;
-		Cbuf_AddText (va("save s%i\n", load_cursor));
+		if (load_cursor == AUTOSAVE_POS)
+		{
+			Cbuf_AddText ("save auto\n");
+		}
+		else
+		{
+			Cbuf_AddText (va("save s%i\n", load_cursor));
+		}
 		return;
 
 	case K_UPARROW:
@@ -910,10 +932,10 @@ void M_Menu_Setup_f (void)
 	key_dest = key_menu;
 	m_state = m_setup;
 	m_entersound = true;
-	Q_strcpy(setup_myname, cl_name->string);
-	Q_strcpy(setup_hostname, hostname->string);
-	setup_top = setup_oldtop = ((int)cl_color->value) >> 4;
-	setup_bottom = setup_oldbottom = ((int)cl_color->value) & 15;
+	Q_strlcpy(setup_myname, cl_name->string, sizeof(setup_myname));
+	Q_strlcpy(setup_hostname, hostname->string, sizeof(setup_hostname));
+	setup_top = setup_oldtop = (cl_color->intValue) >> 4;
+	setup_bottom = setup_oldbottom = (cl_color->intValue) & 15;
 }
 
 
@@ -1630,7 +1652,7 @@ void M_Keys_Key (int k)
 		}
 		else if (k != '`')
 		{
-			sprintf (cmd, "bind \"%s\" \"%s\"\n", Key_KeynumToString (k), bindnames[keys_cursor][0]);
+			Com_sprintf (cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString (k), bindnames[keys_cursor][0]);
 			Cbuf_InsertText (cmd);
 		}
 		
@@ -2249,9 +2271,8 @@ void M_Menu_ModemConfig_f (void)
 	key_dest = key_menu;
 	m_state = m_modemconfig;
 	m_entersound = true;
-	(*GetModemConfig) (0, &modemConfig_dialing, modemConfig_clear, modemConfig_init, modemConfig_hangup);
+	(*GetModemConfig) (0, &modemConfig_dialing, modemConfig_clear, modemConfig_init, modemConfig_hangup, sizeof(modemConfig_clear), sizeof(modemConfig_init), sizeof(modemConfig_hangup));
 }
-
 
 void M_ModemConfig_Draw (void)
 {
@@ -2435,7 +2456,7 @@ void M_Menu_LanConfig_f (void)
 	if (StartingGame && lanConfig_cursor == 2)
 		lanConfig_cursor = 1;
 	lanConfig_port = DEFAULTnet_hostport;
-	sprintf(lanConfig_portname, "%u", lanConfig_port);
+	Com_sprintf(lanConfig_portname, sizeof(lanConfig_portname), "%u", lanConfig_port);
 
 	m_return_onerror = false;
 	m_return_reason[0] = 0;
@@ -2517,6 +2538,11 @@ void M_LanConfig_Key (int key)
 	case K_UPARROW:
 		S_LocalSound ("misc/menu1.wav");
 		lanConfig_cursor--;
+#ifdef GAMESPY
+		if (StartingGame && lanConfig_cursor < 0) /* FS: -2 now because we got the gamespy stuff. */
+			lanConfig_cursor = NUM_LANCONFIG_CMDS-2;
+		else
+#endif
 		if (lanConfig_cursor < 0)
 			lanConfig_cursor = NUM_LANCONFIG_CMDS-1;
 		break;
@@ -2608,7 +2634,11 @@ void M_LanConfig_Key (int key)
 		}
 	}
 
+#ifdef GAMESPY /* FS: Added Gamespy */
+	if (StartingGame && lanConfig_cursor == NUM_LANCONFIG_CMDS-2) /* FS: -2 now because we got the gamespy stuff. */
+#else
 	if (StartingGame && lanConfig_cursor == NUM_LANCONFIG_CMDS-1)
+#endif
 	{
 		if (key == K_UPARROW)
 			lanConfig_cursor = 1;
@@ -2616,14 +2646,14 @@ void M_LanConfig_Key (int key)
 			lanConfig_cursor = 0;
 	}
 
-	l =  Q_atoi(lanConfig_portname);
+	l =  atoi(lanConfig_portname);
 
 	if (l > 65535)
 		l = lanConfig_port;
 	else
 		lanConfig_port = l;
 
-	sprintf(lanConfig_portname, "%u", lanConfig_port);
+	Com_sprintf(lanConfig_portname, sizeof(lanConfig_portname), "%u", lanConfig_port);
 }
 
 //=============================================================================
@@ -2811,7 +2841,7 @@ void M_GameOptions_Draw (void)
 	M_Print (160, 56, va("%i", maxplayers) );
 
 	M_Print (0, 64, "        Game Type");
-	if (coop->value)
+	if (coop->intValue)
 		M_Print (160, 64, "Cooperative");
 	else
 		M_Print (160, 64, "Deathmatch");
@@ -2821,7 +2851,7 @@ void M_GameOptions_Draw (void)
 	{
 		char *msg;
 
-		switch((int)teamplay->value)
+		switch(teamplay->intValue)
 		{
 			case 1: msg = "No Friendly Fire"; break;
 			case 2: msg = "Friendly Fire"; break;
@@ -2837,7 +2867,7 @@ void M_GameOptions_Draw (void)
 	{
 		char *msg;
 
-		switch((int)teamplay->value)
+		switch(teamplay->intValue)
 		{
 			case 1: msg = "No Friendly Fire"; break;
 			case 2: msg = "Friendly Fire"; break;
@@ -2939,7 +2969,7 @@ void M_NetStart_Change (int dir)
 		break;
 
 	case 2:
-		Cvar_SetValue ("coop", coop->value ? 0 : 1);
+		Cvar_SetValue ("coop", coop->intValue ? 0 : 1);
 		break;
 
 	case 3:
@@ -2948,34 +2978,34 @@ void M_NetStart_Change (int dir)
 		else
 			count = 2;
 
-		Cvar_SetValue ("teamplay", teamplay->value + dir);
-		if (teamplay->value > count)
+		Cvar_SetValue ("teamplay", teamplay->intValue + dir);
+		if (teamplay->intValue > count)
 			Cvar_SetValue ("teamplay", 0);
-		else if (teamplay->value < 0)
+		else if (teamplay->intValue < 0)
 			Cvar_SetValue ("teamplay", count);
 		break;
 
 	case 4:
-		Cvar_SetValue ("skill", skill->value + dir);
-		if (skill->value > 3)
+		Cvar_SetValue ("skill", skill->intValue + dir);
+		if (skill->intValue > 3)
 			Cvar_SetValue ("skill", 0);
-		if (skill->value < 0)
+		if (skill->intValue < 0)
 			Cvar_SetValue ("skill", 3);
 		break;
 
 	case 5:
-		Cvar_SetValue ("fraglimit", fraglimit->value + dir*10);
-		if (fraglimit->value > 100)
+		Cvar_SetValue ("fraglimit", fraglimit->intValue + dir*10);
+		if (fraglimit->intValue > 100)
 			Cvar_SetValue ("fraglimit", 0);
-		if (fraglimit->value < 0)
+		if (fraglimit->intValue < 0)
 			Cvar_SetValue ("fraglimit", 100);
 		break;
 
 	case 6:
-		Cvar_SetValue ("timelimit", timelimit->value + dir*5);
-		if (timelimit->value > 60)
+		Cvar_SetValue ("timelimit", timelimit->intValue + dir*5);
+		if (timelimit->intValue > 60)
 			Cvar_SetValue ("timelimit", 0);
-		if (timelimit->value < 0)
+		if (timelimit->intValue < 0)
 			Cvar_SetValue ("timelimit", 60);
 		break;
 
@@ -3177,9 +3207,9 @@ void M_ServerList_Draw (void)
 				for (j = i+1; j < hostCacheCount; j++)
 					if (strcmp(hostcache[j].name, hostcache[i].name) < 0)
 					{
-						Q_memcpy(&temp, &hostcache[j], sizeof(hostcache_t));
-						Q_memcpy(&hostcache[j], &hostcache[i], sizeof(hostcache_t));
-						Q_memcpy(&hostcache[i], &temp, sizeof(hostcache_t));
+						memcpy(&temp, &hostcache[j], sizeof(hostcache_t));
+						memcpy(&hostcache[j], &hostcache[i], sizeof(hostcache_t));
+						memcpy(&hostcache[i], &temp, sizeof(hostcache_t));
 					}
 		}
 		slist_sorted = true;
@@ -3190,9 +3220,9 @@ void M_ServerList_Draw (void)
 	for (n = 0; n < hostCacheCount; n++)
 	{
 		if (hostcache[n].maxusers)
-			sprintf(string, "%-15.15s %-15.15s %2u/%2u\n", hostcache[n].name, hostcache[n].map, hostcache[n].users, hostcache[n].maxusers);
+			Com_sprintf(string, sizeof(string), "%-15.15s %-15.15s %2u/%2u\n", hostcache[n].name, hostcache[n].map, hostcache[n].users, hostcache[n].maxusers);
 		else
-			sprintf(string, "%-15.15s %-15.15s\n", hostcache[n].name, hostcache[n].map);
+			Com_sprintf(string, sizeof(string), "%-15.15s %-15.15s\n", hostcache[n].name, hostcache[n].map);
 		M_Print (16, 32 + 8*n, string);
 	}
 	M_DrawCharacter (0, 32 + slist_cursor*8, 12+((int)(realtime*4)&1));
@@ -3502,7 +3532,7 @@ void M_Menu_Extended_f(void)
 
 }
 
-void M_Extended_Draw()
+void M_Extended_Draw (void)
 {
 	int		y = 32;
 	float	r;
@@ -3525,19 +3555,19 @@ void M_Extended_Draw()
 	M_DrawCheckbox (220, y, cl_unbindall_protection->intValue);
 
 	M_Print (16, y = y + Y_SPACE,  "           Show Uptime");
-	if (show_uptime->value < 1 )
+	if (show_uptime->intValue < 1 )
 		M_Print (220, y, "off");
-	else if (show_uptime->value == 1)
+	else if (show_uptime->intValue == 1)
 		M_Print (220, y, "Server");
-	else if (show_uptime->value >= 2)
+	else if (show_uptime->intValue >= 2)
 		M_Print (220, y, "Total");
 
 	M_Print (16, y = y + Y_SPACE,  "             Show Time");
-	if (show_time->value < 1 )
+	if (show_time->intValue < 1 )
 		M_Print (220, y, "off");
-	else if (show_time->value == 1)
+	else if (show_time->intValue == 1)
 		M_Print (220, y, "Military");
-	else if (show_time->value >= 2)
+	else if (show_time->intValue >= 2)
 		M_Print (220, y, "AM/PM");
 
 	M_Print (16, y = y + Y_SPACE,  "        Show Framerate");
@@ -3681,42 +3711,42 @@ void M_Extended_Key(int k)
 		switch (extended_cursor)
 		{
 		case 0:
-			Cvar_SetValue ("v_contentblend", !v_contentblend->value);
+			Cvar_SetValue ("v_contentblend", !v_contentblend->intValue);
 			break;
 		case 1:
-			Cvar_SetValue ("pq_fullpitch", !pq_fullpitch->value);
-			Cvar_SetValue ("cl_fullpitch", pq_fullpitch->value);
+			Cvar_SetValue ("pq_fullpitch", !pq_fullpitch->intValue);
+			Cvar_SetValue ("cl_fullpitch", pq_fullpitch->intValue);
 			break;
 		case 2:
-			Cvar_SetValue ("cl_demos", !cl_demos->value);
+			Cvar_SetValue ("cl_demos", !cl_demos->intValue);
 			break;
 		case 3:
-			Cvar_SetValue ("cl_unbindall_protection", !cl_unbindall_protection->value);
+			Cvar_SetValue ("cl_unbindall_protection", !cl_unbindall_protection->intValue);
 			break;
 		case 4:
-			if (show_uptime->value >= 2)
+			if (show_uptime->intValue >= 2)
 				Cvar_SetValue ("show_uptime", 0);
-			else if (show_uptime->value <= 0)
+			else if (show_uptime->intValue <= 0)
 				Cvar_SetValue ("show_uptime", 1);
-			else if (show_uptime->value == 1)
+			else if (show_uptime->intValue == 1)
 				Cvar_SetValue ("show_uptime", 2);
 			break;
 		case 5:
-			if (show_time->value >= 2)
+			if (show_time->intValue >= 2)
 				Cvar_SetValue ("show_time", 0);
-			else if (show_time->value <= 0)
+			else if (show_time->intValue <= 0)
 				Cvar_SetValue ("show_time", 1);
-			else if (show_time->value == 1)
+			else if (show_time->intValue == 1)
 				Cvar_SetValue ("show_time", 2);
 			break;
 		case 6:
-			Cvar_SetValue ("show_fps", !show_fps->value);
+			Cvar_SetValue ("show_fps", !show_fps->intValue);
 			break;
 		case 7:
-			Cvar_SetValue ("in_freelook", !in_freelook->value);
+			Cvar_SetValue ("in_freelook", !in_freelook->intValue);
 			break;
 		case 8:
-			Cvar_SetValue ("r_waterwarp", !r_waterwarp->value);
+			Cvar_SetValue ("r_waterwarp", !r_waterwarp->intValue);
 			break;
 		case 9:
 			M_AdjustSliders_Extended(1);
@@ -4113,9 +4143,9 @@ static void SearchGamespyGames (void)
 
 	m_num_gamespy_servers = 0;
 
-	for (i=0 ; i<=MAX_GAMESPY_MENU_SERVERS ; i++)
+	for (i=0 ; i< MAX_GAMESPY_MENU_SERVERS ; i++)
 	{
-		strcpy (gamespy_server_names[i], NO_SERVER_STRING);
+		Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 	}
 
 	// send out info packets
@@ -4200,9 +4230,9 @@ void M_Gamespy_Draw(void)
 
 	if(gamespyInit)
 	{
-		for (i = 0; i <= MAX_GAMESPY_MENU_SERVERS; i++)
+		for (i = 0; i < MAX_GAMESPY_MENU_SERVERS; i++)
 		{
-			strcpy (gamespy_server_names[i], NO_SERVER_STRING);
+			Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 			memset (&gamespy_connect_string, 0, sizeof(gamespy_connect_string));
 		}
 

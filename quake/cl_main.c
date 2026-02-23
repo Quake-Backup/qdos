@@ -59,8 +59,7 @@ entity_t		cl_static_entities[MAX_STATIC_ENTITIES];
 lightstyle_t	cl_lightstyle[MAX_LIGHTSTYLES];
 dlight_t		cl_dlights[MAX_DLIGHTS];
 
-entity_t		*cl_entities; //johnfitz -- was a static array, now on hunk
-int				cl_max_edicts; //johnfitz -- only changes when new map loads
+entity_t		cl_entities[MAX_EDICTS];
 
 int				cl_numvisedicts;
 entity_t		*cl_visedicts[MAX_VISEDICTS];
@@ -91,6 +90,12 @@ static void CL_Gspystop_f (void);
 static void CL_PrintBrowserList_f (void);
 #endif
 
+#ifdef __DJGPP__
+void Sys_Memory_Stats_f (void); /* FS: Added */
+#endif
+
+extern void CL_PlayBackgroundTrack (int track);
+
 /*
 =====================
 CL_ClearState
@@ -115,11 +120,7 @@ void CL_ClearState (void)
 	memset (cl_lightstyle, 0, sizeof(cl_lightstyle));
 	memset (cl_temp_entities, 0, sizeof(cl_temp_entities));
 	memset (cl_beams, 0, sizeof(cl_beams));
-
-	//johnfitz -- cl_entities is now dynamically allocated
-	cl_max_edicts = CLAMP (MIN_EDICTS,(int)max_edicts->value,MAX_EDICTS);
-	cl_entities = Hunk_AllocName (cl_max_edicts*sizeof(entity_t), "cl_entities");
-	//johnfitz
+	memset (cl_entities, 0, sizeof(cl_entities));
 
 //
 // allocate the efrags and chain together into a free list
@@ -170,6 +171,11 @@ void CL_Disconnect (void)
 	cls.signon = 0;
 	key_dest = 0; /* FS: Fix so main menu still works after disconnect */
 	cl.intermission = 0; /* FS: Baker fix */
+
+	/* FS: Clear these three for snd_restart. */
+	cl.cdtrack = 0;
+	cls.forcetrack = -1;
+	cl.numsounds = 0;
 }
 
 void CL_Disconnect_f (void)
@@ -238,7 +244,7 @@ void CL_SignonReply (void)
 		MSG_WriteString (&cls.message, va("name \"%s\"\n", cl_name->string));
 	
 		MSG_WriteByte (&cls.message, clc_stringcmd);
-		MSG_WriteString (&cls.message, va("color %i %i\n", ((int)cl_color->value)>>4, ((int)cl_color->value)&15));
+		MSG_WriteString (&cls.message, va("color %i %i\n", (cl_color->intValue)>>4, (cl_color->intValue)&15));
 	
 		MSG_WriteByte (&cls.message, clc_stringcmd);
 		Com_sprintf (str, sizeof(str), "spawn %s", cls.spawnparms);
@@ -248,7 +254,6 @@ void CL_SignonReply (void)
 	case 3:  
 		MSG_WriteByte (&cls.message, clc_stringcmd);
 		MSG_WriteString (&cls.message, "begin");
-		Cache_Report ();	  // print remaining memory
 		break;
 		
 	case 4:
@@ -276,7 +281,7 @@ void CL_NextDemo (void)
 		cls.demonum = 0;
 		if (!cls.demos[cls.demonum][0])
 		{
-			if (!cl_demos->value || nostartupdemos) /* FS: Disable startup demos */
+			if (!cl_demos->intValue || nostartupdemos) /* FS: Disable startup demos */
 				Com_DPrintf(DEVELOPER_MSG_STANDARD, "Startup demos disabled.");
 			else
 				Com_Printf ("No demos listed with startdemos\n");
@@ -406,7 +411,7 @@ float CL_LerpPoint (void)
 
 	f = cl.mtime[0] - cl.mtime[1];
 	
-	if (!f || cl_nolerp->value || cls.timedemo || sv.active)
+	if (!f || cl_nolerp->intValue || cls.timedemo || sv.active)
 	{
 		cl.time = cl.mtime[0];
 		return 1;
@@ -600,7 +605,7 @@ void CL_RelinkEntities (void)
 
 		ent->forcelink = false;
 
-		if (i == cl.viewentity && !chase_active->value)
+		if (i == cl.viewentity && !chase_active->intValue)
 			continue;
 
 		if (cl_numvisedicts < MAX_VISEDICTS)
@@ -639,7 +644,7 @@ int CL_ReadFromServer (void)
 		CL_ParseServerMessage ();
 	} while (ret && cls.state == ca_connected);
 	
-	if (cl_shownet->value)
+	if (cl_shownet->intValue)
 		Com_Printf ("\n");
 
 	CL_RelinkEntities ();
@@ -745,10 +750,29 @@ void CL_Snd_Shutdown_f (void)
 
 void CL_Snd_Restart_f (void)
 {
+	int i;
+
 	S_StopAllSounds();
 	S_Shutdown();
-	//Cache_Flush();
 	S_Init();
+
+	if (cl.numsounds)
+	{
+		for (i = 1; i < cl.numsounds; i++) /* FS: First one is always blank, so skip it. */
+		{
+			S_TouchSound (cl.sound_precache_str[i]);
+			cl.sound_precache[i] = S_PrecacheSound (cl.sound_precache_str[i]);
+		}
+	}
+
+	if ( (cls.demoplayback || cls.demorecording) && (cls.forcetrack != -1) )
+	{
+		CL_PlayBackgroundTrack(cls.forcetrack);
+	}
+	else
+	{
+		CL_PlayBackgroundTrack(cl.cdtrack);
+	}
 }
 
 /*
@@ -767,10 +791,10 @@ void CL_Init (void)
 // register our commands
 //
 	cl_name = Cvar_Get("_cl_name", "player", CVAR_ARCHIVE);
-	cl_name->description = "Internal CVAR for setting player name.  Use cvar \"name\" to set.";
+	Cvar_Set_Description("cl_name", "Internal CVAR for setting player name.  Use cvar \"name\" to set.");
 
 	cl_color = Cvar_Get("_cl_color", "0", CVAR_ARCHIVE);
-	cl_color->description = "Internal CVAR for setting player colour.  Use cvar \"color\" to set.";
+	Cvar_Set_Description("cl_color", "Internal CVAR for setting player colour.  Use cvar \"color\" to set.");
 
 	cl_upspeed = Cvar_Get("cl_upspeed","200", 0);
 	cl_forwardspeed = Cvar_Get("cl_forwardspeed","400", CVAR_ARCHIVE);
@@ -784,7 +808,7 @@ void CL_Init (void)
 
 	cl_shownet = Cvar_Get("cl_shownet", "0", 0); // can be 0, 1, or 2
 	cl_nolerp = Cvar_Get("cl_nolerp", "0", 0); 
-	cl_nolerp->description = "Disable animation lerping.";
+	Cvar_Set_Description("cl_nolerp", "Disable animation lerping.");
 	lookspring = Cvar_Get("lookspring", "0", CVAR_ARCHIVE);
 	lookstrafe = Cvar_Get("lookstrafe", "0", CVAR_ARCHIVE);
 	sensitivity = Cvar_Get("sensitivity", "3", CVAR_ARCHIVE);
@@ -796,32 +820,32 @@ void CL_Init (void)
 
 #ifdef GAMESPY /* FS: GameSpy CVARs */
 	cl_master_server_ip = Cvar_Get("cl_master_server_ip", CL_MASTER_ADDR, CVAR_ARCHIVE);
-	cl_master_server_ip->description = "GameSpy Master Server IP.";
+	Cvar_Set_Description("cl_master_server_ip", "GameSpy Master Server IP.");
 	cl_master_server_port = Cvar_Get("cl_master_server_port", CL_MASTER_PORT, CVAR_ARCHIVE); 
-	cl_master_server_port->description = "GameSpy Master Server Port.";
+	Cvar_Set_Description("cl_master_server_port", "GameSpy Master Server Port.");
 	cl_master_server_queries = Cvar_Get("cl_master_server_queries", "10", CVAR_ARCHIVE);
-	cl_master_server_queries->description = "Number of sockets to allocate for GameSpy.";
+	Cvar_Set_Description("cl_master_server_queries", "Number of sockets to allocate for GameSpy.");
 	cl_master_server_timeout = Cvar_Get("cl_master_server_timeout", "3000", CVAR_ARCHIVE);
-	cl_master_server_timeout->description = "Timeout (in milliseconds) to give up on pinging a server.";
+	Cvar_Set_Description("cl_master_server_timeout", "Timeout (in milliseconds) to give up on pinging a server.");
 	cl_master_server_retries = Cvar_Get("cl_master_server_retries", "20", CVAR_ARCHIVE);
-	cl_master_server_retries->description = "Number of retries to attempt for receiving the server list.  Formula is 50ms + 10ms for each retry.";
+	Cvar_Set_Description("cl_master_server_retries", "Number of retries to attempt for receiving the server list.  Formula is 50ms + 10ms for each retry.");
 	cl_master_server_optout = Cvar_Get("cl_master_server_optout", "0", CVAR_ARCHIVE);
-	cl_master_server_optout->description = "Opt-out of sending your Quake Username in GameSpy list requests.";
+	Cvar_Set_Description("cl_master_server_optout", "Opt-out of sending your Quake Username in GameSpy list requests.");
 	snd_gamespy_sounds = Cvar_Get("snd_gamespy_sounds", "0", CVAR_ARCHIVE);
-	snd_gamespy_sounds->description = "Play the complete.wav and abort.wav from GameSpy3D if it exists in sounds/gamespy.";
+	Cvar_Set_Description("snd_gamespy_sounds", "Play the complete.wav and abort.wav from GameSpy3D if it exists in sounds/gamespy.");
 #endif
 
 	/* FS: New stuff */
 	console_old_complete = Cvar_Get("console_old_complete", "0", CVAR_ARCHIVE);
-	console_old_complete->description = "Use the legacy style console tab completion.";
+	Cvar_Set_Description("console_old_complete", "Use the legacy style console tab completion.");
 	cl_ogg_music = Cvar_Get("cl_ogg_music", "1", CVAR_ARCHIVE);
-	cl_ogg_music->description = "Play OGG tracks in the format of id1/music/trackXX.ogg if they exist.";
+	Cvar_Set_Description("cl_ogg_music", "Play OGG tracks in the format of id1/music/trackXX.ogg if they exist.");
 	cl_wav_music = Cvar_Get("cl_wav_music", "1", CVAR_ARCHIVE);
-	cl_wav_music->description = "Play WAV tracks in the format of id1/music/trackXX.wav if they exist.";
+	Cvar_Set_Description("cl_wav_music", "Play WAV tracks in the format of id1/music/trackXX.wav if they exist.");
 	cl_autorepeat_allkeys = Cvar_Get("cl_autorepeat_allkeys", "0", CVAR_ARCHIVE);
-	cl_autorepeat_allkeys->description = "Allow to autorepeat any key, not just Backspace, Pause, PgUp, and PgDn keys.";
+	Cvar_Set_Description("cl_autorepeat_allkeys", "Allow to autorepeat any key, not just Backspace, Pause, PgUp, and PgDn keys.");
 	cl_sleep = Cvar_Get("cl_sleep", "0", CVAR_ARCHIVE);
-	cl_sleep->description = "Reduce CPU usage by issuing sleep commands between extra frames.";
+	Cvar_Set_Description("cl_sleep", "Reduce CPU usage by issuing sleep commands between extra frames.");
 
 	Cmd_AddCommand ("entities", CL_PrintEntities_f);
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
@@ -846,6 +870,10 @@ void CL_Init (void)
 #endif
 	Cmd_AddCommand("snd_shutdown", CL_Snd_Shutdown_f); /* FS */
 	Cmd_AddCommand("snd_restart", CL_Snd_Restart_f); /* FS */
+
+#ifdef __DJGPP__
+	Cmd_AddCommand ("memstats", Sys_Memory_Stats_f); /* FS: Added to keep track of memory usage in DOS */
+#endif
 }
 
 #ifdef GAMESPY /* FS: Gamespy Stuff */

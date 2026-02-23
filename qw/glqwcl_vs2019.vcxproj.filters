@@ -1,0 +1,549 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{33c51f9e-057b-48f2-942e-235cfcfc9629}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Gamespy">
+      <UniqueIdentifier>{d8e67213-a655-4902-ad39-ed7ee9dca141}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DOS">
+      <UniqueIdentifier>{6eabff9b-e99f-4fa1-a897-9a6c67af298e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GL">
+      <UniqueIdentifier>{11beeb85-f5d8-4984-a592-ffe812f1c6bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Software">
+      <UniqueIdentifier>{3042084d-aa01-4f19-99b4-4c70286abd92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Software\ASM">
+      <UniqueIdentifier>{bb4ff1c2-5c7b-4774-82e3-ade802b1b6e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{c2abe892-a2fb-4316-b552-c82622a238ba}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{a3643ba2-e0fb-4875-ae87-f9686eccd84f}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\common\cd_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_cam.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_demo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_ents.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_http.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_input.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_parse.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_pred.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\cl_tent.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\cmd_auto.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\console.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\crc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\cvar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\in_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\keys.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\mathlib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="md4.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="net_chan.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="net_wins.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\nonintel.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pmove.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pmovetst.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="r_part.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sbar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snd_dma.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snd_mem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snd_mix.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snd_strm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snd_wavstream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snd_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\sys_find.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\sys_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="view.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\wad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zone.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Goa\CEngine\darray.c">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Goa\CEngine\gserver.c">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Goa\CEngine\gserverlist.c">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Goa\CEngine\gutil.c">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Goa\CEngine\hashtable.c">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\Goa\nonport.c">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\dos_v2.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\in_dos.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="net_udp.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\sys_dos.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="vid_dos.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="vid_ext.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="vregset.c">
+      <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_draw.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_mesh.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_model.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_ngraph.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_refrag.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_rlight.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_rmain.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_rmisc.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_rsurf.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_screen.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_test.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_vidnt.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_warp.c">
+      <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_edge.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_fill.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_init.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_modech.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_part.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_polyse.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_scan.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_sky.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_sprite.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_surf.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_vars.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_zpoint.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\draw.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="model.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_aclip.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_alias.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_bsp.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_draw.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_edge.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_efrag.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_light.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="r_main.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="r_misc.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_sky.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_sprite.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_surf.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_vars.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="screen.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\vid_win.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\q_shwin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="qe3.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="quakeworld.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="qwcl2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="winquake.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\Goa\CEngine\darray.h">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Goa\CEngine\goaceng.h">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Goa\Sdk\goautil.h">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Goa\CEngine\gserver.h">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Goa\CEngine\gutil.h">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Goa\CEngine\hashtable.h">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Goa\nonport.h">
+      <Filter>Source Files\Gamespy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\adivtab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\anorms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bothdefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bspfile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\cdaudio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cl_http.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\console.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\crc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\cvar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\d_iface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\d_ifacea.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\d_local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\draw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\dstring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\gl_func.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\keys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mathlib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\modelgen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pmove.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="quakedef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\r_local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\r_shared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="render.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sbar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\screen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\snd_ogg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\spritegn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\sys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\wad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\winquake.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\common\math.s">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\snd_mixa.s">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\sys_wina.s">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="gl_model.h">
+      <Filter>Source Files\GL</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\gl_warp_sin.h">
+      <Filter>Source Files\GL</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\glquake.h">
+      <Filter>Source Files\GL</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\d_draw.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\d_draw16.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\d_parta.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\d_polysa.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\d_scana.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\d_spr8.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\d_varsa.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\r_aclipa.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\r_aliasa.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\r_drawa.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\r_edgea.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\r_varsa.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\surf16.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\surf8.s">
+      <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

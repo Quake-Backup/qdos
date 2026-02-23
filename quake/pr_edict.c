@@ -261,7 +261,7 @@ eval_t *GetEdictFieldValue(edict_t *ed, char *field)
 	if (strlen(field) < MAX_FIELD_LEN)
 	{
 		gefvCache[rep].pcache = def;
-		strcpy (gefvCache[rep].field, field);
+		Q_strlcpy (gefvCache[rep].field, field, sizeof(gefvCache[rep].field));
 		rep ^= 1;
 	}
 
@@ -291,33 +291,33 @@ char *PR_ValueString (etype_t type, eval_t *val)
 	switch (type)
 	{
 	case ev_string:
-		sprintf (line, "%s", pr_strings + val->string);
+		Com_sprintf (line, sizeof(line), "%s", pr_strings + val->string);
 		break;
 	case ev_entity:	
-		sprintf (line, "entity %i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)) );
+		Com_sprintf (line, sizeof(line), "entity %i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)) );
 		break;
 	case ev_function:
 		f = pr_functions + val->function;
-		sprintf (line, "%s()", pr_strings + f->s_name);
+		Com_sprintf (line, sizeof(line), "%s()", pr_strings + f->s_name);
 		break;
 	case ev_field:
 		def = ED_FieldAtOfs ( val->_int );
-		sprintf (line, ".%s", pr_strings + def->s_name);
+		Com_sprintf (line, sizeof(line), ".%s", pr_strings + def->s_name);
 		break;
 	case ev_void:
-		sprintf (line, "void");
+		Com_sprintf (line, sizeof(line), "void");
 		break;
 	case ev_float:
-		sprintf (line, "%5.1f", val->_float);
+		Com_sprintf (line, sizeof(line), "%5.1f", val->_float);
 		break;
 	case ev_vector:
-		sprintf (line, "'%5.1f %5.1f %5.1f'", val->vector[0], val->vector[1], val->vector[2]);
+		Com_sprintf (line, sizeof(line), "'%5.1f %5.1f %5.1f'", val->vector[0], val->vector[1], val->vector[2]);
 		break;
 	case ev_pointer:
-		sprintf (line, "pointer");
+		Com_sprintf (line, sizeof(line), "pointer");
 		break;
 	default:
-		sprintf (line, "bad type %i", type);
+		Com_sprintf (line, sizeof(line), "bad type %i", type);
 		break;
 	}
 	
@@ -343,30 +343,30 @@ char *PR_UglyValueString (etype_t type, eval_t *val)
 	switch (type)
 	{
 	case ev_string:
-		sprintf (line, "%s", pr_strings + val->string);
+		Com_sprintf (line, sizeof(line), "%s", pr_strings + val->string);
 		break;
 	case ev_entity:	
-		sprintf (line, "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
+		Com_sprintf (line, sizeof(line), "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
 		break;
 	case ev_function:
 		f = pr_functions + val->function;
-		sprintf (line, "%s", pr_strings + f->s_name);
+		Com_sprintf (line, sizeof(line), "%s", pr_strings + f->s_name);
 		break;
 	case ev_field:
 		def = ED_FieldAtOfs ( val->_int );
-		sprintf (line, "%s", pr_strings + def->s_name);
+		Com_sprintf (line, sizeof(line), "%s", pr_strings + def->s_name);
 		break;
 	case ev_void:
-		sprintf (line, "void");
+		Com_sprintf (line, sizeof(line), "void");
 		break;
 	case ev_float:
-		sprintf (line, "%f", val->_float);
+		Com_sprintf (line, sizeof(line), "%f", val->_float);
 		break;
 	case ev_vector:
-		sprintf (line, "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
+		Com_sprintf (line, sizeof(line), "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
 		break;
 	default:
-		sprintf (line, "bad type %i", type);
+		Com_sprintf (line, sizeof(line), "bad type %i", type);
 		break;
 	}
 	
@@ -392,17 +392,17 @@ char *PR_GlobalString (int ofs)
 	val = (void *)&pr_globals[ofs];
 	def = ED_GlobalAtOfs(ofs);
 	if (!def)
-		sprintf (line,"%i(?)", ofs);
+		Com_sprintf (line, sizeof(line), "%i(?)", ofs);
 	else
 	{
 		s = PR_ValueString (def->type, val);
-		sprintf (line,"%i(%s)%s", ofs, pr_strings + def->s_name, s);
+		Com_sprintf (line, sizeof(line), "%i(%s)%s", ofs, pr_strings + def->s_name, s);
 	}
 	
 	i = strlen(line);
 	for ( ; i<20 ; i++)
-		strcat (line," ");
-	strcat (line," ");
+		Q_strlcat (line," ", sizeof(line));
+	Q_strlcat (line, " ", sizeof(line));
 		
 	return line;
 }
@@ -415,14 +415,14 @@ char *PR_GlobalStringNoContents (int ofs)
 	
 	def = ED_GlobalAtOfs(ofs);
 	if (!def)
-		sprintf (line,"%i(?)", ofs);
+		Com_sprintf (line, sizeof(line), "%i(?)", ofs);
 	else
-		sprintf (line,"%i(%s)", ofs, pr_strings + def->s_name);
+		Com_sprintf (line, sizeof(line), "%i(%s)", ofs, pr_strings + def->s_name);
 	
 	i = strlen(line);
 	for ( ; i<20 ; i++)
-		strcat (line," ");
-	strcat (line," ");
+		Q_strlcat (line," ", sizeof(line));
+	Q_strlcat (line," ", sizeof(line));
 		
 	return line;
 }
@@ -562,7 +562,7 @@ void ED_PrintEdict_f (void)
 {
 	int		i;
 	
-	i = Q_atoi (Cmd_Argv(1));
+	i = atoi (Cmd_Argv(1));
 	if (i >= sv.num_edicts)
 	{
 		Com_Printf("Bad edict number\n");
@@ -666,17 +666,26 @@ void ED_ParseGlobals (char *data)
 		if (com_token[0] == '}')
 			break;
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return;
+		}
 
-		strcpy (keyname, com_token);
+		Q_strlcpy (keyname, com_token, sizeof(keyname));
 
 	// parse value	
 		data = COM_Parse (data);
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return;
+		}
 
 		if (com_token[0] == '}')
+		{
 			Sys_Error ("ED_ParseEntity: closing brace without data");
+			return;
+		}
 
 		key = ED_FindGlobal (keyname);
 		if (!key)
@@ -686,7 +695,10 @@ void ED_ParseGlobals (char *data)
 		}
 
 		if (!ED_ParseEpair ((void *)pr_globals, key, com_token))
+		{
 			Host_Error ("ED_ParseGlobals: parse error");
+			return;
+		}
 	}
 }
 
@@ -704,7 +716,7 @@ char *ED_NewString (char *string)
 	int		i,l;
 	
 	l = strlen(string) + 1;
-	new = Hunk_Alloc (l);
+	new = Z_TagMalloc (l, TAG_LEVEL);
 	new_p = new;
 
 	for (i=0 ; i< l ; i++)
@@ -755,7 +767,7 @@ qboolean	ED_ParseEpair (void *base, ddef_t *key, char *s)
 		break;
 		
 	case ev_vector:
-		strcpy (string, s);
+		Q_strlcpy (string, s, sizeof(string));
 		v = string;
 		w = string;
 		for (i=0 ; i<3 ; i++)
@@ -826,28 +838,32 @@ char *ED_ParseEdict (char *data, edict_t *ent)
 // go through all the dictionary pairs
 	while (1)
 	{	
-	// parse key
+		// parse key
 		data = COM_Parse (data);
 		if (com_token[0] == '}')
 			break;
+
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return NULL;
+		}
 		
-// anglehack is to allow QuakeEd to write single scalar angles
-// and allow them to be turned into vectors. (FIXME...)
-if (!strcmp(com_token, "angle"))
-{
-	strcpy (com_token, "angles");
-	anglehack = true;
-}
-else
-	anglehack = false;
+		// anglehack is to allow QuakeEd to write single scalar angles
+		// and allow them to be turned into vectors. (FIXME...)
+		if (!strcmp(com_token, "angle"))
+		{
+			Q_strlcpy (com_token, "angles", sizeof(com_token));
+			anglehack = true;
+		}
+		else
+			anglehack = false;
 
-// FIXME: change light to _light to get rid of this hack
-if (!strcmp(com_token, "light"))
-	strcpy (com_token, "light_lev");	// hack for single light def
+		// FIXME: change light to _light to get rid of this hack
+		if (!strcmp(com_token, "light"))
+			Q_strlcpy (com_token, "light_lev", sizeof(com_token));	// hack for single light def
 
-		strcpy (keyname, com_token);
+		Q_strlcpy (keyname, com_token, sizeof(keyname));
 
 		// another hack to fix heynames with trailing spaces
 		n = strlen(keyname);
@@ -857,18 +873,24 @@ if (!strcmp(com_token, "light"))
 			n--;
 		}
 
-	// parse value	
+		// parse value
 		data = COM_Parse (data);
 		if (!data)
+		{
 			Sys_Error ("ED_ParseEntity: EOF without closing brace");
+			return NULL;
+		}
 
 		if (com_token[0] == '}')
+		{
 			Sys_Error ("ED_ParseEntity: closing brace without data");
+			return NULL;
+		}
 
-		init = true;	
+		init = true;
 
-// keynames with a leading underscore are used for utility comments,
-// and are immediately discarded by quake
+		// keynames with a leading underscore are used for utility comments,
+		// and are immediately discarded by quake
 		if (keyname[0] == '_')
 			continue;
 
@@ -886,15 +908,18 @@ if (!strcmp(com_token, "light"))
 			continue;
 		}
 
-if (anglehack)
-{
-char	temp[32];
-strcpy (temp, com_token);
-sprintf (com_token, "0 %s 0", temp);
-}
+		if (anglehack)
+		{
+			char	temp[32];
+			Q_strlcpy (temp, com_token, sizeof(temp));
+			Com_sprintf (com_token, sizeof(com_token), "0 %s 0", temp);
+		}
 
 		if (!ED_ParseEpair ((void *)&ent->v, key, com_token))
+		{
 			Host_Error ("ED_ParseEdict: parse error");
+			return NULL;
+		}
 	}
 
 	if (!init)
@@ -937,16 +962,26 @@ void ED_LoadFromFile (char *data)
 		if (!data)
 			break;
 		if (com_token[0] != '{')
-			Sys_Error ("ED_LoadFromFile: found %s when expecting {",com_token);
+		{
+			Sys_Error ("ED_LoadFromFile: found %s when expecting {", com_token);
+			return;
+		}
 
 		if (!ent)
 			ent = EDICT_NUM(0);
 		else
 			ent = ED_Alloc ();
+
+		if (!ent)
+		{
+			Sys_Error("ED_LoadFromFile: no ent");
+			return;
+		}
+
 		data = ED_ParseEdict (data, ent);
 
 // remove things from different skill levels or deathmatch
-		if (deathmatch->value)
+		if (deathmatch->intValue)
 		{
 			if (((int)ent->v.spawnflags & SPAWNFLAG_NOT_DEATHMATCH))
 			{
@@ -1009,9 +1044,17 @@ void PR_LoadProgs (void)
 
 	CRC_Init (&pr_crc);
 
-	progs = (dprograms_t *)COM_LoadHunkFile ("progs.dat");
+	if (progs)
+	{
+		Z_Free(progs); /* FS: FIXME: Free on disconnect/quit. */
+	}
+
+	progs = (dprograms_t *)COM_LoadFile("progs.dat");
 	if (!progs)
+	{
 		Sys_Error ("PR_LoadProgs: couldn't load progs.dat");
+		return;
+	}
 	Com_DPrintf(DEVELOPER_MSG_PROGS, "Programs occupy %iK.\n", com_filesize/1024);
 
 	for (i=0 ; i<com_filesize ; i++)
@@ -1022,9 +1065,16 @@ void PR_LoadProgs (void)
 		((int *)progs)[i] = LittleLong ( ((int *)progs)[i] );		
 
 	if (progs->version != PROG_VERSION)
+	{
 		Sys_Error ("progs.dat has wrong version number (%i should be %i)", progs->version, PROG_VERSION);
+		return;
+	}
+
 	if (progs->crc != PROGHEADER_CRC)
+	{
 		Sys_Error ("progs.dat system vars have been modified, progdefs.h is out of date");
+		return;
+	}
 
 	pr_functions = (dfunction_t *)((byte *)progs + progs->ofs_functions);
 	pr_strings = (char *)progs + progs->ofs_strings;

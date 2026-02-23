@@ -38,7 +38,7 @@ int     D_SurfaceCacheForRes (int width, int height)
 
 	if (COM_CheckParm ("-surfcachesize"))
 	{
-		size = Q_atoi(com_argv[COM_CheckParm("-surfcachesize")+1]) * 1024;
+		size = atoi(com_argv[COM_CheckParm("-surfcachesize")+1]) * 1024;
 		return size;
 	}
 	
@@ -80,7 +80,7 @@ D_InitCaches
 
 ================
 */
-void D_InitCaches (void *buffer, int size)
+void D_InitCaches (void *buffer, size_t size)
 {
 	if (!msg_suppress_1)
 		Com_Printf ("%ik surface cache\n", size/1024);

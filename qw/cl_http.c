@@ -71,10 +71,10 @@ void CL_HTTP_RemoveTemp(void)
 	if (cls.download)
 		fclose(cls.download);
 
-	Com_sprintf(removeFile, sizeof(removeFile), "%s/%s", com_gamedir, cls.downloadtempname->str);
-	Com_DPrintf(DEVELOPER_MSG_NET, "Removing temp file: %s\n", cls.downloadtempname->str);
+	Com_sprintf(removeFile, sizeof(removeFile), "%s/%s", com_gamedir, cls.downloadtempname);
+	Com_DPrintf(DEVELOPER_MSG_NET, "Removing temp file: %s\n", cls.downloadtempname);
 	if(remove(removeFile) != 0)
-		Com_Printf("Error removing file: %s\n", cls.downloadtempname->str);
+		Com_Printf("Error removing file: %s\n", cls.downloadtempname);
 }
 
 static int http_progress (void *clientp, double dltotal, double dlnow,
@@ -129,10 +129,10 @@ void CL_HTTP_StartDownload (void)
 	curl_easy_setopt (easy_handle, CURLOPT_NOSIGNAL, 1L);
 	curl_easy_setopt (easy_handle, CURLOPT_PROGRESSFUNCTION, http_progress);
 	curl_easy_setopt (easy_handle, CURLOPT_WRITEFUNCTION, http_write);
-	curl_easy_setopt (easy_handle, CURLOPT_URL, cls.downloadurl->str);
+	curl_easy_setopt (easy_handle, CURLOPT_URL, cls.downloadurl);
 	curl_multi_add_handle (multi_handle, easy_handle);
 
-	Com_DPrintf(DEVELOPER_MSG_NET, "HTTP Download URL: %s\n", cls.downloadurl->str);
+	Com_DPrintf(DEVELOPER_MSG_NET, "HTTP Download URL: %s\n", cls.downloadurl);
 }
 
 void CL_HTTP_Update (void)
@@ -152,7 +152,7 @@ void CL_HTTP_Update (void)
 			Com_DPrintf(DEVELOPER_MSG_NET, "HTTP URL response code: %li\n", response_code);
 			if ( (response_code == HTTP_OK || response_code == HTTP_REST) && !(httpDlAborted)) /* FS: Have to check for the abort boolean, very rarely a ctrl+c to stop the transfer ends up here instead and thinks it's a good file to load fucking everything up */
 			{
-				Com_Printf ("HTTP Download of %s completed\n", cls.downloadname->str); /* FS: Tell me when it's done */
+				Com_Printf ("HTTP Download of %s completed\n", cls.downloadname); /* FS: Tell me when it's done */
 
 				CL_FinishDownload (true); /* FS: Temp file renames are handled here if successful */
 			}

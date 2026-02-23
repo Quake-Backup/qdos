@@ -358,15 +358,15 @@ void TTY_SetComPortConfig (int portNumber, int port, int irq, int baud, qboolean
 	Cvar_SetValue ("_config_com_modem", temp);
 }
 
-void TTY_GetModemConfig (int portNumber, char *dialType, char *clear, char *init, char *hangup)
+void TTY_GetModemConfig (int portNumber, char *dialType, char *clear, char *init, char *hangup, size_t clearlen, size_t initlen, size_t hanguplen)
 {
 	ComPort	*p;
 
 	p = handleToPort[portNumber];
 	*dialType = p->dialType;
-	Q_strcpy(clear, p->clear);
-	Q_strcpy(init, p->startup);
-	Q_strcpy(hangup, p->shutdown);
+	Q_strlcpy(clear, p->clear, clearlen);
+	Q_strlcpy(init, p->startup, initlen);
+	Q_strlcpy(hangup, p->shutdown, hanguplen);
 }
 
 void TTY_SetModemConfig (int portNumber, char *dialType, char *clear, char *init, char *hangup)
@@ -375,9 +375,9 @@ void TTY_SetModemConfig (int portNumber, char *dialType, char *clear, char *init
 
 	p = handleToPort[portNumber];
 	p->dialType = dialType[0];
-	Q_strcpy(p->clear, clear);
-	Q_strcpy(p->startup, init);
-	Q_strcpy(p->shutdown, hangup);
+	Q_strlcpy(p->clear, clear, sizeof(p->clear));
+	Q_strlcpy(p->startup, init, sizeof(p->startup));
+	Q_strlcpy(p->shutdown, hangup, sizeof(p->shutdown));
 
 	p->modemInitialized = false;
 
@@ -397,9 +397,9 @@ static void ResetComPortConfig (ComPort *p)
 	p->modemStatusIgnore = MSR_CD | MSR_CTS | MSR_DSR;
 	p->baudBits = 115200 / 57600;
 	p->lineControl = LCR_DATA_BITS_8 | LCR_STOP_BITS_1 | LCR_PARITY_NONE;
-	Q_strcpy(p->clear, "ATZ");
-	Q_strcpy(p->startup, "");
-	Q_strcpy(p->shutdown, "AT H");
+	Q_strlcpy(p->clear, "ATZ", sizeof(p->clear));
+	Q_strlcpy(p->startup, "", sizeof(p->startup));
+	Q_strlcpy(p->shutdown, "AT H", sizeof(p->shutdown));
 	p->modemRang = false;
 	p->modemConnected = false;
 	p->statusUpdated = false;
@@ -651,7 +651,7 @@ failed:
 		key_dest = key_menu;
 		m_state = m_return_state;
 		m_return_onerror = false;
-		Q_strcpy(m_return_reason, "Initialization Failed");
+		Q_strlcpy(m_return_reason, "Initialization Failed", sizeof(m_return_reason));
 	}
 	return;
 }
@@ -781,7 +781,7 @@ int TTY_Connect(int handle, char *host)
 		key_count = -2;
 
 		Com_Printf ("Dialing...\n");
-		sprintf((char *)dialstring, "AT D%c %s\r", p->dialType, host);
+		Com_sprintf((char *)dialstring, sizeof(dialstring), "AT D%c %s\r", p->dialType, host);
 		Modem_Command (p, (char *)dialstring);
 		start = Sys_DoubleTime();
 		while(1)
@@ -955,7 +955,7 @@ void Com_f (void)
 	int		n;
 
 	// first, determine which port they're messing with
-	portNumber = Q_atoi(Cmd_Argv (0) + 3) - 1;
+	portNumber = atoi(Cmd_Argv (0) + 3) - 1;
 	if (portNumber > 1)
 		return;
 	p = handleToPort[portNumber];
@@ -1013,7 +1013,7 @@ void Com_f (void)
 				Com_Printf("COM port must be disabled to change port\n");
 				return;
 			}
-		p->uart = Q_atoi (Cmd_Argv (i+1));
+		p->uart = atoi (Cmd_Argv (i+1));
 	}
 
 	if ((i = Cmd_CheckParm ("irq")) != 0)
@@ -1023,7 +1023,7 @@ void Com_f (void)
 				Com_Printf("COM port must be disabled to change irq\n");
 				return;
 			}
-		p->irq = Q_atoi (Cmd_Argv (i+1));
+		p->irq = atoi (Cmd_Argv (i+1));
 	}
 
 	if ((i = Cmd_CheckParm ("baud")) != 0)
@@ -1033,7 +1033,7 @@ void Com_f (void)
 				Com_Printf("COM port must be disabled to change baud\n");
 				return;
 			}
-		n = Q_atoi (Cmd_Argv (i+1));
+		n = atoi (Cmd_Argv (i+1));
 		if (n == 0)
 			Com_Printf("Invalid baud rate specified\n");
 		else
@@ -1147,15 +1147,18 @@ int TTY_Init(void)
 
 	for (n = 0; n < NUM_COM_PORTS; n++)
 	{
-		p = (ComPort *)Hunk_AllocName(sizeof(ComPort), "comport");
+		p = (ComPort *)Z_Malloc(sizeof(ComPort));
 		if (p == NULL)
-			Sys_Error("Hunk alloc failed for com port\n");
+		{
+			Sys_Error("Z_Malloc failed for com port\n");
+			return -1;
+		}
 		p->next = portList;
 		portList = p;
 		handleToPort[n] = p;
 		p->portNumber = n;
 		p->dialType = 'T';
-		sprintf(p->name, "com%u", n+1);
+		Com_sprintf(p->name, sizeof(p->name), "com%u", n+1);
 		Cmd_AddCommand (p->name, Com_f);
 		ResetComPortConfig (p);
 	}
@@ -1167,7 +1170,6 @@ int TTY_Init(void)
 
 	return 0;
 }
-
 
 void TTY_Shutdown(void)
 {
@@ -1183,6 +1185,7 @@ void TTY_Shutdown(void)
 				NET_Poll();
 			ComPort_Disable (p);
 		}
+		Z_Free(p);
 	}
 }
 

@@ -283,7 +283,7 @@ static int add_section(char *instring, long offset)
 		if (field_buffers[i].section==current_section_buffer)
 			field_buffers[i].name[0]=0;
 	// Set buffer information
-	strcpy(section_buffers[current_section_buffer].name,section);
+	Q_strlcpy(section_buffers[current_section_buffer].name, section, sizeof(section_buffers[current_section_buffer].name));
 	section_buffers[current_section_buffer].offset=offset;
 	return(current_section_buffer);
 }
@@ -306,7 +306,7 @@ static void add_field(char *instring, int section, long offset)
 	if (current_field_buffer>NUM_FIELD_BUFFERS)
 		current_field_buffer=0;
 	// Set buffer information
-	strcpy(field_buffers[current_field_buffer].name,field);
+	Q_strlcpy(field_buffers[current_field_buffer].name, field, sizeof(field_buffers[current_field_buffer].name));
 	field_buffers[current_field_buffer].section=section;
 	field_buffers[current_field_buffer].offset=offset;
 }
@@ -1093,9 +1093,9 @@ qboolean GUS_Init(void)
 		FSVal = extCodecVoices = 0x03; /* FS: Added extCodecVoices */
 		rc = COM_CheckParm("-sspeed");
 
-		if (s_khz->value >= 22050) /* FS: S_KHZ */
+		if (s_khz->intValue > 11025) /* FS: S_KHZ */
 		{
-			dma.speed = s_khz->value;
+			dma.speed = s_khz->intValue;
 
 			// Make sure rate not too high
 			if (dma.speed>48000)
@@ -1115,7 +1115,7 @@ qboolean GUS_Init(void)
 
 		if (rc)
 		{
-			dma.speed = Q_atoi(com_argv[rc+1]);
+			dma.speed = atoi(com_argv[rc+1]);
 	
 			// Make sure rate not too high
 			if (dma.speed>48000)
@@ -1142,7 +1142,7 @@ qboolean GUS_Init(void)
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
 		if (dma_dosadr==NULL)  // sezero
 		{
-			Com_Printf("Couldn't allocate sound dma buffer");
+			Com_Printf("Couldn't allocate sound dma buffer\n");
 			return false;
 		}
 
@@ -1169,9 +1169,9 @@ qboolean GUS_Init(void)
 		Voices=extVoices=32; /* FS: Added extVoices */
 		rc = COM_CheckParm("-sspeed");
 
-		if (s_khz->value >= 19293) /* FS: S_KHZ */
+		if (s_khz->intValue > 19293) /* FS: S_KHZ */
 		{
-			dma.speed = s_khz->value;
+			dma.speed = s_khz->intValue;
 
 			// Make sure rate not too high
 			if (dma.speed>44100)
@@ -1191,7 +1191,7 @@ qboolean GUS_Init(void)
 
 		if (rc)
 		{
-			dma.speed = Q_atoi(com_argv[rc+1]);
+			dma.speed = atoi(com_argv[rc+1]);
 
 			// Make sure rate not too high
 			if (dma.speed>44100)
@@ -1216,7 +1216,7 @@ qboolean GUS_Init(void)
 		dma_dosadr = dos_getmemory(SND_BUFFER_SIZE*2);
 		if (dma_dosadr==NULL)
 		{
-			Com_Printf("Couldn't allocate sound dma buffer");
+			Com_Printf("Couldn't allocate sound dma buffer\n");
 			return false;
 		}
 
@@ -1241,6 +1241,8 @@ qboolean GUS_Init(void)
 		GUS_StartGf1(SND_BUFFER_SIZE,Voices);
 		havegus = GUS_CLASSIC; /* FS: Classic GUS */
 
+		if (s_mixahead->value <= 0.2) /* FS: GUS Classic needs 0.3 to work properly. */
+			Cvar_SetValue ("s_mixahead", 0.3);
 	}
 
 	return(true);

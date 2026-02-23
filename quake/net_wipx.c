@@ -111,8 +111,8 @@ int WIPX_Init (void)
 	((struct sockaddr_ipx *)&broadcastaddr)->sa_socket = htons((unsigned short)net_hostport);
 
 	WIPX_GetSocketAddr (net_controlsocket, &addr);
-	Q_strcpy(my_ipx_address,  WIPX_AddrToString (&addr));
-	p = Q_strrchr (my_ipx_address, ':');
+	Q_strlcpy(my_ipx_address,  WIPX_AddrToString (&addr), sizeof(my_ipx_address));
+	p = strrchr (my_ipx_address, ':');
 	if (p)
 		*p = 0;
 
@@ -295,7 +295,7 @@ char *WIPX_AddrToString (struct qsockaddr *addr)
 {
 	static char buf[28];
 
-	sprintf(buf, "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%u",
+	Com_sprintf(buf, sizeof(buf), "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%u",
 		((struct sockaddr_ipx *)addr)->sa_netnum[0] & 0xff,
 		((struct sockaddr_ipx *)addr)->sa_netnum[1] & 0xff,
 		((struct sockaddr_ipx *)addr)->sa_netnum[2] & 0xff,
@@ -319,7 +319,7 @@ int WIPX_StringToAddr (char *string, struct qsockaddr *addr)
 	char buf[3];
 
 	buf[2] = 0;
-	Q_memset(addr, 0, sizeof(struct qsockaddr));
+	memset(addr, 0, sizeof(struct qsockaddr));
 	addr->sa_family = AF_IPX;
 
 #define DO(src,dest)	\
@@ -354,7 +354,7 @@ int WIPX_GetSocketAddr (int handle, struct qsockaddr *addr)
 	int socket = ipxsocket[handle];
 	int addrlen = sizeof(struct qsockaddr);
 
-	Q_memset(addr, 0, sizeof(struct qsockaddr));
+	memset(addr, 0, sizeof(struct qsockaddr));
 	if(pgetsockname(socket, (struct sockaddr *)addr, &addrlen) != 0)
 	{
 		int errno;
@@ -366,9 +366,9 @@ int WIPX_GetSocketAddr (int handle, struct qsockaddr *addr)
 
 //=============================================================================
 
-int WIPX_GetNameFromAddr (struct qsockaddr *addr, char *name)
+int WIPX_GetNameFromAddr (struct qsockaddr *addr, char *name, size_t namelen)
 {
-	Q_strcpy(name, WIPX_AddrToString(addr));
+	Q_strlcpy(name, WIPX_AddrToString(addr), namelen);
 	return 0;
 }
 
@@ -383,12 +383,12 @@ int WIPX_GetAddrFromName(char *name, struct qsockaddr *addr)
 
 	if (n == 12)
 	{
-		sprintf(buf, "00000000:%s:%u", name, net_hostport);
+		Com_sprintf(buf, sizeof(buf), "00000000:%s:%u", name, net_hostport);
 		return WIPX_StringToAddr (buf, addr);
 	}
 	if (n == 21)
 	{
-		sprintf(buf, "%s:%u", name, net_hostport);
+		Com_sprintf(buf, sizeof(buf), "%s:%u", name, net_hostport);
 		return WIPX_StringToAddr (buf, addr);
 	}
 	if (n > 21 && n <= 27)

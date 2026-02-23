@@ -54,13 +54,12 @@
 #endif
 
 size_t
-strnlen (const char *s, size_t maxlen) /* FS: Fix linkage errors */
+d_strnlen (const char *s, size_t maxlen) /* FS: Fix linkage errors */
 {
 	size_t i;
 	for (i = 0; i < maxlen && s[i]; i++);
 	return i;
 }
-
 
 static void *
 dstring_alloc (void *data, size_t size)
@@ -271,7 +270,7 @@ dstring_copystr (dstring_t *dstr, const char *str)
 VISIBLE void
 dstring_copysubstr (dstring_t *dstr, const char *str, unsigned int len)
 {
-	len = strnlen (str, len);
+	len = d_strnlen (str, len);
 
 	dstr->size = len + 1;
 	dstring_adjust (dstr);
@@ -282,7 +281,7 @@ dstring_copysubstr (dstring_t *dstr, const char *str, unsigned int len)
 VISIBLE void
 dstring_appendstr (dstring_t *dstr, const char *str)
 {
-	unsigned int pos = strnlen (dstr->str, dstr->size);
+	unsigned int pos = d_strnlen (dstr->str, dstr->size);
 	unsigned int len = strlen (str);
 
 	dstr->size = pos + len + 1;
@@ -293,9 +292,9 @@ dstring_appendstr (dstring_t *dstr, const char *str)
 VISIBLE void
 dstring_appendsubstr (dstring_t *dstr, const char *str, unsigned int len)
 {
-	unsigned int pos = strnlen (dstr->str, dstr->size);
+	unsigned int pos = d_strnlen (dstr->str, dstr->size);
 
-	len = strnlen (str, len);
+	len = d_strnlen (str, len);
 	dstr->size = pos + len + 1;
 	dstring_adjust (dstr);
 	strncpy (dstr->str + pos, str, len);
@@ -313,7 +312,7 @@ VISIBLE void
 dstring_insertsubstr (dstring_t *dstr, unsigned int pos, const char *str,
 					  unsigned int len)
 {
-	len = strnlen (str, len);
+	len = d_strnlen (str, len);
 
 	dstring_insert (dstr, pos, str, len);
 }
@@ -337,7 +336,7 @@ dstring_clearstr (dstring_t *dstr)
 static int
 _dvsprintf (dstring_t *dstr, int offs, const char *fmt, va_list args)
 {
-	int size;
+	size_t size;
 
 #ifdef VA_LIST_IS_ARRAY
 	va_list tmp_args;

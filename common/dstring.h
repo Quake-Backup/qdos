@@ -49,7 +49,7 @@ typedef struct dstring_mem_s {
 
 typedef struct dstring_s {
 	dstring_mem_t *mem;
-	unsigned long int size, truesize;
+	size_t size, truesize;
 	char *str;
 } dstring_t;
 

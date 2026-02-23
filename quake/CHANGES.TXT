@@ -142,8 +142,6 @@ Additional code from sezero, taniwha, spoike, LordHavoc,
 * JOY_RECALIBRATE allows you recalibrate your joystick any time in quake.
 * Fixed it so you can do "MAKE CLEAN" and spits out qdos.exe
    instead of quake.exe.
-* If -mem <value> is not defined it will default to 32MB (just like QW)
-   instead of allocating all available RAM.
 * 2GB fix from Hexen 2: HoT port.
 * VESA ini corruption fix from Hexen 2: HoT port.
 * Raised MAX_EFRAGS from 640->2048.
@@ -158,6 +156,8 @@ Additional code from sezero, taniwha, spoike, LordHavoc,
 * Raised SURFCACHE_SIZE_AT_320_200 default from 600->4096 -- Should be able
    to set d_picmip 0 and avoid seeing the RAM icon (for most maps!).
 * CD_AUDIO.C no longer has "press any key to continue" for MSCDEX errors.
+* Switched memory manager to Quake 2.  This means you no longer have to
+  mess with -zone and -mem parameters.
 
 QIP Fixes (http://www.inside3d.com/qip/home.shtml):
 * Cache_Alloc: already allocated Fix.

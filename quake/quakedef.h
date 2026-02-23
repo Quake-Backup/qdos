@@ -48,12 +48,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h> //johnfitz
 #endif
 
-#ifndef VISIBLE
-#define VISIBLE /* FS: for dstrings */
-#endif
-
-#include "dstring.h"
-
 #if defined(_WIN32) && !defined(WINDED)
 
 #if defined(_M_IX86)
@@ -302,7 +296,7 @@ typedef struct
 	int		argc;
 	char	**argv;
 	void	*membase;
-	int		memsize;
+	size_t	memsize;
 } quakeparms_t;
 
 
@@ -377,5 +371,12 @@ void Chase_Update (void);
 char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave);
 char *Sys_FindNext (unsigned musthave, unsigned canthave);
 void Sys_FindClose (void);
+
+/* FS: FIXME: Move. */
+#define	TAG_GAME	765		// clear when unloading the dll
+#define	TAG_LEVEL	766		// clear when loading a new level
+#define TAG_TEMP	767
+
+#define		MAXPRINTMSG	8192	// Knightmare 3/12/15- was 4096
 
 #endif // __QUAKEDEF_H

@@ -41,14 +41,17 @@ void Update_Gamespy_Menu(void);
 void GameSpy_Async_Think(void); /* FS: Not static in Q1 since it is called from host.c */
 #endif
 
-typedef struct
+typedef struct usercmd_s
 {
-	vec3_t	viewangles;
-
-// intended velocities
-	float	forwardmove;
-	float	sidemove;
-	float	upmove;
+	vec3_t	angles;
+#ifdef QUAKE1
+	float	forwardmove, sidemove, upmove;
+#else
+	short	forwardmove, sidemove, upmove;
+#endif
+	byte	msec;
+	byte	buttons;
+	byte	impulse;
 } usercmd_t;
 
 typedef struct
@@ -254,6 +257,10 @@ typedef struct
 	scoreboard_t	*scores;		// [cl.maxclients]
 
 	unsigned	protocol; //johnfitz
+
+	/* FS: This crap is needed for snd_restart. */
+	char sound_precache_str[MAX_SOUNDS][MAX_QPATH];
+	int numsounds;
 } client_state_t;
 
 
@@ -334,8 +341,7 @@ extern	beam_t			cl_beams[MAX_BEAMS];
 extern	entity_t		*cl_visedicts[MAX_VISEDICTS];
 extern	int				cl_numvisedicts;
 
-extern	entity_t		*cl_entities; //johnfitz -- was a static array, now on hunk
-extern	int				cl_max_edicts; //johnfitz -- only changes when new map loads
+extern	entity_t		cl_entities[MAX_EDICTS];
 
 //=============================================================================
 

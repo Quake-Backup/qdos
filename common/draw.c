@@ -43,7 +43,7 @@ qpic_t		*draw_backtile;
 typedef struct cachepic_s
 {
 	char		name[MAX_QPATH];
-	cache_user_t	cache;
+	void		*data;
 } cachepic_t;
 
 #define	MAX_CACHED_PICS		128
@@ -74,28 +74,30 @@ qpic_t  *Draw_CachePic (char *path)
 	if (i == menu_numcachepics)
 	{
 		if (menu_numcachepics == MAX_CACHED_PICS)
+		{
 			Sys_Error ("menu_numcachepics == MAX_CACHED_PICS");
+			return NULL;
+		}
 		menu_numcachepics++;
-		strcpy (pic->name, path);
+		Q_strlcpy (pic->name, path, sizeof(pic->name));
 	}
 
-	dat = Cache_Check (&pic->cache);
-
+	dat = pic->data;
 	if (dat)
 		return dat;
 
 //
 // load the pic from disk
 //
-	COM_LoadCacheFile (path, &pic->cache);
-	
-	dat = (qpic_t *)pic->cache.data;
+	dat = (qpic_t *)COM_LoadFile (path);
 	if (!dat)
 	{
 		Sys_Error ("Draw_CachePic: failed to load %s", path);
+		return NULL;
 	}
 
 	SwapPic (dat);
+	pic->data = dat;
 
 	return dat;
 }
@@ -360,7 +362,7 @@ void Draw_Pic (int x, int y, qpic_t *pic)
 
 		for (v=0 ; v<pic->height ; v++)
 		{
-			Q_memcpy (dest, source, pic->width);
+			memcpy (dest, source, pic->width);
 			dest += vid.rowbytes;
 			source += pic->width;
 		}
@@ -411,7 +413,7 @@ void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int h
 
 		for (v=0 ; v<height ; v++)
 		{
-			Q_memcpy (dest, source, width);
+			memcpy (dest, source, width);
 			dest += vid.rowbytes;
 			source += pic->width;
 		}

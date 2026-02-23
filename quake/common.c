@@ -19,16 +19,27 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // common.c -- misc functions used in client and server
 
-#ifdef __DJGPP__
+#include <ctype.h>
+#include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
+
+#ifdef __DJGPP__
 #include <limits.h>
 #include <errno.h>
 #include <libc/file.h>
 #endif
 
+#ifdef SERVERONLY
+#include "qwsvdef.h"
+#else
 #include "quakedef.h"
+#endif
 
+#define MAX_NUM_ARGVS	50
 #define NUM_SAFE_ARGVS  8
+
+usercmd_t nullcmd; // guarenteed to be zero
 
 static char	*largv[MAX_NUM_ARGVS + NUM_SAFE_ARGVS + 1];
 static char	*argvdummy = " ";
@@ -36,6 +47,8 @@ static char	*argvdummy = " ";
 static char	*safeargvs[NUM_SAFE_ARGVS] = {"-stdvid", "-nolan", "-nosound", "-nocdaudio", "-nojoy", "-nomouse", "-dibonly", "-safevga"}; /* FS: Added -safevga for 320x200 */
 
 cvar_t	*registered;
+
+#ifdef QUAKE1
 /* sending cmdline upon CCREQ_RULE_INFO is evil */
 cvar_t	*cmdline;
 
@@ -62,18 +75,19 @@ cvar_t	*nehx17;
 cvar_t	*nehx18;
 cvar_t	*nehx19;
 
-
-qboolean        com_modified;   // set true if using non-id files
-
 int com_nummissionpacks; //johnfitz
 
 qboolean		proghack;
+#endif // QUAKE1
+
+qboolean        com_modified;   // set true if using non-id files
 
 int             static_registered = 1;  // only for startup check, then set
 
 qboolean		msg_suppress_1 = 0;
 
 void COM_InitFilesystem (void);
+void COM_Path_f (void);
 void COM_Dir_f (void); /* FS: From Quake 2 */
 
 // if a packfile directory differs from this, it is assumed to be hacked
@@ -81,7 +95,11 @@ void COM_Dir_f (void); /* FS: From Quake 2 */
 #define PAK0_CRC_V100		13900	/* id1/pak0.pak - v1.00 */
 #define PAK0_CRC_V101		62751	/* id1/pak0.pak - v1.01 */
 #define PAK0_CRC_V106		32981	/* id1/pak0.pak - v1.06 */
+#ifdef QUAKE1
 #define PAK0_CRC	(PAK0_CRC_V106)
+#else
+#define	PAK0_CRC		52883
+#endif
 #define PAK0_COUNT_V091		308	/* id1/pak0.pak - v0.91/0.92, not supported */
 #define PAK0_CRC_V091		28804	/* id1/pak0.pak - v0.91/0.92, not supported */
 
@@ -95,8 +113,10 @@ char	com_cmdline[CMDLINE_LENGTH];
 qboolean	standard_quake = true, rogue, hipnotic;
 qboolean	nehahra, extended_mod, warpspasm; /* FS: For Nehahra and Warpspasm */
 
+char	gamedirfile[MAX_OSPATH];
+
 // this graphic needs to be in the pak file to use registered features
-unsigned short pop[] =
+static const unsigned short pop[] =
 {
  0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000
 ,0x0000,0x0000,0x6600,0x0000,0x0000,0x0000,0x6600,0x0000
@@ -120,23 +140,16 @@ unsigned short pop[] =
 
 All of Quake's data access is through a hierchal file system, but the contents of the file system can be transparently merged from several sources.
 
-The "base directory" is the path to the directory holding the quake.exe and all game directories.  The sys_* files pass this to host_init in quakeparms_t->basedir.  This can be overridden with the "-basedir" command line parm to allow code debugging i
-n a different directory.  The base directory is
-only used during filesystem initialization.
+The "base directory" is the path to the directory holding the quake.exe and all game directories.  The sys_* files pass this to host_init in quakeparms_t->basedir.  This can be overridden with the "-basedir" command line parm to allow code debugging
+in a different directory.  The base directory is only used during filesystem initialization.
 
-The "game directory" is the first tree on the search path and directory that all generated files (savegames, screenshots, demos, config files) will be saved to.  This can be overridden with the "-game" command line parameter.  The game directory can n
-ever be changed while quake is executing.  This is a precacution against having a malicious server instruct clients to write files over areas they shouldn't.
+The "game directory" is the first tree on the search path and directory that all generated files (savegames, screenshots, demos, config files) will be saved to.  This can be overridden with the "-game" command line parameter.  The game directory can
+never be changed while quake is executing.  This is a precacution against having a malicious server instruct clients to write files over areas they shouldn't.
 
 The "cache directory" is only used during development to save network bandwidth, especially over ISDN / T1 lines.  If there is a cache directory
 specified, when a file is found by the normal search path, it will be mirrored
 into the cache directory, then opened there.
 
-
-
-FIXME:
-The file "parms.txt" will be read out of the game directory and appended to the current command line arguments to allow different games to initialize startup parms differently.  This could be used to add a "-sspeed 22050" for the high quality sound ed
-ition.  Because they are added at the end, they will not override an explicit setting on the original command line.
-	
 */
 
 //============================================================================
@@ -177,68 +190,7 @@ void InsertLinkAfter (link_t *l, link_t *after)
 ============================================================================
 */
 
-void Q_memset (void *dest, int fill, int count)
-{
-	int             i;
-	
-	if ( (((long)dest | count) & 3) == 0)
-	{
-		count >>= 2;
-		fill = fill | (fill<<8) | (fill<<16) | (fill<<24);
-		for (i=0 ; i<count ; i++)
-			((int *)dest)[i] = fill;
-	}
-	else
-		for (i=0 ; i<count ; i++)
-			((byte *)dest)[i] = fill;
-}
-
-void Q_memcpy (void *dest, void *src, int count)
-{
-	int             i;
-	
-	if (( ( (long)dest | (long)src | count) & 3) == 0 )
-	{
-		count>>=2;
-		for (i=0 ; i<count ; i++)
-			((int *)dest)[i] = ((int *)src)[i];
-	}
-	else
-		for (i=0 ; i<count ; i++)
-			((byte *)dest)[i] = ((byte *)src)[i];
-}
-
-int Q_memcmp (void *m1, void *m2, int count)
-{
-	while(count)
-	{
-		count--;
-		if (((byte *)m1)[count] != ((byte *)m2)[count])
-			return -1;
-	}
-	return 0;
-}
-
-void Q_strcpy (char *dest, char *src)
-{
-	while (*src)
-	{
-		*dest++ = *src++;
-	}
-	*dest++ = 0;
-}
-
-void Q_strncpy (char *dest, char *src, int count)
-{
-	while (*src && count--)
-	{
-		*dest++ = *src++;
-	}
-	if (count)
-		*dest++ = 0;
-}
-
-int Q_strlen (char *str)
+int Q_strlen (const char *str)
 {
 	int             count;
 	
@@ -249,22 +201,7 @@ int Q_strlen (char *str)
 	return count;
 }
 
-char *Q_strrchr(char *s, char c)
-{
-    int len = Q_strlen(s);
-    s += len;
-    while (len--)
-	if (*--s == c) return s;
-    return 0;
-}
-
-void Q_strcat (char *dest, char *src)
-{
-	dest += Q_strlen(dest);
-	Q_strcpy (dest, src);
-}
-
-int Q_strcmp (char *s1, char *s2)
+int Q_strcmp (const char *s1, const char *s2)
 {
 	while (1)
 	{
@@ -279,7 +216,7 @@ int Q_strcmp (char *s1, char *s2)
 	return -1;
 }
 
-int Q_strncmp (char *s1, char *s2, int count)
+int Q_strncmp (const char *s1, const char *s2, int count)
 {
 	while (1)
 	{
@@ -296,7 +233,7 @@ int Q_strncmp (char *s1, char *s2, int count)
 	return -1;
 }
 
-int Q_strncasecmp (char *s1, char *s2, int n)
+int Q_strncasecmp (const char *s1, const char *s2, int n)
 {
 	int             c1, c2;
 	
@@ -326,143 +263,9 @@ int Q_strncasecmp (char *s1, char *s2, int n)
 	return -1;
 }
 
-int Q_strcasecmp (char *s1, char *s2)
+int Q_strcasecmp (const char *s1, const char *s2)
 {
 	return Q_strncasecmp (s1, s2, 99999);
-}
-
-int Q_atoi (char *str)
-{
-	int val;
-	int sign;
-	int c;
-	
-	if (*str == '-')
-	{
-		sign = -1;
-		str++;
-	}
-	else
-		sign = 1;
-		
-	val = 0;
-
-//
-// check for hex
-//
-	if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X') )
-	{
-		str += 2;
-		while (1)
-		{
-			c = *str++;
-			if (c >= '0' && c <= '9')
-				val = (val<<4) + c - '0';
-			else if (c >= 'a' && c <= 'f')
-				val = (val<<4) + c - 'a' + 10;
-			else if (c >= 'A' && c <= 'F')
-				val = (val<<4) + c - 'A' + 10;
-			else
-				return val*sign;
-		}
-	}
-	
-//
-// check for character
-//
-	if (str[0] == '\'')
-	{
-		return sign * str[1];
-	}
-	
-//
-// assume decimal
-//
-	while (1)
-	{
-		c = *str++;
-		if (c <'0' || c > '9')
-			return val*sign;
-		val = val*10 + c - '0';
-	}
-	
-	return 0;
-}
-
-
-float Q_atof (char *str)
-{
-	double	val;
-	int		sign;
-	int		c;
-	int		decimal, total;
-	
-	if (*str == '-')
-	{
-		sign = -1;
-		str++;
-	}
-	else
-		sign = 1;
-		
-	val = 0;
-
-//
-// check for hex
-//
-	if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X') )
-	{
-		str += 2;
-		while (1)
-		{
-			c = *str++;
-			if (c >= '0' && c <= '9')
-				val = (val*16) + c - '0';
-			else if (c >= 'a' && c <= 'f')
-				val = (val*16) + c - 'a' + 10;
-			else if (c >= 'A' && c <= 'F')
-				val = (val*16) + c - 'A' + 10;
-			else
-				return val*sign;
-		}
-	}
-	
-//
-// check for character
-//
-	if (str[0] == '\'')
-	{
-		return sign * str[1];
-	}
-	
-//
-// assume decimal
-//
-	decimal = -1;
-	total = 0;
-	while (1)
-	{
-		c = *str++;
-		if (c == '.')
-		{
-			decimal = total;
-			continue;
-		}
-		if (c <'0' || c > '9')
-			break;
-		val = val*10 + c - '0';
-		total++;
-	}
-
-	if (decimal == -1)
-		return val*sign;
-	while (total > decimal)
-	{
-		val /= 10;
-		total--;
-	}
-	
-	return val*sign;
 }
 
 /* FS: From OpenBSD */
@@ -617,13 +420,97 @@ Handles byte ordering and avoids alignment errors
 // writing functions
 //
 
+#ifdef FTE_PEXT_FLOATCOORDS
+
+int msg_coordsize = 2; // 2 or 4.
+int msg_anglesize = 1; // 1 or 2.
+
+float MSG_FromCoord(coorddata c, int bytes)
+{
+	switch(bytes)
+	{
+	case 2:	//encode 1/8th precision, giving -4096 to 4096 map sizes
+		return LittleShort(c.b2)/8.0f;
+	case 4:
+		return LittleFloat(c.f);
+	default:
+		Host_Error("MSG_FromCoord: not a sane size");
+		return 0;
+	}
+}
+
+coorddata MSG_ToCoord(float f, int bytes)	//return value should be treated as (char*)&ret;
+{
+	coorddata r;
+	switch(bytes)
+	{
+	case 2:
+		r.b4 = 0;
+		if (f >= 0)
+			r.b2 = LittleShort((short)(f*8+0.5f));
+		else
+			r.b2 = LittleShort((short)(f*8-0.5f));
+		break;
+	case 4:
+		r.f = LittleFloat(f);
+		break;
+	default:
+		Host_Error("MSG_ToCoord: not a sane size");
+		r.b4 = 0;
+	}
+
+	return r;
+}
+
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable:4761) /* FS: Disable the conversion warning since it's on purpose */
+#endif
+coorddata MSG_ToAngle(float f, int bytes)	//return value is NOT byteswapped.
+{
+	coorddata r;
+	switch(bytes)
+	{
+	case 1:
+		r.b4 = 0;
+		if (f >= 0)
+			r.b[0] = (int)(f*(256.0f/360.0f) + 0.5f) & 255;
+		else
+			r.b[0] = (int)(f*(256.0f/360.0f) - 0.5f) & 255;
+		break;
+	case 2:
+		r.b4 = 0;
+		if (f >= 0)
+			r.b2 = LittleShort((int)(f*(65536.0f/360.0f) + 0.5f) & 65535);
+		else
+			r.b2 = LittleShort((int)(f*(65536.0f/360.0f) - 0.5f) & 65535);
+		break;
+//	case 4:
+//		r.f = LittleFloat(f);
+//		break;
+	default:
+		Host_Error("MSG_ToAngle: not a sane size");
+		r.b4 = 0;
+	}
+
+	return r;
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
+}
+
+#endif
+
 void MSG_WriteChar (sizebuf_t *sb, int c)
 {
-	byte	*buf;
-	
+	byte *buf;
+
 #ifdef PARANOID
 	if (c < -128 || c > 127)
+	{
 		Sys_Error ("MSG_WriteChar: range error");
+		return;
+	}
 #endif
 
 	buf = SZ_GetSpace (sb, 1);
@@ -632,11 +519,14 @@ void MSG_WriteChar (sizebuf_t *sb, int c)
 
 void MSG_WriteByte (sizebuf_t *sb, int c)
 {
-	byte	*buf;
-	
+	byte *buf;
+
 #ifdef PARANOID
 	if (c < 0 || c > 255)
+	{
 		Sys_Error ("MSG_WriteByte: range error");
+		return;
+	}
 #endif
 
 	buf = SZ_GetSpace (sb, 1);
@@ -645,11 +535,14 @@ void MSG_WriteByte (sizebuf_t *sb, int c)
 
 void MSG_WriteShort (sizebuf_t *sb, int c)
 {
-	byte	*buf;
-	
+	byte *buf;
+
 #ifdef PARANOID
 	if (c < ((short)0x8000) || c > (short)0x7fff)
+	{
 		Sys_Error ("MSG_WriteShort: range error");
+		return;
+	}
 #endif
 
 	buf = SZ_GetSpace (sb, 2);
@@ -720,12 +613,60 @@ void MSG_WriteAngle (sizebuf_t *sb, float f)
 	MSG_WriteByte (sb, Q_rint(f * 256.0 / 360.0) & 255); //johnfitz -- use Q_rint instead of (int)
 }
 
-//johnfitz -- for PROTOCOL_FITZQUAKE
+//johnfitz -- for PROTOCOL_FITZQUAKE and QW
 void MSG_WriteAngle16 (sizebuf_t *sb, float f)
 {
 	MSG_WriteShort (sb, Q_rint(f * 65536.0 / 360.0) & 65535);
 }
 //johnfitz
+
+void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
+{
+	int		bits;
+
+//
+// send the movement message
+//
+	bits = 0;
+	if (cmd->angles[0] != from->angles[0])
+		bits |= CM_ANGLE1;
+	if (cmd->angles[1] != from->angles[1])
+		bits |= CM_ANGLE2;
+	if (cmd->angles[2] != from->angles[2])
+		bits |= CM_ANGLE3;
+	if (cmd->forwardmove != from->forwardmove)
+		bits |= CM_FORWARD;
+	if (cmd->sidemove != from->sidemove)
+		bits |= CM_SIDE;
+	if (cmd->upmove != from->upmove)
+		bits |= CM_UP;
+	if (cmd->buttons != from->buttons)
+		bits |= CM_BUTTONS;
+	if (cmd->impulse != from->impulse)
+		bits |= CM_IMPULSE;
+
+    MSG_WriteByte (buf, bits);
+
+	if (bits & CM_ANGLE1)
+		MSG_WriteAngle16 (buf, cmd->angles[0]);
+	if (bits & CM_ANGLE2)
+		MSG_WriteAngle16 (buf, cmd->angles[1]);
+	if (bits & CM_ANGLE3)
+		MSG_WriteAngle16 (buf, cmd->angles[2]);
+	
+	if (bits & CM_FORWARD)
+		MSG_WriteShort (buf, cmd->forwardmove);
+	if (bits & CM_SIDE)
+	  	MSG_WriteShort (buf, cmd->sidemove);
+	if (bits & CM_UP)
+		MSG_WriteShort (buf, cmd->upmove);
+
+ 	if (bits & CM_BUTTONS)
+	  	MSG_WriteByte (buf, cmd->buttons);
+ 	if (bits & CM_IMPULSE)
+	    MSG_WriteByte (buf, cmd->impulse);
+	MSG_WriteByte (buf, cmd->msec);
+}
 
 //
 // reading functions
@@ -737,6 +678,11 @@ void MSG_BeginReading (void)
 {
 	msg_readcount = 0;
 	msg_badread = false;
+}
+
+int MSG_GetReadCount(void)
+{
+	return msg_readcount;
 }
 
 // returns -1 and sets msg_badread if no more characters are available
@@ -850,6 +796,26 @@ char *MSG_ReadString (void)
 	return string;
 }
 
+char *MSG_ReadStringLine (void)
+{
+	static char	string[2048];
+	int		l,c;
+	
+	l = 0;
+	do
+	{
+		c = MSG_ReadByte ();
+		if (c == -1 || c == 0 || c == '\n')
+			break;
+		string[l] = c;
+		l++;
+	} while (l < sizeof(string)-1);
+	
+	string[l] = 0;
+	
+	return string;
+}
+
 //johnfitz -- original behavior, 13.3 fixed point coords, max range +-4096
 float MSG_ReadCoord16 (void)
 {
@@ -878,38 +844,84 @@ float MSG_ReadAngle (void)
 	return MSG_ReadChar() * (360.0/256);
 }
 
-//johnfitz -- for PROTOCOL_FITZQUAKE
+//johnfitz -- for PROTOCOL_FITZQUAKE and QW
 float MSG_ReadAngle16 (void)
 {
-	return MSG_ReadShort() * (360.0 / 65536);
+	return MSG_ReadShort() * (360.0/65536);
 }
 //johnfitz
 
+void MSG_ReadDeltaUsercmd (usercmd_t *from, usercmd_t *move)
+{
+	int bits;
 
+	memcpy (move, from, sizeof(*move));
+
+	bits = MSG_ReadByte ();
+		
+// read current angles
+	if (bits & CM_ANGLE1)
+		move->angles[0] = MSG_ReadAngle16 ();
+	if (bits & CM_ANGLE2)
+		move->angles[1] = MSG_ReadAngle16 ();
+	if (bits & CM_ANGLE3)
+		move->angles[2] = MSG_ReadAngle16 ();
+		
+// read movement
+	if (bits & CM_FORWARD)
+		move->forwardmove = MSG_ReadShort ();
+	if (bits & CM_SIDE)
+		move->sidemove = MSG_ReadShort ();
+	if (bits & CM_UP)
+		move->upmove = MSG_ReadShort ();
+	
+// read buttons
+	if (bits & CM_BUTTONS)
+		move->buttons = MSG_ReadByte ();
+
+	if (bits & CM_IMPULSE)
+		move->impulse = MSG_ReadByte ();
+
+// read time to run command
+	move->msec = MSG_ReadByte ();
+}
+
+void MSG_ReadData (void *data, int len) /* FS */
+{
+	int	i;
+
+	for (i = 0 ; i < len ; i++)
+		((byte *)data)[i] = MSG_ReadByte ();
+}
 
 //===========================================================================
+
+void SZ_InitEx (sizebuf_t *buf, byte *data, int length, qbool allowoverflow) /* FS: From EZQ */
+{
+	memset (buf, 0, sizeof (*buf));
+	buf->data = data;
+	buf->maxsize = length;
+	buf->allowoverflow = allowoverflow;
+}
+
+void SZ_Init (sizebuf_t *buf, byte *data, int length) /* FS: From EZQ */
+{
+	SZ_InitEx (buf, data, length, false);
+}
 
 void SZ_Alloc (sizebuf_t *buf, int startsize)
 {
 	if (startsize < 256)
 		startsize = 256;
-	buf->data = Hunk_AllocName (startsize, "sizebuf");
+	buf->data = Z_Malloc (startsize);
 	buf->maxsize = startsize;
-	buf->cursize = 0;
-}
-
-
-void SZ_Free (sizebuf_t *buf)
-{
-//      Z_Free (buf->data);
-//      buf->data = NULL;
-//      buf->maxsize = 0;
 	buf->cursize = 0;
 }
 
 void SZ_Clear (sizebuf_t *buf)
 {
 	buf->cursize = 0;
+	buf->overflowed = false;
 }
 
 void *SZ_GetSpace (sizebuf_t *buf, int length)
@@ -919,12 +931,20 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 	if (buf->cursize + length > buf->maxsize)
 	{
 		if (!buf->allowoverflow)
-			Sys_Error ("SZ_GetSpace: overflow without allowoverflow set");
+		{
+			Sys_Error ("SZ_GetSpace: overflow without allowoverflow set (%d)", buf->maxsize);
+			return NULL;
+		}
+
 		if (length > buf->maxsize)
+		{
 			Sys_Error ("SZ_GetSpace: %i is > full buffer size", length);
-		buf->overflowed = true;
-		Com_Printf ("SZ_GetSpace: overflow");
+			return NULL;
+		}
+			
+		Sys_Printf ("SZ_GetSpace: overflow\n");	// because Com_Printf may be redirected
 		SZ_Clear (buf); 
+		buf->overflowed = true;
 	}
 
 	data = buf->data + buf->cursize;
@@ -935,7 +955,7 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 
 void SZ_Write (sizebuf_t *buf, void *data, int length)
 {
-	Q_memcpy (SZ_GetSpace(buf,length),data,length);
+	memcpy (SZ_GetSpace(buf,length),data,length);
 }
 
 void SZ_Print (sizebuf_t *buf, char *data)
@@ -944,11 +964,10 @@ void SZ_Print (sizebuf_t *buf, char *data)
 	
 	len = Q_strlen(data)+1;
 
-// byte * cast to keep VC++ happy
-	if (buf->data[buf->cursize-1])
-		Q_memcpy ((byte *)SZ_GetSpace(buf, len),data,len); // no trailing 0
+	if (!buf->cursize || buf->data[buf->cursize-1])
+		memcpy ((byte *)SZ_GetSpace(buf, len),data,len); // no trailing 0
 	else
-		Q_memcpy ((byte *)SZ_GetSpace(buf, len-1)-1,data,len); // write over trailing 0
+		memcpy ((byte *)SZ_GetSpace(buf, len-1)-1,data,len); // write over trailing 0
 }
 
 
@@ -1009,37 +1028,6 @@ char *COM_FileExtension (char *in)
 
 /*
 ============
-COM_FileBase
-============
-*/
-void COM_FileBase (char *in, char *out)
-{
-	char *s, *s2;
-
-	if (!*in) {
-		*out = 0;
-		return;
-	}
-	s = in + strlen(in) - 1;
-
-	while (s != in && *s != '.')
-		s--;
-
-	for (s2 = s ; s2 != in && *s2 != '/' ; s2--)
-	 ;
-
-	if (s-s2 < 2)
-		strcpy (out,"?model?");
-	else
-	{
-		s--;
-		strncpy (out,s2+1, s-s2);
-		out[s-s2] = 0;
-	}
-}
-
-/*
-============
 COM_FilePath
 
 Returns the path up to, but not including the last /
@@ -1068,7 +1056,7 @@ void COM_FilePath (char *in, char *out)
 COM_DefaultExtension
 ==================
 */
-void COM_DefaultExtension (char *path, char *extension)
+void COM_DefaultExtension (char *path, const char *extension, size_t pathlen)
 {
 	char    *src;
 //
@@ -1084,8 +1072,10 @@ void COM_DefaultExtension (char *path, char *extension)
 		src--;
 	}
 
-	strcat (path, extension);
+	Q_strlcat (path, extension, pathlen);
 }
+
+//============================================================================
 
 
 /*
@@ -1152,6 +1142,7 @@ skipwhite:
 		}
 	}
 
+#ifdef QUAKE1
 // parse single characters
 	if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
 	{
@@ -1160,6 +1151,7 @@ skipwhite:
 		com_token[len] = 0;
 		return data+1;
 	}
+#endif // QUAKE1
 
 // parse a regular word
 	do
@@ -1168,8 +1160,10 @@ skipwhite:
 		data++;
 		len++;
 		c = *data;
-	if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
+#ifdef QUAKE1
+		if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
 			break;
+#endif // QUAKE1
 	} while (c>32);
 	
 	com_token[len] = 0;
@@ -1254,8 +1248,13 @@ void COM_CheckRegistered (void)
 	COM_CloseFile (h);
 	
 	for (i=0 ; i<128 ; i++)
+	{
 		if (pop[i] != (unsigned short)BigShort (check[i]))
+		{
 			Sys_Error ("Corrupted data file.");
+			return;
+		}
+	}
 
 	Cvar_Set ("cmdline", com_cmdline+1); //johnfitz -- eliminate leading space
 	Cvar_ForceSet("registered", "1");
@@ -1332,7 +1331,7 @@ void COM_InitArgv (int argc, char **argv)
 		standard_quake = false;
 	}
 
-	if (COM_CheckParm ("-warp") || COM_CheckParm ("-nehahra")) /* FS: So we get larger RAM by default */
+	if (COM_CheckParm ("-warp") || COM_CheckParm ("-nehahra")) /* FS: So we get larger Hunk_Alloc by default */
 	{
 		if (COM_CheckParm ("-nehahra"))
 			nehahra = true;
@@ -1343,13 +1342,24 @@ void COM_InitArgv (int argc, char **argv)
 	}
 }
 
+/*
+================
+COM_AddParm
+
+Adds the given string at the end of the current argument list
+================
+*/
+void COM_AddParm (char *parm)
+{
+	largv[com_argc++] = parm;
+}
 
 /*
 ================
 COM_Init
 ================
 */
-void COM_Init (char *basedir)
+void COM_Init (void)
 {
 	byte    swaptest[2] = {1,0};
 
@@ -1375,56 +1385,60 @@ void COM_Init (char *basedir)
 		LittleFloat = FloatSwap;
 	}
 
+#ifdef QUAKE1
 	if (nehahra) /* FS: For Nehara */
 	{
 		cutscene = Cvar_Get("cutscene", "1", CVAR_ARCHIVE); 
-		cutscene->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("cutscene", "Special internal CVAR for Nehara mod.");
 		nehx00 = Cvar_Get("nehx00", "0", CVAR_ARCHIVE);
-		nehx00->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx00", "Special internal CVAR for Nehara mod.");
 		nehx01 = Cvar_Get("nehx01", "0", CVAR_ARCHIVE);
-		nehx01->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx01", "Special internal CVAR for Nehara mod.");
 		nehx02 = Cvar_Get("nehx02", "0", CVAR_ARCHIVE);
-		nehx02->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx02", "Special internal CVAR for Nehara mod.");
 		nehx03 = Cvar_Get("nehx03", "0", CVAR_ARCHIVE);
-		nehx03->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx03", "Special internal CVAR for Nehara mod.");
 		nehx04 = Cvar_Get("nehx04", "0", CVAR_ARCHIVE);
-		nehx04->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx04", "Special internal CVAR for Nehara mod.");
 		nehx05 = Cvar_Get("nehx05", "0", CVAR_ARCHIVE);
-		nehx05->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx05", "Special internal CVAR for Nehara mod.");
 		nehx06 = Cvar_Get("nehx06", "0", CVAR_ARCHIVE);
-		nehx06->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx06", "Special internal CVAR for Nehara mod.");
 		nehx07 = Cvar_Get("nehx07", "0", CVAR_ARCHIVE);
-		nehx07->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx07", "Special internal CVAR for Nehara mod.");
 		nehx08 = Cvar_Get("nehx08", "0", CVAR_ARCHIVE);
-		nehx08->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx08", "Special internal CVAR for Nehara mod.");
 		nehx09 = Cvar_Get("nehx09", "0", CVAR_ARCHIVE);
-		nehx09->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx09", "Special internal CVAR for Nehara mod.");
 		nehx10 = Cvar_Get("nehx10", "0", CVAR_ARCHIVE);
-		nehx10->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx10", "Special internal CVAR for Nehara mod.");
 		nehx11 = Cvar_Get("nehx11", "0", CVAR_ARCHIVE);
-		nehx11->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx11", "Special internal CVAR for Nehara mod.");
 		nehx12 = Cvar_Get("nehx12", "0", CVAR_ARCHIVE);
-		nehx12->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx12", "Special internal CVAR for Nehara mod.");
 		nehx13 = Cvar_Get("nehx13", "0", CVAR_ARCHIVE);
-		nehx13->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx13", "Special internal CVAR for Nehara mod.");
 		nehx14 = Cvar_Get("nehx14", "0", CVAR_ARCHIVE);
-		nehx14->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx14", "Special internal CVAR for Nehara mod.");
 		nehx15 = Cvar_Get("nehx15", "0", CVAR_ARCHIVE);
-		nehx15->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx15", "Special internal CVAR for Nehara mod.");
 		nehx16 = Cvar_Get("nehx16", "0", CVAR_ARCHIVE);
-		nehx16->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx16", "Special internal CVAR for Nehara mod.");
 		nehx17 = Cvar_Get("nehx17", "0", CVAR_ARCHIVE);
-		nehx17->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx17", "Special internal CVAR for Nehara mod.");
 		nehx18 = Cvar_Get("nehx18", "0", CVAR_ARCHIVE);
-		nehx18->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx18", "Special internal CVAR for Nehara mod.");
 		nehx19 = Cvar_Get("nehx19", "0", CVAR_ARCHIVE);
-		nehx19->description = "Special internal CVAR for Nehara mod.";
+		Cvar_Set_Description("nehx19", "Special internal CVAR for Nehara mod.");
 	}
+#endif // QUAKE1
 
 	registered = Cvar_Get("registered","0", CVAR_NOSET);
-	registered->description = "Special internal CVAR for setting Registered game.";
+	Cvar_Set_Description("registered", "Special internal CVAR for setting Registered game.");
+#ifdef QUAKE1
 	cmdline = Cvar_Get("cmdline","", 0);
-	cmdline->description = "Adds command line parameters as script statements\nCommands lead with a +, and continue until a - or another +\nquake +prog jctest.qp +cmd amlev1\nquake -nosound +cmd amlev1";
+	Cvar_Set_Description("cmdline", "Adds command line parameters as script statements\nCommands lead with a +, and continue until a - or another +\nquake +prog jctest.qp +cmd amlev1\nquake -nosound +cmd amlev1");
+#endif // QUAKE1
 
 	Cmd_AddCommand ("path", COM_Path_f);
 	Cmd_AddCommand ("dir", COM_Dir_f); /* FS: From Quake 2 */
@@ -1432,8 +1446,6 @@ void COM_Init (char *basedir)
 	COM_InitFilesystem ();
 	COM_CheckRegistered ();
 }
-
-/* FS: VA varargs from QF */
 
 /*
 ============
@@ -1443,35 +1455,16 @@ does a varargs printf into a temp buffer, so I don't need to have
 varargs versions of all text functions.
 ============
 */
-VISIBLE char *
-va (const char *fmt, ...)
+char *va (const char *fmt, ...)
 {
 	va_list     args;
-	static dstring_t *string;
-
-	if (!string)
-		string = dstring_new ();
+	static char string[MAXPRINTMSG];
 
 	va_start (args, fmt);
-	dvsprintf (string, fmt, args);
+	Q_vsnprintf (string, sizeof(string), fmt, args);
 	va_end (args);
 
-	return string->str;
-}
-
-VISIBLE char *
-nva (const char *fmt, ...)
-{
-	va_list     args;
-	dstring_t  *string;
-
-	string = dstring_new ();
-
-	va_start (args, fmt);
-	dvsprintf (string, fmt, args);
-	va_end (args);
-
-	return dstring_freeze (string);
+	return string;
 }
 
 /// just for debugging
@@ -1545,24 +1538,56 @@ typedef struct searchpath_s
 searchpath_t    *com_searchpaths;
 
 /*
+================
+COM_filelength
+================
+*/
+int COM_filelength (FILE *f)
+{
+	int		pos;
+	int		end;
+
+	if (!f)
+		return 0;
+
+	pos = ftell (f);
+	fseek (f, 0, SEEK_END);
+	end = ftell (f);
+	fseek (f, pos, SEEK_SET);
+
+	return end;
+}
+
+int COM_FileOpenRead (char *path, FILE **hndl)
+{
+	FILE	*f;
+
+	f = fopen(path, "rb");
+	if (!f)
+	{
+		*hndl = NULL;
+		return -1;
+	}
+	*hndl = f;
+	
+	return COM_filelength(f);
+}
+
+/*
 ============
 COM_Path_f
 
 ============
 */
-
-
 void COM_Path_f (void)
 {
-	searchpath_t    *s;
+	searchpath_t	*s;
 	
 	Com_Printf ("Current search path:\n");
 	for (s=com_searchpaths ; s ; s=s->next)
 	{
 		if (s->pack)
-		{
 			Com_Printf ("%s (%i files)\n", s->pack->filename, s->pack->numfiles);
-		}
 		else
 			Com_Printf ("%s\n", s->filename);
 	}
@@ -1575,7 +1600,7 @@ COM_WriteFile
 The filename will be prefixed by the current game directory
 ============
 */
-void COM_WriteFile (char *filename, void *data, int len)
+void COM_WriteFile (const char *filename, void *data, int len)
 {
 	int		handle;
 	char	name[MAX_OSPATH];
@@ -1601,17 +1626,17 @@ void COM_WriteFile (char *filename, void *data, int len)
 ============
 COM_CreatePath
 
-Only used for CopyFile
+Only used for CopyFile and download
 ============
 */
-void    COM_CreatePath (char *path)
+void	COM_CreatePath (char *path)
 {
-	char    *ofs;
+	char	*ofs;
 	
 	for (ofs = path+1 ; *ofs ; ofs++)
 	{
 		if (*ofs == '/')
-		{       // create the directory
+		{	// create the directory
 			*ofs = 0;
 			Sys_mkdir (path);
 			*ofs = '/';
@@ -1637,6 +1662,11 @@ void COM_CopyFile (char *netpath, char *cachepath)
 	remaining = Sys_FileOpenRead (netpath, &in);            
 	COM_CreatePath (cachepath);     // create directories up to the cache file
 	out = Sys_FileOpenWrite (cachepath);
+	if (!out)
+	{
+		Sys_Error ("COM_CopyFile: error opening %s", cachepath);
+		return;
+	}
 	
 	while (remaining)
 	{
@@ -1661,7 +1691,7 @@ Finds the file in the search path.
 Sets com_filesize and one of handle or file
 ===========
 */
-int COM_FindFile (char *filename, int *handle, FILE **file)
+int COM_FindFile (const char *filename, int *handle, FILE **file)
 {
 	searchpath_t    *search;
 	char            netpath[MAX_OSPATH];
@@ -1671,19 +1701,28 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 	int                     findtime, cachetime;
 
 	if (file && handle)
+	{
 		Sys_Error ("COM_FindFile: both handle and file set");
+		return -1;
+	}
+
 	if (!file && !handle)
+	{
 		Sys_Error ("COM_FindFile: neither handle or file set");
+		return -1;
+	}
 
 //
 // search through the path, one element at a time
 //
 	search = com_searchpaths;
+#ifdef QUAKE1
 	if (proghack)
 	{	// gross hack to use quake 1 progs with quake 2 maps
 		if (!strcmp(filename, "progs.dat"))
 			search = search->next;
 	}
+#endif // QUAKE1
 
 	for ( ; search ; search = search->next)
 	{
@@ -1728,7 +1767,9 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 				
 		// see if the file needs to be updated in the cache
 			if (!com_cachedir[0])
-				strcpy (cachepath, netpath);
+			{
+				Q_strlcpy (cachepath, netpath, sizeof(cachepath));
+			}
 			else
 			{	
 #if defined(_WIN32)
@@ -1744,8 +1785,8 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 			
 				if (cachetime < findtime)
 					COM_CopyFile (netpath, cachepath);
-				strcpy (netpath, cachepath);
-			}	
+				Q_strlcpy (netpath, cachepath, sizeof(netpath));
+			}
 
 			Sys_Printf ("FindFile: %s\n",netpath);
 			com_filesize = Sys_FileOpenRead (netpath, &i);
@@ -1781,7 +1822,7 @@ returns a handle and a length
 it may actually be inside a pak file
 ===========
 */
-int COM_OpenFile (char *filename, int *handle)
+int COM_OpenFile (const char *filename, int *handle)
 {
 	return COM_FindFile (filename, handle, NULL);
 }
@@ -1794,7 +1835,7 @@ If the requested file is inside a packfile, a new FILE * will be opened
 into the file.
 ===========
 */
-int COM_FOpenFile (char *filename, FILE **file)
+int COM_FOpenFile (const char *filename, FILE **file)
 {
 	return COM_FindFile (filename, NULL, file);
 }
@@ -1817,7 +1858,6 @@ void COM_CloseFile (int h)
 	Sys_FileClose (h);
 }
 
-
 /*
 ============
 COM_LoadFile
@@ -1826,14 +1866,12 @@ Filename are reletive to the quake directory.
 Allways appends a 0 byte.
 ============
 */
-cache_user_t *loadcache;
 byte    *loadbuf;
 int             loadsize;
-byte *COM_LoadFile (char *path, int usehunk)
+byte *COM_LoadFile (const char *path)
 {
 	int             h;
 	byte    *buf;
-	char    base[32];
 	int             len;
 
 	buf = NULL;     // quiet compiler warning
@@ -1842,67 +1880,28 @@ byte *COM_LoadFile (char *path, int usehunk)
 	len = COM_OpenFile (path, &h);
 	if (h == -1)
 		return NULL;
-	
-// extract the filename base name for hunk tag
-	COM_FileBase (path, base);
-	
-	if (usehunk == 1)
-		buf = Hunk_AllocName (len+1, base);
-	else if (usehunk == 2)
-		buf = Hunk_TempAlloc (len+1);
-	else if (usehunk == 0)
-		buf = Z_Malloc (len+1);
-	else if (usehunk == 3)
-		buf = Cache_Alloc (loadcache, len+1, base);
-	else if (usehunk == 4)
-	{
-		if (len+1 > loadsize)
-			buf = Hunk_TempAlloc (len+1);
-		else
-			buf = loadbuf;
-	}
-	else
-		Sys_Error ("COM_LoadFile: bad usehunk");
 
+	buf = Z_Malloc (len+1);
 	if (!buf)
+	{
 		Sys_Error ("COM_LoadFile: not enough space for %s", path);
+		return NULL;
+	}
 		
 	((byte *)buf)[len] = 0;
 
 	Draw_BeginDisc ();
-	Sys_FileRead (h, buf, len);                     
+	Sys_FileRead (h, buf, len);
 	COM_CloseFile (h);
 	Draw_EndDisc ();
 
 	return buf;
 }
 
-byte *COM_LoadHunkFile (char *path)
+void COM_FreeFile (void *buffer)
 {
-	return COM_LoadFile (path, 1);
-}
-
-byte *COM_LoadTempFile (char *path)
-{
-	return COM_LoadFile (path, 2);
-}
-
-void COM_LoadCacheFile (char *path, struct cache_user_s *cu)
-{
-	loadcache = cu;
-	COM_LoadFile (path, 3);
-}
-
-// uses temp hunk if larger than bufsize
-byte *COM_LoadStackFile (char *path, void *buffer, int bufsize)
-{
-	byte    *buf;
-	
-	loadbuf = (byte *)buffer;
-	loadsize = bufsize;
-	buf = COM_LoadFile (path, 4);
-	
-	return buf;
+	if (buffer)
+		Z_Free (buffer);
 }
 
 /*
@@ -1917,14 +1916,14 @@ of the list so they override previous pack files.
 */
 pack_t *COM_LoadPackFile (char *packfile)
 {
-	dpackheader_t   header;
-	int                             i;
-	packfile_t              *newfiles;
-	int                             numpackfiles;
-	pack_t                  *pack;
-	int                             packhandle;
-	dpackfile_t             info[MAX_FILES_IN_PACK];
-	unsigned short          crc;
+	dpackheader_t	header;
+	int				i;
+	packfile_t		*newfiles;
+	int				numpackfiles;
+	pack_t			*pack;
+	int				packhandle;
+	dpackfile_t		info[MAX_FILES_IN_PACK];
+	unsigned short	crc;
 
 	if (Sys_FileOpenRead (packfile, &packhandle) == -1)
 		return NULL;
@@ -1961,27 +1960,32 @@ pack_t *COM_LoadPackFile (char *packfile)
 	Sys_FileRead (packhandle, (void *)info, header.dirlen);
 
 	// crc the directory to check for modifications
+#ifdef QUAKE1
 	CRC_Init (&crc);
 	for (i = 0; i < header.dirlen ; i++)
 		CRC_ProcessByte (&crc, ((byte *)info)[i]);
 	if (crc != PAK0_CRC_V106 && crc != PAK0_CRC_V101 && crc != PAK0_CRC_V100)
 		com_modified = true;
-
+#else
+	crc = CRC_Block((byte *)info, header.dirlen);
+	if (crc != PAK0_CRC)
+		com_modified = true;
+#endif // QUAKE1
 	// parse the directory
 	for (i = 0; i < numpackfiles ; i++)
 	{
-		strcpy (newfiles[i].name, info[i].name);
+		Q_strlcpy (newfiles[i].name, info[i].name, sizeof(newfiles[i].name));
 		newfiles[i].filepos = LittleLong(info[i].filepos);
 		newfiles[i].filelen = LittleLong(info[i].filelen);
 	}
 
 	pack = Z_Malloc (sizeof (pack_t));
-	strcpy (pack->filename, packfile);
+	Q_strlcpy (pack->filename, packfile, sizeof(pack->filename));
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
-
-	//Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
+	
+	Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
 	return pack;
 }
 
@@ -2010,6 +2014,12 @@ char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned
 	*numfiles = nfiles;
 
 	list = malloc( sizeof( char * ) * nfiles );
+	if (!list)
+	{
+		Sys_Error("COM_ListFiles: out of memory");
+		return NULL;
+	}
+
 	memset( list, 0, sizeof( char * ) * nfiles );
 
 	s = Sys_FindFirst( findname, musthave, canthave );
@@ -2019,6 +2029,12 @@ char **COM_ListFiles( char *findname, int *numfiles, unsigned musthave, unsigned
 		if ( s[strlen(s)-1] != '.' )
 		{
 			list[nfiles] = strdup( s );
+			if (!list[nfiles])
+			{
+				free(list);
+				Sys_Error("COM_ListFiles: out of memory");
+				return NULL;
+			}
 #if defined(_WIN32) || defined(__MSDOS__)
 			strlwr( list[nfiles] );
 #endif
@@ -2097,7 +2113,7 @@ void COM_Dir_f (void)
 
 	if ( Cmd_Argc() != 1 )
 	{
-		strcpy( wildcard, Cmd_Argv( 1 ) );
+		Q_strlcpy( wildcard, Cmd_Argv( 1 ), sizeof(wildcard) );
 	}
 
 	while ( ( path = COM_NextPath( path ) ) != NULL )
@@ -2146,11 +2162,17 @@ void COM_AddGameDirectory (char *dir)
 	pack_t	*pak;
 	char	pakfile[MAX_OSPATH];
 
-	strcpy (com_gamedir, dir);
+	if (!dir)
+	{
+		return;
+	}
+	Q_strlcpy (com_gamedir, dir, sizeof(com_gamedir));
 
-	// add the directory to the search path
+//
+// add the directory to the search path
+//
 	search = Z_Malloc(sizeof(searchpath_t));
-	strcpy (search->filename, dir);
+	Q_strlcpy (search->filename, dir, sizeof(search->filename));
 	search->next = com_searchpaths;
 	com_searchpaths = search;
 
@@ -2180,7 +2202,7 @@ void COM_AddGameDirectory (char *dir)
 COM_InitFilesystem
 ================
 */
-void COM_InitFilesystem () //johnfitz -- modified based on topaz's tutorial
+void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 {
 	int             i, j;
 	char    basedir[MAX_OSPATH];
@@ -2192,9 +2214,9 @@ void COM_InitFilesystem () //johnfitz -- modified based on topaz's tutorial
 //
 	i = COM_CheckParm ("-basedir");
 	if (i && i < com_argc-1)
-		strcpy (basedir, com_argv[i+1]);
+		Q_strlcpy (basedir, com_argv[i+1], sizeof(basedir));
 	else
-		strcpy (basedir, host_parms.basedir);
+		Q_strlcpy (basedir, host_parms.basedir, sizeof(basedir));
 
 	j = strlen (basedir);
 
@@ -2215,10 +2237,10 @@ void COM_InitFilesystem () //johnfitz -- modified based on topaz's tutorial
 		if (com_argv[i+1][0] == '-')
 			com_cachedir[0] = 0;
 		else
-			strcpy (com_cachedir, com_argv[i+1]);
+			Q_strlcpy (com_cachedir, com_argv[i+1], sizeof(com_cachedir));
 	}
 	else if (host_parms.cachedir)
-		strcpy (com_cachedir, host_parms.cachedir);
+		Q_strlcpy (com_cachedir, host_parms.cachedir, sizeof(com_cachedir));
 	else
 		com_cachedir[0] = 0;
 
@@ -2226,7 +2248,7 @@ void COM_InitFilesystem () //johnfitz -- modified based on topaz's tutorial
 // start up with GAMENAME by default (id1)
 //
 	COM_AddGameDirectory (va("%s/"GAMENAME, basedir) );
-	strcpy (com_gamedir, va("%s/"GAMENAME, basedir));
+	Q_strlcpy (com_gamedir, va("%s/"GAMENAME, basedir), sizeof(com_gamedir));
 
 	//johnfitz -- track number of mission packs added
 	//since we don't want to allow the "game" command to strip them away
@@ -2298,10 +2320,13 @@ void COM_InitFilesystem () //johnfitz -- modified based on topaz's tutorial
 			{
 				search->pack = COM_LoadPackFile (com_argv[i]);
 				if (!search->pack)
+				{
 					Sys_Error ("Couldn't load packfile: %s", com_argv[i]);
+					return;
+				}
 			}
 			else
-				strcpy (search->filename, com_argv[i]);
+				Q_strlcpy (search->filename, com_argv[i], sizeof(search->filename));
 			search->next = com_searchpaths;
 			com_searchpaths = search;
 		}
@@ -2309,6 +2334,410 @@ void COM_InitFilesystem () //johnfitz -- modified based on topaz's tutorial
 
 	if (COM_CheckParm ("-proghack"))
 		proghack = true;
+}
+
+/*
+=====================================================================
+
+  INFO STRINGS
+
+=====================================================================
+*/
+
+/*
+===============
+Info_ValueForKey
+
+Searches the string for the given
+key and returns the associated value, or an empty string.
+===============
+*/
+char *Info_ValueForKey (char *s, char *key)
+{
+	char	pkey[512];
+	static	char value[4][512];	// use two buffers so compares
+								// work without stomping on each other
+	static	int	valueindex;
+	char	*o;
+	
+	valueindex = (valueindex + 1) % 4;
+	if (*s == '\\')
+		s++;
+	while (1)
+	{
+		o = pkey;
+		while (*s != '\\')
+		{
+			if (!*s)
+				return "";
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value[valueindex];
+
+		while (*s != '\\' && *s)
+		{
+			if (!*s)
+				return "";
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		if (!strcmp (key, pkey) )
+			return value[valueindex];
+
+		if (!*s)
+			return "";
+		s++;
+	}
+}
+
+void Info_RemoveKey (char *s, char *key)
+{
+	char	*start;
+	char	pkey[512];
+	char	value[512];
+	char	*o;
+
+	if (!s || !key)
+	{
+		return;
+	}
+
+	if (strchr (key, '\\'))
+	{
+		Com_Printf ("Can't use a key with a \\\n");
+		return;
+	}
+
+	while (1)
+	{
+		start = s;
+		if (*s == '\\')
+			s++;
+		o = pkey;
+		while (*s != '\\')
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value;
+		while (*s != '\\' && *s)
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		if (!strcmp (key, pkey) )
+		{
+			memmove(start, s, strlen(s) + 1);	// remove this part
+			return;
+		}
+
+		if (!*s)
+			return;
+	}
+
+}
+
+void Info_RemovePrefixedKeys (char *start, char prefix)
+{
+	char	*s;
+	char	pkey[512];
+	char	value[512];
+	char	*o;
+
+	s = start;
+
+	while (1)
+	{
+		if (*s == '\\')
+			s++;
+		o = pkey;
+		while (*s != '\\')
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value;
+		while (*s != '\\' && *s)
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		if (pkey[0] == prefix)
+		{
+			Info_RemoveKey (start, pkey);
+			s = start;
+		}
+
+		if (!*s)
+			return;
+	}
+
+}
+
+void Info_SetValueForStarKey (char *s, char *key, const char *value, size_t maxsize)
+{
+	char	new[1024], *v;
+	int		c;
+#ifdef SERVERONLY
+	extern cvar_t sv_highchars;
+#endif
+
+	if (!s || !key || !value)
+	{
+		return;
+	}
+
+	if (strchr (key, '\\') || strchr (value, '\\') )
+	{
+		Com_Printf ("Can't use keys or values with a \\\n");
+		return;
+	}
+
+	if (strchr (key, '\"') || strchr (value, '\"'))
+	{
+		Com_Printf ("Can't use keys or values with a \"\n");
+		return;
+	}
+
+	if (strlen(key) > 63 || strlen(value) > 63)
+	{
+		Com_Printf ("Keys and values must be < 64 characters.\n");
+		return;
+	}
+
+	// this next line is kinda trippy
+	if (*(v = Info_ValueForKey(s, key))) {
+		// key exists, make sure we have enough room for new value, if we don't,
+		// don't change it!
+		if (strlen(value) - strlen(v) + strlen(s) > maxsize) {
+			Com_Printf ("Info string length exceeded\n");
+			return;
+		}
+	}
+	Info_RemoveKey (s, key);
+	if (!value || !strlen(value))
+		return;
+
+	Com_sprintf (new, sizeof(new), "\\%s\\%s", key, value);
+
+	if ((strlen(new) + strlen(s)) > maxsize)
+	{
+		Com_Printf ("Info string length exceeded\n");
+		return;
+	}
+
+	// only copy ascii values
+	s += strlen(s);
+	v = new;
+	while (*v)
+	{
+		c = (unsigned char)*v++;
+#ifndef SERVERONLY
+		// client only allows highbits on name
+		if (stricmp(key, "name") != 0) {
+			c &= 127;
+			if (c < 32 || c > 127)
+				continue;
+			// auto lowercase team
+			if (stricmp(key, "team") == 0)
+				c = tolower(c);
+		}
+#else
+		if (!sv_highchars->value) {
+			c &= 127;
+			if (c < 32 || c > 127)
+				continue;
+		}
+#endif
+//		c &= 127;		// strip high bits
+		if (c > 13) // && c < 127)
+			*s++ = c;
+	}
+	*s = 0;
+}
+
+void Info_SetValueForKey (char *s, char *key, char *value, size_t maxsize)
+{
+	if (key[0] == '*')
+	{
+		Com_Printf ("Can't set * keys\n");
+		return;
+	}
+
+	Info_SetValueForStarKey (s, key, value, maxsize);
+}
+
+void Info_Print (char *s)
+{
+	char	key[512];
+	char	value[512];
+	char	*o;
+	int		l;
+
+	if (*s == '\\')
+		s++;
+	while (*s)
+	{
+		o = key;
+		while (*s && *s != '\\')
+			*o++ = *s++;
+
+		l = o - key;
+		if (l < 20)
+		{
+			memset (o, ' ', 20-l);
+			key[20] = 0;
+		}
+		else
+			*o = 0;
+		Com_Printf ("%s", key);
+
+		if (!*s)
+		{
+			Com_Printf ("MISSING VALUE\n");
+			return;
+		}
+
+		o = value;
+		s++;
+		while (*s && *s != '\\')
+			*o++ = *s++;
+		*o = 0;
+
+		if (*s)
+			s++;
+		Com_Printf ("%s\n", value);
+	}
+}
+
+static byte chktbl[1024 + 4] = {
+0x78,0xd2,0x94,0xe3,0x41,0xec,0xd6,0xd5,0xcb,0xfc,0xdb,0x8a,0x4b,0xcc,0x85,0x01,
+0x23,0xd2,0xe5,0xf2,0x29,0xa7,0x45,0x94,0x4a,0x62,0xe3,0xa5,0x6f,0x3f,0xe1,0x7a,
+0x64,0xed,0x5c,0x99,0x29,0x87,0xa8,0x78,0x59,0x0d,0xaa,0x0f,0x25,0x0a,0x5c,0x58,
+0xfb,0x00,0xa7,0xa8,0x8a,0x1d,0x86,0x80,0xc5,0x1f,0xd2,0x28,0x69,0x71,0x58,0xc3,
+0x51,0x90,0xe1,0xf8,0x6a,0xf3,0x8f,0xb0,0x68,0xdf,0x95,0x40,0x5c,0xe4,0x24,0x6b,
+0x29,0x19,0x71,0x3f,0x42,0x63,0x6c,0x48,0xe7,0xad,0xa8,0x4b,0x91,0x8f,0x42,0x36,
+0x34,0xe7,0x32,0x55,0x59,0x2d,0x36,0x38,0x38,0x59,0x9b,0x08,0x16,0x4d,0x8d,0xf8,
+0x0a,0xa4,0x52,0x01,0xbb,0x52,0xa9,0xfd,0x40,0x18,0x97,0x37,0xff,0xc9,0x82,0x27,
+0xb2,0x64,0x60,0xce,0x00,0xd9,0x04,0xf0,0x9e,0x99,0xbd,0xce,0x8f,0x90,0x4a,0xdd,
+0xe1,0xec,0x19,0x14,0xb1,0xfb,0xca,0x1e,0x98,0x0f,0xd4,0xcb,0x80,0xd6,0x05,0x63,
+0xfd,0xa0,0x74,0xa6,0x86,0xf6,0x19,0x98,0x76,0x27,0x68,0xf7,0xe9,0x09,0x9a,0xf2,
+0x2e,0x42,0xe1,0xbe,0x64,0x48,0x2a,0x74,0x30,0xbb,0x07,0xcc,0x1f,0xd4,0x91,0x9d,
+0xac,0x55,0x53,0x25,0xb9,0x64,0xf7,0x58,0x4c,0x34,0x16,0xbc,0xf6,0x12,0x2b,0x65,
+0x68,0x25,0x2e,0x29,0x1f,0xbb,0xb9,0xee,0x6d,0x0c,0x8e,0xbb,0xd2,0x5f,0x1d,0x8f,
+0xc1,0x39,0xf9,0x8d,0xc0,0x39,0x75,0xcf,0x25,0x17,0xbe,0x96,0xaf,0x98,0x9f,0x5f,
+0x65,0x15,0xc4,0x62,0xf8,0x55,0xfc,0xab,0x54,0xcf,0xdc,0x14,0x06,0xc8,0xfc,0x42,
+0xd3,0xf0,0xad,0x10,0x08,0xcd,0xd4,0x11,0xbb,0xca,0x67,0xc6,0x48,0x5f,0x9d,0x59,
+0xe3,0xe8,0x53,0x67,0x27,0x2d,0x34,0x9e,0x9e,0x24,0x29,0xdb,0x69,0x99,0x86,0xf9,
+0x20,0xb5,0xbb,0x5b,0xb0,0xf9,0xc3,0x67,0xad,0x1c,0x9c,0xf7,0xcc,0xef,0xce,0x69,
+0xe0,0x26,0x8f,0x79,0xbd,0xca,0x10,0x17,0xda,0xa9,0x88,0x57,0x9b,0x15,0x24,0xba,
+0x84,0xd0,0xeb,0x4d,0x14,0xf5,0xfc,0xe6,0x51,0x6c,0x6f,0x64,0x6b,0x73,0xec,0x85,
+0xf1,0x6f,0xe1,0x67,0x25,0x10,0x77,0x32,0x9e,0x85,0x6e,0x69,0xb1,0x83,0x00,0xe4,
+0x13,0xa4,0x45,0x34,0x3b,0x40,0xff,0x41,0x82,0x89,0x79,0x57,0xfd,0xd2,0x8e,0xe8,
+0xfc,0x1d,0x19,0x21,0x12,0x00,0xd7,0x66,0xe5,0xc7,0x10,0x1d,0xcb,0x75,0xe8,0xfa,
+0xb6,0xee,0x7b,0x2f,0x1a,0x25,0x24,0xb9,0x9f,0x1d,0x78,0xfb,0x84,0xd0,0x17,0x05,
+0x71,0xb3,0xc8,0x18,0xff,0x62,0xee,0xed,0x53,0xab,0x78,0xd3,0x65,0x2d,0xbb,0xc7,
+0xc1,0xe7,0x70,0xa2,0x43,0x2c,0x7c,0xc7,0x16,0x04,0xd2,0x45,0xd5,0x6b,0x6c,0x7a,
+0x5e,0xa1,0x50,0x2e,0x31,0x5b,0xcc,0xe8,0x65,0x8b,0x16,0x85,0xbf,0x82,0x83,0xfb,
+0xde,0x9f,0x36,0x48,0x32,0x79,0xd6,0x9b,0xfb,0x52,0x45,0xbf,0x43,0xf7,0x0b,0x0b,
+0x19,0x19,0x31,0xc3,0x85,0xec,0x1d,0x8c,0x20,0xf0,0x3a,0xfa,0x80,0x4d,0x2c,0x7d,
+0xac,0x60,0x09,0xc0,0x40,0xee,0xb9,0xeb,0x13,0x5b,0xe8,0x2b,0xb1,0x20,0xf0,0xce,
+0x4c,0xbd,0xc6,0x04,0x86,0x70,0xc6,0x33,0xc3,0x15,0x0f,0x65,0x19,0xfd,0xc2,0xd3,
+
+// map checksum goes here
+0x00,0x00,0x00,0x00
+};
+
+/*
+====================
+COM_BlockSequenceCRCByte
+
+For proxy protecting
+====================
+*/
+byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
+{
+	unsigned short crc;
+	byte	*p;
+	byte chkb[60 + 4];
+
+	p = chktbl + (sequence % (sizeof(chktbl) - 8));
+
+	if (length > 60)
+		length = 60;
+	memcpy (chkb, base, length);
+
+	chkb[length] = (sequence & 0xff) ^ p[0];
+	chkb[length+1] = p[1];
+	chkb[length+2] = ((sequence>>8) & 0xff) ^ p[2];
+	chkb[length+3] = p[3];
+
+	length += 4;
+
+	crc = CRC_Block(chkb, length);
+
+	crc &= 0xff;
+
+	return crc;
+}
+
+// char *date = "Oct 24 1996";
+static const char *date = __DATE__ ;
+static const char *mon[12] = 
+{ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+static const char mond[12] = 
+{ 31,    28,    31,    30,    31,    30,    31,    31,    30,    31,    30,    31 };
+
+// returns days since Oct 24 1996
+int build_number( void )
+{
+	int m = 0; 
+	int d = 0;
+	int y = 0;
+	static int b = 0;
+
+	if (b != 0)
+		return b;
+
+	for (m = 0; m < 11; m++)
+	{
+		if (Q_strncasecmp( &date[0], mon[m], 3 ) == 0)
+			break;
+		d += mond[m];
+	}
+
+	d += atoi( &date[4] ) - 1;
+
+	y = atoi( &date[7] ) - 1900;
+
+	b = d + (int)((y - 1) * 365.25);
+
+	if (((y % 4) == 0) && m > 1)
+	{
+		b += 1;
+	}
+
+	b -= 35778; // Dec 16 1998
+
+	return b;
 }
 
 #ifdef __DJGPP__
@@ -2351,8 +2780,7 @@ int vsnprintf(char *str, size_t n, const char *fmt, va_list ap)
 #endif
 
 #if defined(__DJGPP__) || defined(_WIN32)
-char * /* from OpenBSD */
-strtok_r(char *s, const char *delim, char **last)
+char *strtok_r(char *s, const char *delim, char **last) /* from OpenBSD */
 {
 	const char *spanp;
 	int c, sc;
@@ -2400,7 +2828,7 @@ cont:
 #endif
 
 /* FS: Buffer safe sprintf so we aren't va'ing all over the place */
-void Com_sprintf (char *dest, int size, char *fmt, ...)
+void Com_sprintf (char *dest, size_t size, char *fmt, ...)
 {
 	int		len;
 	va_list		argptr;
@@ -2412,24 +2840,4 @@ void Com_sprintf (char *dest, int size, char *fmt, ...)
 	if (len < 0 || len >= size) {
 		Com_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
 	}
-}
-
-// Knightmare added
-void Com_strcpy (char *dest, int destSize, const char *src)
-{
-	if (!dest) {
-		Com_Printf ("Com_strcpy: NULL dst\n");
-		return;
-	}
-	if (!src) {
-		Com_Printf ("Com_strcpy: NULL src\n");
-		return;
-	}
-	if (destSize < 1) {
-		Com_Printf ("Com_strcpy: dstSize < 1\n");
-		return;
-	}
-
-	strncpy(dest, src, destSize-1);
-	dest[destSize-1] = 0;
 }

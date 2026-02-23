@@ -67,17 +67,14 @@ void Sys_PushFPCW_SetHigh (void);
 void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
     va_list argptr;
-	static dstring_t *data;
+	char data[MAXPRINTMSG];
     int fd;
 
-	if(!data)
-		data = dstring_new();
-
     va_start(argptr, fmt);
-    dvsprintf(data, fmt, argptr);
+    Q_vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
     fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0666);
-    write(fd, data->str, strlen(data->str));
+    write(fd, data, strlen(data));
     close(fd);
 };
 
@@ -268,9 +265,10 @@ void Sys_Init (void)
 {
 	OSVERSIONINFO	vinfo;
 
+#if	id386
 	MaskExceptions ();
 	Sys_SetFPCW ();
-
+#endif
 
 	// make sure the timer is high precision, otherwise
 	// NT gets 18ms resolution
@@ -294,10 +292,10 @@ void Sys_Init (void)
 }
 
 #ifdef QUAKE1
+static		char errtext1[MAXPRINTMSG], errtext2[MAXPRINTMSG];
 void Sys_Error (const char *error, ...)
 {
 	va_list		argptr;
-	static		dstring_t	*errtext1, *errtext2;
 	char		*errtext3 = "Press Enter to exit\n";
 	char		*errtext4 = "***********************************\n";
 	char		*errtext5 = "\n";
@@ -308,11 +306,6 @@ void Sys_Error (const char *error, ...)
 	static int	in_sys_error2 = 0;
 	static int	in_sys_error3 = 0;
 
-	if(!errtext1)
-		errtext1 = dstring_new();
-	if (!errtext2)
-		errtext2 = dstring_new();
-
 	if (!in_sys_error3)
 	{
 		in_sys_error3 = 1;
@@ -320,19 +313,19 @@ void Sys_Error (const char *error, ...)
 	}
 
 	va_start (argptr, error);
-	dvsprintf (errtext1, error, argptr);
+	Q_vsnprintf (errtext1, sizeof(errtext1), error, argptr);
 	va_end (argptr);
 
 	if (isDedicated)
 	{
 		va_start (argptr, error);
-		dvsprintf (errtext1, error, argptr);
+		Q_vsnprintf (errtext1, sizeof(errtext1), error, argptr);
 		va_end (argptr);
 
-		dsprintf (errtext2, "ERROR: %s\n", errtext1);
+		Q_vsnprintf (errtext2, sizeof(errtext2), "ERROR: %s\n", errtext1);
 		WriteFile (houtput, errtext5, strlen (errtext5), &dummy, NULL);
 		WriteFile (houtput, errtext4, strlen (errtext4), &dummy, NULL);
-		WriteFile (houtput, errtext2->str, strlen (errtext2->str), &dummy, NULL);
+		WriteFile (houtput, errtext2, strlen (errtext2), &dummy, NULL);
 		WriteFile (houtput, errtext3, strlen (errtext3), &dummy, NULL);
 		WriteFile (houtput, errtext4, strlen (errtext4), &dummy, NULL);
 
@@ -353,12 +346,12 @@ void Sys_Error (const char *error, ...)
 		{
 			in_sys_error0 = 1;
 			VID_SetDefaultMode ();
-			MessageBox(NULL, errtext1->str, "Quake Error",
+			MessageBox(NULL, errtext1, "Quake Error",
 					   MB_OK | MB_SETFOREGROUND | MB_ICONSTOP);
 		}
 		else
 		{
-			MessageBox(NULL, errtext1->str, "Double Quake Error",
+			MessageBox(NULL, errtext1, "Double Quake Error",
 					   MB_OK | MB_SETFOREGROUND | MB_ICONSTOP);
 		}
 	}
@@ -382,19 +375,16 @@ void Sys_Error (const char *error, ...)
 void Sys_Error (const char *error, ...)
 {
 	va_list		argptr;
-    static dstring_t    *string;
-
-    if (!string)
-        string = dstring_new();
+    char	string[MAXPRINTMSG];
 
 	Host_Shutdown ();
 
 	va_start (argptr, error);
-    dvsprintf (string,error,argptr);
+    Q_vsnprintf (string, sizeof(string), error,argptr);
 	va_end (argptr);
 
-	MessageBox(NULL, string->str, "Error", 0 /* MB_OK */ );
-	fprintf(stderr, "Error: %s\n", string->str);
+	MessageBox(NULL, string, "Error", 0 /* MB_OK */ );
+	fprintf(stderr, "Error: %s\n", string);
 
 
 	exit (1);
@@ -403,13 +393,10 @@ void Sys_Error (const char *error, ...)
 void Sys_Printf (const char *fmt, ...)
 {
 	va_list		argptr;
-	static		dstring_t *text;
+	char	text[MAXPRINTMSG];
 	
-	if (!text)
-		text = dstring_new ();
-
 	va_start (argptr,fmt);
-	dvsprintf (text,fmt,argptr);
+	Q_vsnprintf (text, sizeof(text), fmt,argptr);
 	va_end (argptr);
 }
 
@@ -609,8 +596,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	double			time, oldtime, newtime;
 	MEMORYSTATUS	lpBuffer;
 	static	char	cwd[1024];
-	int				t;
 	RECT			rect;
+	int	t = 0;
 
     /* previous instances do not exist in Win32 */
     if (hPrevInstance)
@@ -703,28 +690,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	if (parms.memsize < (lpBuffer.dwTotalPhys >> 1))
 		parms.memsize = lpBuffer.dwTotalPhys >> 1;
 
-	if (parms.memsize > MAXIMUM_WIN_MEMORY)
-		parms.memsize = MAXIMUM_WIN_MEMORY;
-
-#ifdef QUAKE1
-	if (extended_mod) /* FS: For big boy mods */
-		parms.memsize = (int) 64 * 1024 * 1024;
-#endif
-
-	/* FS */
-	t = COM_CheckParm("-mem");
-	if (t && t < com_argc-1)
-		parms.memsize = Q_atoi(com_argv[t+1]) * 1024 * 1024;
-
-	t = COM_CheckParm("-heapsize");
-	if (t && t < com_argc-1)
-		parms.memsize = Q_atoi(com_argv[t+1]) * 1024;
-
-	parms.membase = malloc (parms.memsize);
-
-	if (!parms.membase)
-		Sys_Error ("Not enough memory free; check disk space\n");
-
 	tevent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	if (!tevent)
@@ -745,19 +710,19 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		if ((t = COM_CheckParm ("-HFILE")) > 0)
 		{
 			if (t < com_argc)
-				hFile = (HANDLE)Q_atoi (com_argv[t+1]);
+				hFile = (HANDLE)atoi (com_argv[t+1]);
 		}
 			
 		if ((t = COM_CheckParm ("-HPARENT")) > 0)
 		{
 			if (t < com_argc)
-				heventParent = (HANDLE)Q_atoi (com_argv[t+1]);
+				heventParent = (HANDLE)atoi (com_argv[t+1]);
 		}
 			
 		if ((t = COM_CheckParm ("-HCHILD")) > 0)
 		{
 			if (t < com_argc)
-				heventChild = (HANDLE)Q_atoi (com_argv[t+1]);
+				heventChild = (HANDLE)atoi (com_argv[t+1]);
 		}
 
 		InitConProc (hFile, heventParent, heventChild);

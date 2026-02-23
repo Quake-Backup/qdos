@@ -480,7 +480,7 @@ int Serial_SendMessage (qsocket_t *sock, sizebuf_t *message)
 
 	// mark sock as busy and save the message for possible retransmit
 	sock->canSend = false;
-	Q_memcpy(sock->sendMessage, message->data, message->cursize);
+	memcpy(sock->sendMessage, message->data, message->cursize);
 	sock->sendMessageLength = message->cursize;
 	sock->lastSendTime = net_time;
 
@@ -692,7 +692,7 @@ static int _Serial_GetMessage (SerialLine *p)
 	p->sock->receiveMessageLength -= length;
 
 	if (p->sock->receiveMessageLength + p->lengthFound)
-		Q_memcpy(p->sock->receiveMessage, &p->sock->receiveMessage[length], p->sock->receiveMessageLength + p->lengthFound);
+		memcpy(p->sock->receiveMessage, &p->sock->receiveMessage[length], p->sock->receiveMessageLength + p->lengthFound);
 
 	return ret;
 }
@@ -757,12 +757,12 @@ void Serial_SearchForHosts (qboolean xmit)
 	if (TTY_IsModem(p->tty))
 		return;
 
-	sprintf(hostcache[hostCacheCount].name, "COM%u", n+1);
-	Q_strcpy(hostcache[hostCacheCount].map, "");
+	Com_sprintf(hostcache[hostCacheCount].name, sizeof(hostcache[hostCacheCount].name), "COM%u", n+1);
+	Q_strlcpy(hostcache[hostCacheCount].map, "", sizeof(hostcache[hostCacheCount].map));
 	hostcache[hostCacheCount].users = 0;
 	hostcache[hostCacheCount].maxusers = 0;
 	hostcache[hostCacheCount].driver = net_driverlevel;
-	Q_strcpy(hostcache[hostCacheCount].cname, "#");
+	Q_strlcpy(hostcache[hostCacheCount].cname, "#", sizeof(hostcache[hostCacheCount].cname));
 	hostCacheCount++;
 
 	return;
@@ -941,7 +941,7 @@ static qsocket_t *_Serial_CheckNewConnections (SerialLine *p)
 	p->connected = true;
 	p->connecting = false;
 	p->sock->lastMessageTime = net_time;
-	sprintf(p->sock->address, "COM%u", (int)((p - serialLine) + 1));
+	Com_sprintf(p->sock->address, sizeof(p->sock->address), "COM%u", (int)((p - serialLine) + 1));
 
 	return p->sock;
 }

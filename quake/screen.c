@@ -326,7 +326,7 @@ SCR_Init
 void SCR_Init (void)
 {
 	scr_viewsize = Cvar_Get("viewsize","100", CVAR_ARCHIVE);
-	scr_fov = Cvar_Get("fov","90", 0); // 10 - 170
+	scr_fov = Cvar_Get("fov","90", CVAR_ARCHIVE); // 10 - 170
 	scr_conspeed = Cvar_Get("scr_conspeed","1000", 0); /* FS: Was 300 */
 	scr_centertime = Cvar_Get("scr_centertime","2", 0);
 	scr_showram = Cvar_Get("showram","1", 0);
@@ -664,7 +664,7 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx_t	*pcx;
 	byte		*pack;
 	  
-	pcx = Hunk_TempAlloc (width*height*2+1000);
+	pcx = Z_Malloc (width*height*2+1000);
 	if (pcx == NULL)
 	{
 		Com_Printf("SCR_ScreenShot_f: not enough memory\n");
@@ -681,11 +681,11 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx->ymax = LittleShort((short)(height-1));
 	pcx->hres = LittleShort((short)width);
 	pcx->vres = LittleShort((short)height);
-	Q_memset (pcx->palette,0,sizeof(pcx->palette));
+	memset (pcx->palette,0,sizeof(pcx->palette));
 	pcx->color_planes = 1;		// chunky image
 	pcx->bytes_per_line = LittleShort((short)width);
 	pcx->palette_type = LittleShort(2);		// not a grey scale
-	Q_memset (pcx->filler,0,sizeof(pcx->filler));
+	memset (pcx->filler,0,sizeof(pcx->filler));
 
 // pack the image
 	pack = &pcx->data;
@@ -714,6 +714,8 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 // write output file 
 	length = pack - (byte *)pcx;
 	COM_WriteFile (filename, pcx, length);
+
+	Z_Free(pcx);
 } 
  
 

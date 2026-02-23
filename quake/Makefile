@@ -116,7 +116,6 @@ OBJS=	$(SYSOBJ_DXE)        \
 	crc.o      \
 	cvar.o     \
 	dos_v2.o   \
-	dstring.o  \
 	host.o     \
 	host_cmd.o \
 	in_dos.o   \
@@ -135,6 +134,7 @@ OBJS=	$(SYSOBJ_DXE)        \
 	pr_edict.o \
 	pr_exec.o  \
 	r_part.o   \
+	q_shdos.o  \
 	sbar.o     \
 	snd_dma.o  \
 	snd_dos.o  \

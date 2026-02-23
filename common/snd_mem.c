@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int			cache_full_cycle;
 
-byte *S_Alloc (int size);
+byte *S_Alloc (size_t size);
 
 /*
 ================
@@ -39,7 +39,7 @@ void ResampleSfx (sfx_t *sfx, int inrate, int inwidth, byte *data)
 	int		sample, samplefrac, fracstep;
 	sfxcache_t	*sc;
 	
-	sc = Cache_Check (&sfx->cache);
+	sc = (sfxcache_t *) sfx->cache;
 	if (!sc)
 		return;
 
@@ -51,7 +51,7 @@ void ResampleSfx (sfx_t *sfx, int inrate, int inwidth, byte *data)
 		sc->loopstart = sc->loopstart / stepscale;
 
 	sc->speed = dma.speed;
-	if (loadas8bit->value)
+	if (loadas8bit->intValue)
 		sc->width = 1;
 	else
 		sc->width = inwidth;
@@ -100,22 +100,20 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 	int		len;
 	float	stepscale;
 	sfxcache_t	*sc;
-	byte	stackbuf[1*1024];		// avoid dirtying the cache heap
 
 // see if still in memory
-	sc = Cache_Check (&s->cache);
+	sc = (sfxcache_t *) s->cache;
 	if (sc)
 		return sc;
 
 //Com_Printf ("S_LoadSound: %x\n", (int)stackbuf);
 // load it in
-    Q_strcpy(namebuffer, "sound/");
-    Q_strcat(namebuffer, s->name);
+    Q_strlcpy(namebuffer, "sound/", sizeof(namebuffer));
+    Q_strlcat(namebuffer, s->name, sizeof(namebuffer));
 
 //	Com_Printf ("loading %s\n",namebuffer);
 	
-	data = COM_LoadStackFile(namebuffer, stackbuf, sizeof(stackbuf));
-
+	data = COM_LoadFile(namebuffer);
 	if (!data)
 	{
 		Com_Printf ("Couldn't load %s\n", namebuffer);
@@ -135,7 +133,7 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 
 	len = len * info.width * info.channels;
 
-	sc = Cache_Alloc ( &s->cache, len + sizeof(sfxcache_t), s->name);
+	sc = s->cache = Z_Malloc (len + sizeof(sfxcache_t));
 	if (!sc)
 		return NULL;
 	
@@ -152,6 +150,8 @@ sfxcache_t *S_LoadSound (sfx_t *s)
 	// end Knightmare
 
 	ResampleSfx (s, sc->speed, sc->width, data + info.dataofs);
+
+	COM_FreeFile(data);
 
 	return sc;
 }

@@ -47,11 +47,11 @@ void R_InitParticles (void)
 {
 	int		i;
 
-	i = COM_CheckParm ("-particles");
+	i = COM_CheckParm ("-particles"); /* FS: TODO: Make this a CVAR. */
 
 	if (i)
 	{
-		r_numparticles = (int)(Q_atoi(com_argv[i+1]));
+		r_numparticles = atoi(com_argv[i+1]);
 		if (r_numparticles < ABSOLUTE_MIN_PARTICLES)
 			r_numparticles = ABSOLUTE_MIN_PARTICLES;
 	}
@@ -61,7 +61,7 @@ void R_InitParticles (void)
 	}
 
 	particles = (particle_t *)
-			Hunk_AllocName (r_numparticles * sizeof(particle_t), "particles");
+			Z_Malloc(r_numparticles * sizeof(particle_t));
 }
 
 /*
@@ -158,7 +158,7 @@ void R_ReadPointFile_f (void)
 	particle_t	*p;
 	char	name[MAX_OSPATH];
 	
-	sprintf (name,"maps/%s.pts", sv.name);
+	Com_sprintf (name, sizeof(name), "maps/%s.pts", sv.name);
 
 	COM_FOpenFile (name, &f);
 	if (!f)
@@ -748,3 +748,9 @@ void R_DrawParticles (void)
 #endif
 }
 
+void R_ShutdownParticles (void)
+{
+	R_ClearParticles();
+	Z_Free(particles);
+	r_numparticles = 0;
+}

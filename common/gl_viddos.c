@@ -486,7 +486,7 @@ static void Check_Gamma (unsigned char *pal)
 	vid_gamma = v_gamma->value;
 
 	if ((i = COM_CheckParm("-gamma")) > 0)
-		vid_gamma = Q_atof(com_argv[i+1]);
+		vid_gamma = atof(com_argv[i+1]);
 
 	for (i=0 ; i<768 ; i++)
 	{
@@ -512,12 +512,12 @@ void VID_Init(unsigned char *palette)
 	vid_wait = Cvar_Get("vid_wait", "0", 0);;
 	_vid_wait_override = Cvar_Get("_vid_wait_override", "0", 0);
 
-	gl_ztrick = Cvar_Get("gl_ztrick", "1", 0);
-	gl_ztrick->description = "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.";
+	gl_ztrick = Cvar_Get("gl_ztrick", "1", CVAR_ARCHIVE);
+	Cvar_Set_Description("gl_ztrick", "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.");
 	r_ignorehwgamma = Cvar_Get("r_ignorehwgamma", "0", CVAR_ARCHIVE);
-	r_ignorehwgamma->description = "Skip testing for 3DFX Hardware Gamma capabilities";
+	Cvar_Set_Description("r_ignorehwgamma", "Skip testing for 3DFX Hardware Gamma capabilities");
 	gl_conscale = Cvar_Get("gl_conscale", "1", CVAR_ARCHIVE);
-	gl_conscale->description = "Set to 0 to make the console width and height equal to the current resolution.  Set to 1 to control it with conwidth and conheight cmdline.  Requires game restart.";
+	Cvar_Set_Description("gl_conscale", "Set to 0 to make the console width and height equal to the current resolution.Set to 1 to control it with conwidth and conheight cmdline.Requires game restart.");
 
 	Cmd_AddCommand ("gl_strings", GL_Strings_f); /* FS: Added */
 
@@ -551,7 +551,7 @@ void VID_Init(unsigned char *palette)
 
 	if ((i = COM_CheckParm("-bpp")) != 0) /* FS: Force BPP */
 	{
-		int x = Q_atoi(com_argv[i+1]);
+		int x = atoi(com_argv[i+1]);
 		if ((x == 15) || (x == 32))
 			bpp = x;
 	}
@@ -567,7 +567,7 @@ void VID_Init(unsigned char *palette)
 	else
 	{
 		if ((i = COM_CheckParm("-conwidth")) != 0)
-			vid.conwidth = Q_atoi(com_argv[i+1]);
+			vid.conwidth = atoi(com_argv[i+1]);
 		else
 			vid.conwidth = 640;
 
@@ -580,7 +580,7 @@ void VID_Init(unsigned char *palette)
 		vid.conheight = vid.conwidth*3 / 4;
 
 		if ((i = COM_CheckParm("-conheight")) != 0)
-			vid.conheight = Q_atoi(com_argv[i+1]);
+			vid.conheight = atoi(com_argv[i+1]);
 		if (vid.conheight < 200)
 			vid.conheight = 200;
 	}
@@ -604,7 +604,7 @@ void VID_Init(unsigned char *palette)
 
 	GL_Init();
 
-	sprintf (gldir, "%s/glquake", com_gamedir);
+	Com_sprintf (gldir, sizeof(gldir), "%s/glquake", com_gamedir);
 	Sys_mkdir (gldir);
 
 	VID_InitGamma();
@@ -626,6 +626,7 @@ void VID_Init(unsigned char *palette)
 void VID_Shutdown(void)
 {
 	VID_ShutdownGamma();
+	R_Shutdown();
 	if (DOSGL_Shutdown)
 		DOSGL_Shutdown ();
 #ifdef GL_DLSYM

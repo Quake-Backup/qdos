@@ -29,7 +29,7 @@ typedef struct
 {
 	char            name[16];
 	qboolean	failedload;		// the name isn't a valid skin
-	cache_user_t	cache;
+	void *data;
 } skin_t;
 
 #ifdef GAMESPY /* FS: Gamespy stuff */
@@ -200,16 +200,13 @@ typedef struct
 // private userinfo for sending to masterless servers
 	char		userinfo[MAX_INFO_STRING];
 
-//	char            servername[MAX_OSPATH]; // name of server from original connect
-	struct dstring_s *servername; /* FS: Now a dstring */
+	char            servername[MAX_OSPATH]; // name of server from original connect
 	int			qport;
 
 	FILE		*download;		// file transfer from server
-	//char            downloadtempname[MAX_OSPATH];
-	//char            downloadname[MAX_OSPATH];
-	struct dstring_s *downloadtempname; /* FS: Now a dstring */
-	struct dstring_s *downloadname; /* FS: Now a dstring */
-	struct dstring_s *downloadurl; /* FS: HTTP downloading from QuakeForge */
+	char            downloadtempname[MAX_OSPATH];
+	char            downloadname[MAX_OSPATH];
+	char           downloadurl[MAX_OSPATH]; /* FS: HTTP downloading from QuakeForge */
 	int                      downloadnumber;
 	dltype_t	downloadtype;
 	int			downloadpercent;
@@ -630,6 +627,7 @@ void	Skin_Skins_f (void);
 void	Skin_AllSkins_f (void);
 void	Skin_NextDownload (qboolean queue);
 void	Skin_Precache (void);
+void	Skin_FreeAll(void);
 
 #define RSSHOT_WIDTH 320
 #define RSSHOT_HEIGHT 200

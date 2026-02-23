@@ -159,7 +159,7 @@ void IN_UseUp (void) {KeyUp(&in_use);}
 void IN_JumpDown (void) {KeyDown(&in_jump);}
 void IN_JumpUp (void) {KeyUp(&in_jump);}
 
-void IN_Impulse (void) {in_impulse=Q_atoi(Cmd_Argv(1));}
+void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
 
 /*
 ===============
@@ -499,29 +499,25 @@ void CL_SendCmd (void)
 void CL_SendClientCommand(qboolean reliable, char *format, ...) /* FS: From JQuake/EZQ/etc */
 {
 	va_list		argptr;
-	dstring_t	*string;
+	char	string[MAX_MSGLEN];
 
 	if (cls.demoplayback)
 		return;	// no point.
 
-	string = dstring_new();
-
 	va_start (argptr, format);
-	dvsprintf(string, format, argptr);
+	Q_vsnprintf(string, sizeof(string), format, argptr);
 	va_end (argptr);
 
 	if (reliable)
 	{
 		MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
-		MSG_WriteString (&cls.netchan.message, string->str);
+		MSG_WriteString (&cls.netchan.message, string);
 	}
 	else
 	{
 		MSG_WriteByte (&cls.cmdmsg, clc_stringcmd);
-		MSG_WriteString (&cls.cmdmsg, string->str);
+		MSG_WriteString (&cls.cmdmsg, string);
 	}
-
-	dstring_delete(string);
 }
 
 /*
@@ -569,7 +565,7 @@ void CL_InitInput (void)
 
 	cl_nodelta = Cvar_Get("cl_nodelta","0", 0);
 	in_freelook = Cvar_Get("in_freelook","1.0", CVAR_ARCHIVE); /* FS: mlook */
-	in_freelook->description = "Enables Mouselook.";
+	Cvar_Set_Description("in_freelook", "Enables Mouselook.");
 }
 
 /*

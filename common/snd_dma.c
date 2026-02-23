@@ -45,7 +45,6 @@ void S_StopAllSounds(void);
 channel_t	channels[MAX_CHANNELS];
 int			total_channels;
 
-int			snd_blocked = 0;
 static qboolean		snd_ambient = 1;
 qboolean		snd_initialized = false;
 
@@ -66,7 +65,7 @@ portable_samplepair_t	*s_rawsamples;
 size_t	s_rawsamples_size;
 
 #define MAX_SFX		512
-sfx_t		*known_sfx;	// hunk allocated [MAX_SFX]
+sfx_t		known_sfx[MAX_SFX];
 int		num_sfx;
 
 sfx_t		*ambient_sfx[NUM_AMBIENTS];
@@ -172,9 +171,9 @@ void S_Init (void)
 
 	/* FS: New stuff */
 	s_khz = Cvar_Get("s_khz","", CVAR_ARCHIVE);
-	s_khz->description = "Sound sampling rate.";
+	Cvar_Set_Description("s_khz", "Sound sampling rate.");
 	s_musicvolume = Cvar_Get("s_musicvolume", "1.0", CVAR_ARCHIVE);
-	s_musicvolume->description = "Music volume for wav and ogg streaming.";
+	Cvar_Set_Description("s_musicvolume", "Music volume for wav and ogg streaming.");
 	s_mastervolume = Cvar_Get("s_mastervolume", "1.0", CVAR_ARCHIVE);
 	s_paintbuffer_size_cvar = Cvar_Get("s_paintbuffer_size", va("%d", PAINTBUFFER_SIZE), 0);
 	s_rawsamples_size_cvar = Cvar_Get("s_rawsamples_size", va("%d", MAX_RAW_SAMPLES), 0);
@@ -182,19 +181,16 @@ void S_Init (void)
 	if (COM_CheckParm("-nosound"))
 		return;
 
-	if (!host_initialized)
-	{
-		Cmd_AddCommand("play", S_Play);
-		Cmd_AddCommand("play2", S_Play2); /* FS: For Nehara */
-		Cmd_AddCommand("playvol", S_PlayVol);
-		Cmd_AddCommand("stopsound", S_StopAllSounds);
-		Cmd_AddCommand("soundlist", S_SoundList);
-		Cmd_AddCommand("soundinfo", S_SoundInfo_f);
+	Cmd_AddCommand("play", S_Play);
+	Cmd_AddCommand("play2", S_Play2); /* FS: For Nehara */
+	Cmd_AddCommand("playvol", S_PlayVol);
+	Cmd_AddCommand("stopsound", S_StopAllSounds);
+	Cmd_AddCommand("soundlist", S_SoundList);
+	Cmd_AddCommand("soundinfo", S_SoundInfo_f);
 #ifdef OGG_SUPPORT
-		Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
+	Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
 #endif
-		Cmd_AddCommand("wav_restart", S_WAV_Restart); /* FS: Added */
-	}
+	Cmd_AddCommand("wav_restart", S_WAV_Restart); /* FS: Added */
 
 	if (host_parms.memsize < 0x800000)
 	{
@@ -232,7 +228,7 @@ void S_Init (void)
 	S_InitScaletable ();
 
 	sound_started = 1;
-	known_sfx = Hunk_AllocName (MAX_SFX*sizeof(sfx_t), "sfx_t");
+	memset(known_sfx, 0, sizeof(sfx_t) * MAX_SFX);
 	num_sfx = 0;
 
 	soundtime = 0;
@@ -265,7 +261,6 @@ void S_Init (void)
 		return;
 	}
 
-	Com_Printf ("Sound sampling rate: %d\n", dma.speed);
 	Com_Printf("Channels: %d, Bits: %d, Rate: %d\nPaint Buffer Size: %d\nRaw Samples Buffer Size: %d\n", dma.channels, dma.samplebits, dma.speed, (int)s_paintbuffer_size, (int)s_rawsamples_size);
 
 //	if (dma.buffer)
@@ -282,6 +277,8 @@ void S_Init (void)
 		S_WAV_Init(); /* FS: Added */
 
 	S_StopAllSounds ();
+
+	Com_Printf("------------------------------------\n");
 }
 
 
@@ -291,8 +288,25 @@ void S_Init (void)
 
 void S_Shutdown(void)
 {
+	sfx_t *sfx;
+	int i;
+
 	if (!sound_started)
 		return;
+
+	if (snd_initialized)
+	{
+		Cmd_RemoveCommand("play");
+		Cmd_RemoveCommand("play2"); /* FS: For Nehara */
+		Cmd_RemoveCommand("playvol");
+		Cmd_RemoveCommand("stopsound");
+		Cmd_RemoveCommand("soundlist");
+		Cmd_RemoveCommand("soundinfo");
+#ifdef OGG_SUPPORT
+		Cmd_RemoveCommand("ogg_restart"); /* Knightmare added */
+#endif
+		Cmd_RemoveCommand("wav_restart"); /* FS: Added */
+	}
 
 #ifdef OGG_SUPPORT
 	S_OGG_Shutdown(); /* Knightmare added */
@@ -301,9 +315,19 @@ void S_Shutdown(void)
 
 	SNDDMA_Shutdown();
 
-	dma.buffer = NULL;
+	for (i = 0; i < num_sfx; i++)
+	{
+		sfx = &known_sfx[i];
+		if (sfx && sfx->cache)
+		{
+			Z_Free(sfx->cache);
+			sfx->cache = NULL;
+		}
+	}
 
+	dma.buffer = NULL;
 	sound_started = 0;
+	snd_initialized = 0;
 }
 
 
@@ -344,7 +368,7 @@ sfx_t *S_FindName (char *name)
 
 	sfx = &known_sfx[i];
 	memset (sfx, 0, sizeof(*sfx));
-	strcpy (sfx->name, name);
+	Q_strlcpy (sfx->name, name, sizeof(sfx->name));
 
 	num_sfx++;
 
@@ -366,7 +390,8 @@ void S_TouchSound (char *name)
 		return;
 
 	sfx = S_FindName (name);
-	Cache_Check (&sfx->cache);
+	if (!sfx)
+		S_LoadSound(sfx);
 }
 
 /*
@@ -379,13 +404,13 @@ sfx_t *S_PrecacheSound (char *name)
 {
 	sfx_t	*sfx;
 
-	if (!sound_started || nosound->value)
+	if (!sound_started || nosound->intValue)
 		return NULL;
 
 	sfx = S_FindName (name);
 
 // cache it in
-	if (precache->value)
+	if (precache->intValue)
 		S_LoadSound (sfx);
 
 	return sfx;
@@ -512,7 +537,7 @@ void S_StartSound(int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float f
 	if (!sfx)
 		return;
 
-	if (nosound->value)
+	if (nosound->intValue)
 		return;
 
 	vol = fvol*255;
@@ -741,7 +766,7 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	channel_t	*ch;
 	channel_t	*combine;
 
-	if (!sound_started || (snd_blocked > 0))
+	if (!sound_started)
 		return;
 
 	/* FS: Don't allow dumb values. */
@@ -813,8 +838,8 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 		/* FS: FIXME: Use s_rawsamples stuff instead of this crap hack */
 		if (warpspasm && (strstr(ch->sfx->name, "music/warp")) ) /* FS: Fucks up tunes if we allow spatial */
 		{
-			ch->leftvol = ch->master_vol;
-			ch->rightvol = ch->master_vol;
+			ch->leftvol = ch->master_vol * s_musicvolume->value;
+			ch->rightvol = ch->master_vol * s_musicvolume->value;
 			continue;
 		}
 #endif
@@ -864,7 +889,7 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 //
 // debugging output
 //
-	if (snd_show->value)
+	if (snd_show->intValue)
 	{
 		total = 0;
 		ch = channels;
@@ -975,13 +1000,15 @@ void S_Play(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+			Q_strlcat(name, ".wav", sizeof(name));
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+		{
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+		}
 		sfx = S_PrecacheSound(name);
 		S_StartSound(hash++, 0, sfx, listener_origin, 1.0, 1.0);
 		i++;
@@ -998,13 +1025,15 @@ void S_Play2(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+			Q_strlcat(name, ".wav", sizeof(name));
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+		{
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+		}
 		sfx = S_PrecacheSound(name);
 		S_StartSound(hash++, 0, sfx, listener_origin, 1.0, 0.0);
 		i++;
@@ -1022,15 +1051,17 @@ void S_PlayVol(void)
 	i = 1;
 	while (i<Cmd_Argc())
 	{
-		if (!Q_strrchr(Cmd_Argv(i), '.'))
+		if (!strrchr(Cmd_Argv(i), '.'))
 		{
-			Q_strcpy(name, Cmd_Argv(i));
-			Q_strcat(name, ".wav");
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+			Q_strlcat(name, ".wav", sizeof(name));
 		}
 		else
-			Q_strcpy(name, Cmd_Argv(i));
+		{
+			Q_strlcpy(name, Cmd_Argv(i), sizeof(name));
+		}
 		sfx = S_PrecacheSound(name);
-		vol = Q_atof(Cmd_Argv(i+1));
+		vol = atof(Cmd_Argv(i+1));
 		S_StartSound(hash++, 0, sfx, listener_origin, vol, 1.0);
 		i+=2;
 	}
@@ -1046,7 +1077,7 @@ void S_SoundList(void)
 	total = 0;
 	for (sfx=known_sfx, i=0 ; i<num_sfx ; i++, sfx++)
 	{
-		sc = Cache_Check (&sfx->cache);
+		sc = (sfxcache_t *)sfx->cache;
 		if (!sc)
 			continue;
 		size = sc->length*sc->width*(sc->stereo+1);
@@ -1065,7 +1096,7 @@ void S_LocalSound (char *sound)
 {
 	sfx_t	*sfx;
 
-	if (nosound->value)
+	if (nosound->intValue)
 		return;
 	if (!sound_started)
 		return;
@@ -1086,20 +1117,6 @@ void S_GamespySound (char *sound) /* FS: Added */
 		S_LocalSound(sound);
 }
 #endif
-
-void S_ClearPrecache (void)
-{
-}
-
-
-void S_BeginPrecaching (void)
-{
-}
-
-
-void S_EndPrecaching (void)
-{
-}
 
 /*
 ============
@@ -1193,7 +1210,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 	}
 }
 
-/* FS: So we can suport both */
+/* FS: So we can support both */
 void S_StopBackgroundTrack(void)
 {
 	S_StopWAVBackgroundTrack();

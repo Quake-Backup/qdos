@@ -110,7 +110,7 @@ void Cbuf_InsertText (char *text)
 	if (templen)
 	{
 		temp = Z_Malloc (templen);
-		Q_memcpy (temp, cmd_text.data, templen);
+		memcpy (temp, cmd_text.data, templen);
 		SZ_Clear (&cmd_text);
 	}
 	else
@@ -213,6 +213,7 @@ void Cmd_StuffCmds_f (void)
 	int		i, j;
 	int		s;
 	char	*text, *build, c;
+	size_t	len;
 		
 // build the combined string to parse from
 	s = 0;
@@ -225,19 +226,21 @@ void Cmd_StuffCmds_f (void)
 	if (!s)
 		return;
 		
-	text = Z_Malloc (s+1);
+	len = s + 1;
+
+	text = Z_Malloc (len);
 	text[0] = 0;
 	for (i=1 ; i<com_argc ; i++)
 	{
 		if (!com_argv[i])
 			continue;		// NEXTSTEP nulls out -NXHost
-		Q_strcat (text,com_argv[i]);
+		Q_strlcat (text, com_argv[i], len);
 		if (i != com_argc-1)
-			Q_strcat (text, " ");
+			Q_strlcat (text, " ", len);
 	}
 	
 // pull out the commands
-	build = Z_Malloc (s+1);
+	build = Z_Malloc (len);
 	build[0] = 0;
 	
 	for (i=0 ; i<s-1 ; i++)
@@ -252,8 +255,8 @@ void Cmd_StuffCmds_f (void)
 			c = text[j];
 			text[j] = 0;
 			
-			Q_strcat (build, text+i);
-			Q_strcat (build, "\n");
+			Q_strlcat (build, text+i, len);
+			Q_strlcat (build, "\n", len);
 			text[j] = c;
 			i = j-1;
 		}
@@ -276,7 +279,6 @@ void Cmd_Exec_f (void)
 {
 	char	*f;
 	char	*s;
-	int		mark;
 
 	if (Cmd_Argc () != 2)
 	{
@@ -285,7 +287,6 @@ void Cmd_Exec_f (void)
 	}
 
 	s = Cmd_Argv(1);
-	mark = Hunk_LowMark ();
 
 	if(!strncmp(s,"default.cfg",11)) /* FS: unbindall protection hack */
 	{
@@ -297,7 +298,7 @@ void Cmd_Exec_f (void)
 		if(!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
 			s = "qdos.cfg";
 
-	f = (char *)COM_LoadHunkFile (s);
+	f = (char *)COM_LoadFile(s);
 	if (!f)
 	{
 		Com_Printf ("couldn't exec %s\n",s);
@@ -308,7 +309,7 @@ void Cmd_Exec_f (void)
 		Com_Printf ("execing %s\n",s);
 	
 	Cbuf_InsertText (f);
-	Hunk_FreeToLowMark (mark);
+	Z_Free(f);
 }
 
 
@@ -330,21 +331,11 @@ void Cmd_Echo_f (void)
 
 /*
 ===============
-Cmd_Alias_f
+Cmd_Alias_f -- johnfitz -- rewritten
 
 Creates a new command that executes a command string (possibly ; seperated)
 ===============
 */
-
-char *CopyString (char *in)
-{
-	char	*out;
-	
-	out = Z_Malloc (strlen(in)+1);
-	strcpy (out, in);
-	return out;
-}
-
 void Cmd_Alias_f (void)
 {
 	cmdalias_t	*a;
@@ -352,51 +343,122 @@ void Cmd_Alias_f (void)
 	int			i, c;
 	char		*s;
 
-	if (Cmd_Argc() == 1)
+
+	switch (Cmd_Argc())
 	{
-		Com_Printf ("Current alias commands:\n");
+	case 1: //list all aliases
+		for (a = cmd_alias, i = 0; a; a=a->next, i++)
+			Com_SafePrintf ("   %s: %s", a->name, a->value);
+		if (i)
+			Com_SafePrintf ("%i alias command(s)\n", i);
+		else
+			Com_SafePrintf ("no alias commands found\n");
+		break;
+	case 2: //output current alias string
 		for (a = cmd_alias ; a ; a=a->next)
-			Com_Printf ("%s : %s\n", a->name, a->value);
-		return;
-	}
-
-	s = Cmd_Argv(1);
-	if (strlen(s) >= MAX_ALIAS_NAME)
-	{
-		Com_Printf ("Alias name is too long\n");
-		return;
-	}
-
-	// if the alias allready exists, reuse it
-	for (a = cmd_alias ; a ; a=a->next)
-	{
-		if (!strcmp(s, a->name))
+			if (!strcmp(Cmd_Argv(1), a->name))
+				Com_Printf ("   %s: %s", a->name, a->value);
+		break;
+	default: //set alias string
+		s = Cmd_Argv(1);
+		if (strlen(s) >= MAX_ALIAS_NAME)
 		{
-			Z_Free (a->value);
-			break;
+			Com_Printf ("Alias name is too long\n");
+			return;
 		}
-	}
 
-	if (!a)
-	{
-		a = Z_Malloc (sizeof(cmdalias_t));
-		a->next = cmd_alias;
-		cmd_alias = a;
-	}
-	strcpy (a->name, s);	
+		// if the alias allready exists, reuse it
+		for (a = cmd_alias ; a ; a=a->next)
+		{
+			if (!strcmp(s, a->name))
+			{
+				free (a->value);
+				break;
+			}
+		}
 
-// copy the rest of the command line
-	cmd[0] = 0;		// start out with a null string
-	c = Cmd_Argc();
-	for (i=2 ; i< c ; i++)
-	{
-		strcat (cmd, Cmd_Argv(i));
-		if (i != c)
-			strcat (cmd, " ");
+		if (!a)
+		{
+			a = malloc (sizeof(cmdalias_t));
+			if (!a)
+			{
+				Sys_Error("Cmd_Alias_f: out of memory");
+				return;
+			}
+			a->next = cmd_alias;
+			cmd_alias = a;
+		}
+		Q_strlcpy (a->name, s, sizeof(a->name));
+
+		// copy the rest of the command line
+		cmd[0] = 0;		// start out with a null string
+		c = Cmd_Argc();
+		for (i=2 ; i< c ; i++)
+		{
+			Q_strlcat (cmd, Cmd_Argv(i), sizeof(cmd));
+			if (i != c)
+				Q_strlcat (cmd, " ", sizeof(cmd));
+		}
+		Q_strlcat (cmd, "\n", sizeof(cmd));
+
+		a->value = strdup (cmd);
+		if (!a->value)
+		{
+			Sys_Error("Cmd_Alias_f: out of memory");
+			return;
+		}
+		break;
 	}
-	strcat (cmd, "\n");
-	
-	a->value = CopyString (cmd);
+}
+
+/*
+===============
+Cmd_Unalias_f -- johnfitz
+===============
+*/
+void Cmd_Unalias_f (void)
+{
+	cmdalias_t	*a, *prev;
+
+	switch (Cmd_Argc())
+	{
+	default:
+	case 1:
+		Com_Printf("unalias <name> : delete alias\n");
+		break;
+	case 2:
+		for (prev = a = cmd_alias; a; a = a->next)
+		{
+			if (!strcmp(Cmd_Argv(1), a->name))
+			{
+				prev->next = a->next;
+				free (a->value);
+				free (a);
+				prev = a;
+				return;
+			}
+			prev = a;
+		}
+		break;
+	}
+}
+
+/*
+===============
+Cmd_Unaliasall_f -- johnfitz
+===============
+*/
+void Cmd_Unaliasall_f (void)
+{
+	cmdalias_t	*blah;
+
+	while (cmd_alias)
+	{
+		blah = cmd_alias->next;
+		free(cmd_alias->value);
+		free(cmd_alias);
+		cmd_alias = blah;
+	}
 }
 
 /*
@@ -467,8 +529,10 @@ void Cmd_TokenizeString (char *text)
 	int		i;
 	
 // clear the args from the last string
-	for (i=0 ; i<cmd_argc ; i++)
-		Z_Free (cmd_argv[i]);
+	for (i = 0; i < cmd_argc; i++)
+	{
+		free (cmd_argv[i]);
+	}
 		
 	cmd_argc = 0;
 	cmd_args = NULL;
@@ -499,8 +563,14 @@ void Cmd_TokenizeString (char *text)
 
 		if (cmd_argc < MAX_ARGS)
 		{
-			cmd_argv[cmd_argc] = Z_Malloc (Q_strlen(com_token)+1);
-			Q_strcpy (cmd_argv[cmd_argc], com_token);
+			size_t len = Q_strlen(com_token)+1;
+			cmd_argv[cmd_argc] = malloc (len);
+			if (!cmd_argv[cmd_argc])
+			{
+				Sys_Error("Cmd_TokenizeString: out of memory");
+				return;
+			}
+			Q_strlcpy (cmd_argv[cmd_argc], com_token, len);
 			cmd_argc++;
 		}
 	}
@@ -516,10 +586,7 @@ Cmd_AddCommand
 void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 {
 	cmd_function_t	*cmd;
-	
-	if (host_initialized)	// because hunk allocation would get stomped
-		Sys_Error ("Cmd_AddCommand after host_initialized");
-		
+
 // fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
 	{
@@ -537,11 +604,49 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = Hunk_Alloc (sizeof(cmd_function_t));
-	cmd->name = cmd_name;
+	cmd = malloc(sizeof(cmd_function_t));
+	if (!cmd)
+	{
+		Sys_Error("Cmd_AddCommand: out of memory");
+		return;
+	}
+	cmd->name = strdup(cmd_name);
+	if (!cmd->name)
+	{
+		Sys_Error("Cmd_AddCommand: out of memory");
+		return;
+	}
 	cmd->function = function;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
+}
+
+/*
+============
+Cmd_RemoveCommand
+============
+*/
+void	Cmd_RemoveCommand (char *cmd_name)
+{
+	cmd_function_t	*cmd, **back;
+
+	back = &cmd_functions;
+	while (1)
+	{
+		cmd = *back;
+		if (!cmd)
+		{
+			Com_Printf ("Cmd_RemoveCommand: %s not added\n", cmd_name);
+			return;
+		}
+		if (!strcmp (cmd_name, cmd->name))
+		{
+			*back = cmd->next;
+			free (cmd);
+			return;
+		}
+		back = &cmd->next;
+	}
 }
 
 /*
@@ -733,7 +838,7 @@ int Cmd_CheckParm (char *parm)
 void Cmd_ChatInfo (int val)
 {
 #ifdef QUAKEWORLD
-	if(net_broadcast_chat->value && chat->value != val)
+	if (net_broadcast_chat->intValue && chat->intValue != val)
 	{
 		switch (val)
 		{
@@ -762,6 +867,8 @@ Cmd_Init
 void Cmd_Init (void)
 {
 	cl_warncmd = Cvar_Get("cl_warncmd", "0", 0);
+	Cvar_Set_Description("cl_warncmd", "Warn about unknown commands.");
+
 //
 // register our commands
 //
@@ -773,6 +880,9 @@ void Cmd_Init (void)
 #ifndef SERVERONLY
 	Cmd_AddCommand ("cmd", Cmd_ForwardToServer_f);
 #endif
+	Cmd_AddCommand ("cmdlist", Cmd_List_f); //johnfitz
+	Cmd_AddCommand ("unalias", Cmd_Unalias_f); //johnfitz
+	Cmd_AddCommand ("unaliasall", Cmd_Unaliasall_f); //johnfitz
 }
 
 
@@ -809,5 +919,46 @@ void Cbuf_AddEarlyCommands (qboolean clear)
 		}
 
 		i+=2;
+	}
+}
+
+void Cmd_RemoveAllCommands (void)
+{
+	cmdalias_t *alias, *aNext;
+	cmd_function_t	*cmd, *next;
+	int i;
+
+	for (alias=cmd_alias; alias; alias = aNext)
+	{
+		aNext = alias->next;
+
+		if (alias->value)
+		{
+			free(alias->value);
+			alias->value = NULL;
+		}
+
+		free(alias);
+		alias = NULL;
+	}
+
+	for (cmd = cmd_functions; cmd; cmd = next)
+	{
+		next = cmd->next;
+
+		if (cmd->name)
+		{
+			free(cmd->name);
+			cmd->name = NULL;
+		}
+
+		free(cmd);
+		cmd = NULL;
+	}
+
+	for (i = 0; i < cmd_argc; i++)
+	{
+		free(cmd_argv[i]);
+		cmd_argv[i] = NULL;
 	}
 }

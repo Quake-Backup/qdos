@@ -291,14 +291,14 @@ void GL_MakeAliasModelDisplayLists (model_t *m, aliashdr_t *hdr)
 	FILE	*f;
 
 	aliasmodel = m;
-	paliashdr = hdr;	// (aliashdr_t *)Mod_Extradata (m);
+	paliashdr = hdr;
 
 	//
 	// look for a cached version
 	//
-	strcpy (cache, "glquake/");
+	Q_strlcpy (cache, "glquake/", sizeof(cache));
 	COM_StripExtension (m->name+strlen("progs/"), cache+strlen("glquake/"));
-	strcat (cache, ".ms2");
+	Q_strlcat (cache, ".ms2", sizeof(cache));
 
 	COM_FOpenFile (cache, &f);	
 	if (f)
@@ -321,12 +321,12 @@ void GL_MakeAliasModelDisplayLists (model_t *m, aliashdr_t *hdr)
 		//
 		// save out the cached version
 		//
-		sprintf (fullpath, "%s/%s", com_gamedir, cache);
+		Com_sprintf (fullpath, sizeof(fullpath), "%s/%s", com_gamedir, cache);
 		f = fopen (fullpath, "wb");
 		if (!f) {
 			char gldir[MAX_OSPATH];
 
-			sprintf (gldir, "%s/glquake", com_gamedir);
+			Com_sprintf (gldir, sizeof(gldir), "%s/glquake", com_gamedir);
 			Sys_mkdir (gldir);
 			f = fopen (fullpath, "wb");
 		}

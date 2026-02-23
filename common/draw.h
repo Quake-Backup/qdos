@@ -28,7 +28,6 @@ extern	qpic_t		*draw_disc;	// also used on sbar
 
 void Draw_Init (void);
 void Draw_Character (int x, int y, int num);
-void Draw_DebugChar (char num);
 void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int height);
 void Draw_Pic (int x, int y, qpic_t *pic);
 void Draw_TransPic (int x, int y, qpic_t *pic);
@@ -44,5 +43,9 @@ void Draw_Alt_String (int x, int y, char *str);
 qpic_t *Draw_PicFromWad (char *name);
 qpic_t *Draw_CachePic (char *path);
 void Draw_Crosshair(void);
+
+#ifdef GLQUAKE
+void GL_ShutdownTexures (void);
+#endif
 
 #endif // __DRAW_H

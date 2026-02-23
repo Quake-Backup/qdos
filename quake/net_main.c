@@ -37,7 +37,7 @@ char		my_tcpip_address[NET_NAMELEN];
 
 void (*GetComPortConfig) (int portNumber, int *port, int *irq, int *baud, qboolean *useModem);
 void (*SetComPortConfig) (int portNumber, int port, int irq, int baud, qboolean useModem);
-void (*GetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
+void (*GetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup, size_t clearlen, size_t initlen, size_t hanguplen);
 void (*SetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
 
 static qboolean	listening = false;
@@ -119,7 +119,7 @@ qsocket_t *NET_NewQSocket (void)
 
 	sock->disconnected = false;
 	sock->connecttime = net_time;
-	Q_strcpy (sock->address,"UNSET ADDRESS");
+	Q_strlcpy (sock->address, "UNSET ADDRESS", sizeof(sock->address));
 	sock->driver = net_driverlevel;
 	sock->socket = 0;
 	sock->driverdata = NULL;
@@ -172,7 +172,7 @@ static void NET_Listen_f (void)
 		return;
 	}
 
-	listening = Q_atoi(Cmd_Argv(1)) ? true : false;
+	listening = atoi(Cmd_Argv(1)) ? true : false;
 
 	for (net_driverlevel=0 ; net_driverlevel<net_numdrivers; net_driverlevel++)
 	{
@@ -199,7 +199,7 @@ static void MaxPlayers_f (void)
 		return;
 	}
 
-	n = Q_atoi(Cmd_Argv(1));
+	n = atoi(Cmd_Argv(1));
 	if (n < 1)
 		n = 1;
 	if (n > svs.maxclientslimit)
@@ -223,7 +223,7 @@ static void MaxPlayers_f (void)
 	}
 	else
 	{
-		if (coop->value)
+		if (coop->intValue)
 			Cvar_Set ("deathmatch", "0");
 		else
 			Cvar_Set ("deathmatch", "1");
@@ -242,7 +242,7 @@ static void NET_Port_f (void)
 		return;
 	}
 
-	n = Q_atoi(Cmd_Argv(1));
+	n = atoi(Cmd_Argv(1));
 	if (n < 1 || n > 65534)
 	{
 		Com_Printf ("Bad value, must be between 1 and 65534\n");
@@ -731,7 +731,7 @@ void NET_Init (void)
 	if (i)
 	{
 		if (i < com_argc-1)
-			DEFAULTnet_hostport = Q_atoi (com_argv[i+1]);
+			DEFAULTnet_hostport = atoi (com_argv[i+1]);
 		else
 			Sys_Error ("NET_Init: you must specify a number after -port");
 	}
@@ -747,7 +747,7 @@ void NET_Init (void)
 
 	for (i = 0; i < net_numsockets; i++)
 	{
-		s = (qsocket_t *)Hunk_AllocName(sizeof(qsocket_t), "qsocket");
+		s = (qsocket_t *)Z_Malloc(sizeof(qsocket_t));
 		s->next = net_freeSockets;
 		net_freeSockets = s;
 		s->disconnected = true;
@@ -844,11 +844,11 @@ void NET_Poll(void)
 	{
 		if (serialAvailable)
 		{
-			if (config_com_modem->value == 1.0)
+			if (config_com_modem->intValue == 1)
 				useModem = true;
 			else
 				useModem = false;
-			SetComPortConfig (0, (int)config_com_port->value, (int)config_com_irq->value, (int)config_com_baud->value, useModem);
+			SetComPortConfig (0, config_com_port->intValue, config_com_irq->intValue, config_com_baud->intValue, useModem);
 			SetModemConfig (0, config_modem_dialtype->string, config_modem_clear->string, config_modem_init->string, config_modem_hangup->string);
 		}
 		configRestored = true;

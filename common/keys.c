@@ -222,7 +222,7 @@ void CompleteCommand (void)
 	if (cmd)
 	{
 		key_lines[edit_line][1] = '/';
-		Q_strcpy (key_lines[edit_line]+2, cmd);
+		Q_strlcpy (key_lines[edit_line]+2, cmd, sizeof(key_lines[edit_line]));
 		key_linepos = Q_strlen(cmd)+2;
 		key_lines[edit_line][key_linepos] = ' ';
 		key_linepos++;
@@ -315,7 +315,7 @@ void Key_Console (int key)
 		key_linepos = 1;
 
 #ifdef QUAKEWORLD
-		if (key_dest == key_console && net_broadcast_chat->value) /* FS: EZQ Chat */
+		if (key_dest == key_console && net_broadcast_chat->intValue) /* FS: EZQ Chat */
 			Cmd_ChatInfo(EZQ_CHAT_AFK);/* FS: EZQ Chat */
 #endif
 
@@ -382,7 +382,7 @@ void Key_Console (int key)
 				&& !key_lines[history_line][1]);
 		if (history_line == edit_line)
 			history_line = (edit_line+1)&31;
-		Q_strcpy(key_lines[edit_line], key_lines[history_line]);
+		Q_strlcpy(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
 		key_linepos = Q_strlen(key_lines[edit_line]);
 		return;
 	}
@@ -403,7 +403,7 @@ void Key_Console (int key)
 		}
 		else
 		{
-			Q_strcpy(key_lines[edit_line], key_lines[history_line]);
+			Q_strlcpy(key_lines[edit_line], key_lines[history_line], sizeof(key_lines[edit_line]));
 			key_linepos = Q_strlen(key_lines[edit_line]);
 		}
 		return;
@@ -446,15 +446,22 @@ void Key_Console (int key)
 				clipText = GlobalLock(th);
 				if (clipText)
 				{
-					textCopied = malloc(GlobalSize(th)+1);
-					strcpy(textCopied, clipText);
-	/* Substitutes a NULL for every token */strtok(textCopied, "\n\r\b");
+					size_t len = GlobalSize(th)+1;
+					textCopied = malloc(len);
+					if (!textCopied)
+					{
+						Sys_Error("Key_Console: out of memory");
+						return;
+					}
+					Q_strlcpy(textCopied, clipText, len);
+					/* Substitutes a NULL for every token */
+					strtok(textCopied, "\n\r\b");
 					i = strlen(textCopied);
 					if (i+key_linepos>=MAXCMDLINE)
 						i=MAXCMDLINE-key_linepos;
 					if (i>0) {
 						textCopied[i]=0;
-						strcat(key_lines[edit_line], textCopied);
+						Q_strlcat(key_lines[edit_line], textCopied, sizeof(key_lines[edit_line]));
 						key_linepos+=i;;
 					}
 					free(textCopied);
@@ -510,7 +517,7 @@ void Key_Message (int key)
 		key_dest = key_game;
 
 		/* Taniwha's chat ring array */
-		strcpy (chat_buffer_array[chat_head], chat_buffer);
+		Q_strlcpy (chat_buffer_array[chat_head], chat_buffer, sizeof(chat_buffer_array[chat_head]));
 		chat_head = (chat_head + 1) % MAX_CHAT;
 
 		if (chat_head == chat_tail)
@@ -533,7 +540,7 @@ void Key_Message (int key)
 		if (chat_index != chat_tail) 
 		{
 			chat_index = (chat_index + MAX_CHAT - 1) % MAX_CHAT;
-			strcpy (chat_buffer, chat_buffer_array[chat_index]);
+			Q_strlcpy (chat_buffer, chat_buffer_array[chat_index], sizeof(chat_buffer));
 		}
 
 		chat_bufferlen = (strlen(chat_buffer));
@@ -546,7 +553,7 @@ void Key_Message (int key)
 		
 		if (chat_index != chat_head) {
 			chat_index = (chat_index + 1) % MAX_CHAT;
-			strcpy (chat_buffer, chat_buffer_array[chat_index]);
+			Q_strlcpy (chat_buffer, chat_buffer_array[chat_index], sizeof(chat_buffer));
 		}
 
 		chat_bufferlen = (strlen(chat_buffer));
@@ -651,7 +658,7 @@ Key_SetBinding
 void Key_SetBinding (int keynum, char *binding)
 {
 	char	*new;
-	int		l;
+	size_t	l;
 			
 	if (keynum == -1)
 		return;
@@ -664,11 +671,10 @@ void Key_SetBinding (int keynum, char *binding)
 	}
 			
 // allocate memory for new binding
-	l = Q_strlen (binding);	
-	new = Z_Malloc (l+1);
-	Q_strcpy (new, binding);
-	new[l] = 0;
-	keybindings[keynum] = new;	
+	l = strlen (binding)+1;
+	new = Z_Malloc (l);
+	Q_strlcpy (new, binding, l);
+	keybindings[keynum] = new;
 }
 
 /*
@@ -751,9 +757,9 @@ void Key_Bind_f (void)
 	cmd[0] = 0;		// start out with a null string
 	for (i=2 ; i< c ; i++)
 	{
-		strcat (cmd, Cmd_Argv(i));
+		Q_strlcat (cmd, Cmd_Argv(i), sizeof(cmd));
 		if (i != (c-1))
-			strcat (cmd, " ");
+			Q_strlcat (cmd, " ", sizeof(cmd));
 	}
 
 	Key_SetBinding (b, cmd);
@@ -870,7 +876,7 @@ void Key_Init (void)
 
 	 /* FS: Unbindall protection */
 	cl_unbindall_protection = Cvar_Get("cl_unbindall_protection", "1", 0);
-	cl_unbindall_protection->description = "Protection from bad configs with unbindall.  Will warn on execute.";
+	Cvar_Set_Description("cl_unbindall_protection", "Protection from bad configs with unbindall.  Will warn on execute.");
 }
 
 /*
@@ -903,7 +909,7 @@ void Key_Event (int key, qboolean down)
 	{
 		key_repeats[key]++;
 
-		if (!cl_autorepeat_allkeys->intValue) /* FS: Added */
+		if (cl_autorepeat_allkeys && !cl_autorepeat_allkeys->intValue) /* FS: Added */
 		{
 			if (key != K_BACKSPACE 
 				&& key != K_PAUSE 
@@ -975,7 +981,7 @@ void Key_Event (int key, qboolean down)
 		kb = keybindings[key];
 		if (kb && kb[0] == '+')
 		{
-			sprintf (cmd, "-%s %i\n", kb+1, key);
+			Com_sprintf (cmd, sizeof(cmd), "-%s %i\n", kb+1, key);
 			Cbuf_AddText (cmd);
 		}
 		if (keyshift[key] != key)
@@ -983,7 +989,7 @@ void Key_Event (int key, qboolean down)
 			kb = keybindings[keyshift[key]];
 			if (kb && kb[0] == '+')
 			{
-				sprintf (cmd, "-%s %i\n", kb+1, key);
+				Com_sprintf (cmd, sizeof(cmd), "-%s %i\n", kb+1, key);
 				Cbuf_AddText (cmd);
 			}
 		}
@@ -1011,7 +1017,7 @@ void Key_Event (int key, qboolean down)
 		{
 			if (kb[0] == '+')
 			{	// button commands add keynum as a parm
-				sprintf (cmd, "%s %i\n", kb, key);
+				Com_sprintf (cmd, sizeof(cmd), "%s %i\n", kb, key);
 				Cbuf_AddText (cmd);
 			}
 			else

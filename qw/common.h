@@ -23,12 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __COMMON_H
 #define __COMMON_H
 
-#ifdef _MSC_VER /* FS: VS6 */
-	#define __attribute__(x)
+#if !defined BYTE_DEFINED
+typedef unsigned char 		byte;
+#define BYTE_DEFINED 1
 #endif
-
-typedef unsigned char           byte;
-#define _DEF_BYTE_
 
 // KJB Undefined true and false defined in SciTech's DEBUG.H header
 #undef true
@@ -45,10 +43,31 @@ char *strtok_r(char *s, const char *delim, char **last);
 
 /* from Quake3 */
 #ifdef _WIN32
-#define Q_vsnprintf _vsnprintf
+__inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list Args)
+{
+	int ret = _vsnprintf(Dest, Count, Format, Args);
+	Dest[Count - 1] = 0;	// null terminate
+	return ret;
+}
 #else
 #define Q_vsnprintf  vsnprintf
 #endif
+
+// FIXME: DG: the following is a duplication from qcommon.h
+#ifdef __GNUC__ // gcc or clang
+
+// validate arguments for printf-like functions
+// STRIDX: index of format string in function arguments (first arg == 1)
+// FIRSTARGIDX: index of first argument for the format string (usually STRIDX+1)
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX) __attribute__ ((format (printf, STRIDX, FIRSTARGIDX)))
+
+#else // MSVC and other compilers
+
+// sorry, no printf-style-format validation for you :P
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX)
+#pragma warning (disable:4996)
+
+#endif // __GNUC__
 
 #define MAX_INFO_STRING 1024 /* FS: Was 196 */
 #define MAX_SERVERINFO_STRING 2048  /* FS: Was 1024 */
@@ -69,6 +88,7 @@ typedef struct sizebuf_s
 
 void SZ_InitEx (sizebuf_t *buf, byte *data, int length, qbool allowoverflow); /* FS: From EZQ */
 void SZ_Init (sizebuf_t *buf, byte *data, int length); /* FS: From EZQ */
+void SZ_Alloc (sizebuf_t *buf, int startsize);
 void SZ_Clear (sizebuf_t *buf);
 void *SZ_GetSpace (sizebuf_t *buf, int length);
 void SZ_Write (sizebuf_t *buf, void *data, int length);
@@ -97,18 +117,6 @@ void InsertLinkAfter (link_t *l, link_t *after);
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
-
-#define Q_MAXCHAR	((char)0x7f)
-#define Q_MAXSHORT	((short)0x7fff)
-#define Q_MAXINT	((int)0x7fffffff)
-#define Q_MAXLONG	((int)0x7fffffff)
-#define Q_MAXFLOAT	((int)0x7fffffff)
-
-#define Q_MINCHAR	((char)0x80)
-#define Q_MINSHORT	((short)0x8000)
-#define Q_MININT	((int)0x80000000)
-#define Q_MINLONG	((int)0x80000000)
-#define Q_MINFLOAT	((int)0x7fffffff)
 
 //============================================================================
 
@@ -200,14 +208,9 @@ void MSG_ReadDeltaUsercmd (struct usercmd_s *from, struct usercmd_s *cmd);
 
 //============================================================================
 
-#define Q_memset(d, f, c) memset((d), (f), (c))
-#define Q_memcpy(d, s, c) memcpy((d), (s), (c))
-#define Q_memcmp(m1, m2, c) memcmp((m1), (m2), (c))
-#define Q_strcpy(d, s) strcpy((d), (s))
 #define Q_strncpy(d, s, n) strncpy((d), (s), (n))
 #define Q_strlen(s) ((int)strlen(s))
 #define Q_strrchr(s, c) strrchr((s), (c))
-#define Q_strcat(d, s) strcat((d), (s))
 #define Q_strcmp(s1, s2) strcmp((s1), (s2))
 #define Q_strncmp(s1, s2, n) strncmp((s1), (s2), (n))
 
@@ -223,8 +226,6 @@ void MSG_ReadDeltaUsercmd (struct usercmd_s *from, struct usercmd_s *cmd);
 
 #endif
 
-int	Q_atoi (char *str);
-float Q_atof (char *str);
 size_t Q_strlcpy (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 size_t Q_strlcat (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 
@@ -251,14 +252,11 @@ void COM_InitArgv (int argc, char **argv);
 
 char *COM_SkipPath (char *pathname);
 void COM_StripExtension (char *in, char *out);
-void COM_FileBase (char *in, char *out);
 void COM_FilePath (char *in, char *out);
-void COM_DefaultExtension (char *path, char *extension);
+void COM_DefaultExtension (char *path, const char *extension, size_t pathlen);
 
 // does a varargs printf into a temp buffer
-char	*va(const char *format, ...) __attribute__((format(printf,1,2)));
-// does a varargs printf into a malloced buffer
-char	*nva(const char *format, ...) __attribute__((format(printf,1,2)));
+char	*va(const char *format, ...) ATTRIBUTE_PRINTF(1, 2);
 
 //============================================================================
 
@@ -267,14 +265,13 @@ struct cache_user_s;
 
 extern	char	com_gamedir[MAX_OSPATH];
 
-void COM_WriteFile (char *filename, void *data, int len);
-int COM_OpenFile (char *filename, int *hndl); /* FS: From Q1 */
-int COM_FOpenFile (char *filename, FILE **file);
+void COM_WriteFile (const char *filename, void *data, int len);
+int COM_OpenFile (const char *filename, int *hndl);
+int COM_FOpenFile (const char *filename, FILE **file);
+void COM_CloseFile (int h);
 
-byte *COM_LoadStackFile (char *path, void *buffer, int bufsize);
-byte *COM_LoadTempFile (char *path);
-byte *COM_LoadHunkFile (char *path);
-void COM_LoadCacheFile (char *path, struct cache_user_s *cu);
+void COM_FreeFile (void *buffer);
+byte *COM_LoadFile (const char *path);
 void COM_CreatePath (char *path);
 void COM_Gamedir (char *dir);
 
@@ -289,13 +286,15 @@ qboolean COM_ItemInList (char *check, int num, char **list);
 char **COM_ListFiles (char *findname, int *numfiles, unsigned musthave, unsigned canthave);
 
 extern	struct cvar_s	*registered;
-extern	qboolean		standard_quake, rogue, hipnotic;
+
+extern	qboolean	standard_quake, rogue, hipnotic;
+extern	qboolean	warpspasm, nehahra, extended_mod; /* FS: For Nehara */
 
 char *Info_ValueForKey (char *s, char *key);
 void Info_RemoveKey (char *s, char *key);
 void Info_RemovePrefixedKeys (char *start, char prefix);
-void Info_SetValueForKey (char *s, char *key, char *value, int maxsize);
-void Info_SetValueForStarKey (char *s, char *key, const char *value, int maxsize);
+void Info_SetValueForKey (char *s, char *key, char *value, size_t maxsize);
+void Info_SetValueForStarKey (char *s, char *key, const char *value, size_t maxsize);
 void Info_Print (char *s);
 
 unsigned Com_BlockChecksum (void *buffer, int length);
@@ -305,7 +304,6 @@ byte    COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
 
 int build_number( void );
 void CompleteCommand (void); /* FS: Autocomplete commands */
-void Com_sprintf (char *dest, int size, char *fmt, ...); /* FS: Added */
-void Com_strcpy (char *dest, int destSize, const char *src); /* FS: Added */
+void Com_sprintf (char *dest, size_t size, char *fmt, ...); /* FS: Added */
 
 #endif // __COMMON_H

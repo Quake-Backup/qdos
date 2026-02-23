@@ -206,6 +206,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	clc_move		3			// [usercmd_t]
 #define	clc_stringcmd	4		// [string] message
 
+// if the high bit of the client to server byte is set, the low bits are
+// client move cmd bits
+// ms and angle2 are allways sent, the others are optional
+#define	CM_ANGLE1 	(1<<0)
+#define	CM_ANGLE3 	(1<<1)
+#define	CM_FORWARD	(1<<2)
+#define	CM_SIDE		(1<<3)
+#define	CM_UP		(1<<4)
+#define	CM_BUTTONS	(1<<5)
+#define	CM_IMPULSE	(1<<6)
+#define	CM_ANGLE2 	(1<<7)
 
 //
 // temp entity events

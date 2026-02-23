@@ -120,7 +120,7 @@ void IN_KLookUp (void) {KeyUp(&in_klook);}
 void IN_MLookDown (void) {KeyDown(&in_mlook);}
 void IN_MLookUp (void) {
 KeyUp(&in_mlook);
-if ( (!(in_mlook.state&1) &&  lookspring->value) || (!in_freelook->value && lookspring->value))
+if ( (!(in_mlook.state&1) &&  lookspring->intValue) || (!in_freelook->intValue && lookspring->intValue))
 	V_StartPitchDrift();
 }
 void IN_UpDown(void) {KeyDown(&in_up);}
@@ -157,7 +157,7 @@ void IN_UseUp (void) {KeyUp(&in_use);}
 void IN_JumpDown (void) {KeyDown(&in_jump);}
 void IN_JumpUp (void) {KeyUp(&in_jump);}
 
-void IN_Impulse (void) {in_impulse=Q_atoi(Cmd_Argv(1));}
+void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
 
 /*
 ===============
@@ -272,7 +272,7 @@ void CL_AdjustAngles (void)
 	if (up || down)
 		V_StopPitchDrift ();
 
-	if (pq_fullpitch->value) /* FS: ProQuake Shit */
+	if (pq_fullpitch->intValue) /* FS: ProQuake Shit */
 	{
 		if (cl.viewangles[PITCH] > 90)
 			cl.viewangles[PITCH] = 90;
@@ -307,7 +307,7 @@ void CL_BaseMove (usercmd_t *cmd)
 
 	CL_AdjustAngles ();
 	
-	Q_memset (cmd, 0, sizeof(*cmd));
+	memset (cmd, 0, sizeof(*cmd));
 	
 	if (in_strafe.state & 1)
 	{
@@ -465,6 +465,6 @@ void CL_InitInput (void)
 
 	 /* FS: mlook */
 	in_freelook = Cvar_Get("in_freelook", "1.0", CVAR_ARCHIVE);
-	in_freelook->description = "Enables Mouselook.";
+	Cvar_Set_Description("in_freelook", "Enables Mouselook.");
 }
 

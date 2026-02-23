@@ -1,0 +1,21 @@
+* Get registration sequence stuff working from Q2 so we don't reload the BSP
+  if it's the same.  From here you have to implement flushmap as well.
+
+* Fix ref_gl to be like Q2 so it's dynamic.
+
+* Fix ref_soft to have Q2's version that is not tied to that crappy
+  SciTech lib.
+
+* Use dr_wav/dr_ogg/etc. header libraries instead of the compiled libs.
+
+* Would be nice to have x64 working so there could be raw input mouse
+  version for Windows.
+
+* Unify and update the docs.
+
+* Update build batches, partially done.
+
+* The renderers and common.c can probably be merged, carefully,
+  into /common to prevent more code duplication.
+
+* Asynchronous rendering support.

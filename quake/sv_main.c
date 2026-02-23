@@ -41,6 +41,7 @@ cvar_t	*sv_accelerate;
 cvar_t	*sv_aim;
 
 cvar_t  *sv_loadentfiles; /* FS: Load external ent files */
+cvar_t	*sv_autosave; /* FS */
 
  /* FS: Gamespy Stuff */
 cvar_t	*sv_master_server_ip;
@@ -128,23 +129,25 @@ void SV_Init (void)
 
 	/* FS: New stuff */
 	sv_loadentfiles = Cvar_Get("sv_loadentfiles","1", CVAR_ARCHIVE); /* FS: Load external ent files */
-	sv_loadentfiles->description = "Attempt to load external *.ent files if they exist.";
+	Cvar_Set_Description("sv_loadentfiles", "Attempt to load external *.ent files if they exist.");
+	sv_autosave = Cvar_Get("sv_autosave", "1", CVAR_ARCHIVE);
+	Cvar_Set_Description("sv_autosave", "Auto save when entering a new level in single player.");
 	sv_altnoclip = Cvar_Get("sv_altnoclip","1", CVAR_ARCHIVE); //johnfitz
 	pq_fullpitch = Cvar_Get("pq_fullpitch", "0", 0); /* FS: ProQuake Shit */
 
 	/* FS: Gamespy Stuff */
 	sv_master_server_ip = Cvar_Get("sv_master_server_ip", SV_MASTER_ADDR, CVAR_ARCHIVE);
-	sv_master_server_ip->description = "GameSpy Master Server IP for dedicated servers.";
+	Cvar_Set_Description("sv_master_server_ip", "GameSpy Master Server IP for dedicated servers.");
 	sv_master_server_port = Cvar_Get("sv_master_server_port", SV_MASTER_PORT, CVAR_ARCHIVE);
-	sv_master_server_port->description = "GameSpy Master Server Port for dedicated servers."; 
+	Cvar_Set_Description("sv_master_server_port", "GameSpy Master Server Port for dedicated servers.");
 	public_server = Cvar_Get("public", "0", 0);
-	public_server->description = "Report server to a master server.";
+	Cvar_Set_Description("public", "Report server to a master server.");
 
 	Cmd_AddCommand ("sv_dumpentities", &SV_DumpEntities_f); /* FS: Added */
 	Cmd_AddCommand ("sv_protocol", &SV_Protocol_f); //johnfitz
 
 	for (i=0 ; i<MAX_MODELS ; i++)
-		sprintf (localmodels[i], "*%i", i);
+		Com_sprintf (localmodels[i], sizeof(localmodels[i]), "*%i", i);
 }
 
 /*
@@ -316,12 +319,12 @@ void SV_SendServerinfo (client_t *client)
 	MSG_WriteLong (&client->message, sv.protocol); //johnfitz -- sv.protocol instead of PROTOCOL_VERSION
 	MSG_WriteByte (&client->message, svs.maxclients);
 
-	if (!coop->value && deathmatch->value)
+	if (!coop->intValue && deathmatch->intValue)
 		MSG_WriteByte (&client->message, GAME_DEATHMATCH);
 	else
 		MSG_WriteByte (&client->message, GAME_COOP);
 
-	sprintf (message, pr_strings+sv.edicts->v.message);
+	Com_sprintf (message, sizeof(message), "%s", pr_strings + sv.edicts->v.message);
 
 	MSG_WriteString (&client->message,message);
 
@@ -386,7 +389,7 @@ void SV_ConnectClient (int clientnum)
 	memset (client, 0, sizeof(*client));
 	client->netconnection = netconnection;
 
-	strcpy (client->name, "unconnected");
+	Q_strlcpy (client->name, "unconnected", sizeof(client->name));
 	client->active = true;
 	client->spawned = false;
 	client->edict = ent;
@@ -526,7 +529,7 @@ given point.
 byte *SV_FatPVS (vec3_t org)
 {
 	fatbytes = (sv.worldmodel->numleafs+31)>>3;
-	Q_memset (fatpvs, 0, fatbytes);
+	memset (fatpvs, 0, fatbytes);
 	SV_AddToFatPVS (org, sv.worldmodel->nodes);
 	return fatpvs;
 }
@@ -1310,12 +1313,12 @@ This is called at the start of each level
 ================
 */
 extern float      scr_centertime_off;
+char	*entitystring; /* FS: Ent file loading */
 
-void SV_SpawnServer (char *server)
+void SV_SpawnServer (char *server, qboolean loadgame)
 {
 	edict_t	*ent;
 	int		i;
-	char	*entitystring = NULL; /* FS: Ent file loading */
 
 	// let's not have any servers with no name
 	if (hostname->string[0] == 0)
@@ -1339,7 +1342,7 @@ void SV_SpawnServer (char *server)
 	//
 	// make cvars consistant
 	//
-	if (coop->value)
+	if (coop->intValue)
 		Cvar_SetValue ("deathmatch", 0);
 
 	current_skill = (int)(skill->value + 0.5);
@@ -1351,13 +1354,13 @@ void SV_SpawnServer (char *server)
 		current_skill = 3;
 
 	Cvar_SetValue ("skill", (float)current_skill);
-   
+
 	//
 	// set up the new server
 	//
 	Host_ClearMemory ();
 
-	strcpy (sv.name, server);
+	Q_strlcpy (sv.name, server, sizeof(sv.name));
 
 	sv.protocol = sv_protocol; // johnfitz
 
@@ -1365,21 +1368,21 @@ void SV_SpawnServer (char *server)
 	PR_LoadProgs ();
 
 	// allocate server memory
-	sv.max_edicts = CLAMP (MIN_EDICTS,(int)max_edicts->value,MAX_EDICTS); //johnfitz -- max_edicts cvar
-	sv.edicts = Hunk_AllocName (sv.max_edicts*pr_edict_size, "edicts");
+	sv.max_edicts = CLAMP (MIN_EDICTS, max_edicts->intValue, MAX_EDICTS); //johnfitz -- max_edicts cvar
+	sv.edicts = Z_TagMalloc(sv.max_edicts * pr_edict_size, TAG_LEVEL);
 
 	sv.datagram.maxsize = sizeof(sv.datagram_buf);
 	sv.datagram.cursize = 0;
 	sv.datagram.data = sv.datagram_buf;
-   
+
 	sv.reliable_datagram.maxsize = sizeof(sv.reliable_datagram_buf);
 	sv.reliable_datagram.cursize = 0;
 	sv.reliable_datagram.data = sv.reliable_datagram_buf;
-   
+
 	sv.signon.maxsize = sizeof(sv.signon_buf);
 	sv.signon.cursize = 0;
 	sv.signon.data = sv.signon_buf;
-   
+
 	// leave slots at start for clients only
 	sv.num_edicts = svs.maxclients+1;
 
@@ -1388,14 +1391,15 @@ void SV_SpawnServer (char *server)
 		ent = EDICT_NUM(i+1);
 		svs.clients[i].edict = ent;
 	}
-   
+
 	sv.state = ss_loading;
 	sv.paused = false;
 
 	sv.time = 1.0;
-   
-	strcpy (sv.name, server);
-	sprintf (sv.modelname,"maps/%s.bsp", server);
+
+	Q_strlcpy (sv.name, server, sizeof(sv.name));
+	Com_sprintf (sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", server);
+
 	sv.worldmodel = Mod_ForName (sv.modelname, false);
 
 	if (!sv.worldmodel)
@@ -1406,12 +1410,12 @@ void SV_SpawnServer (char *server)
 	}
 
 	sv.models[1] = sv.worldmodel;
-   
+
 	//
 	// clear world interaction links
 	//
 	SV_ClearWorld ();
-   
+
 	sv.sound_precache[0] = pr_strings;
 
 	sv.model_precache[0] = pr_strings;
@@ -1434,16 +1438,15 @@ void SV_SpawnServer (char *server)
 	ent->v.solid = SOLID_BSP;
 	ent->v.movetype = MOVETYPE_PUSH;
 
-	if (coop->value)
-		pr_global_struct->coop = coop->value;
+	if (coop->intValue)
+		pr_global_struct->coop = coop->intValue;
 	else
-		pr_global_struct->deathmatch = deathmatch->value;
+		pr_global_struct->deathmatch = deathmatch->intValue;
 
 	pr_global_struct->mapname = sv.name - pr_strings;
 
 	// serverflags are for cross level information (sigils)
 	pr_global_struct->serverflags = svs.serverflags;
-
 
 	/* FS: Load external ent files, from MVDSV */
 	if(sv_loadentfiles->intValue)
@@ -1452,32 +1455,36 @@ void SV_SpawnServer (char *server)
 
 		Com_sprintf(filename, sizeof(filename), "maps/%s.ent", server);
 		Com_DPrintf(DEVELOPER_MSG_IO, "Attempting to load external ent file %s...\n", filename);
-		entitystring = (char *) COM_LoadHunkFile (filename);
 
+		entitystring = (char *)COM_LoadFile(filename);
 		if (!entitystring)
 			Com_DPrintf(DEVELOPER_MSG_IO, "No external ent file found.\n");
 		else
 			Con_Warning("External ent file found!\n"); /* FS: Warn about non-standardness */
 
-		if(entitystring && strlen(entitystring) == 0) /* FS: Check to see if it's blank. */
+		if (entitystring && strlen(entitystring) == 0) /* FS: Check to see if it's blank. */
 		{
 			Con_Warning("%s.ent is blank!  Defaulting to %s.bsp.\n", filename, server);
+			Z_Free(entitystring);
 			entitystring = NULL;
 		}
 	}
 
-	if(!entitystring)
+	if (entitystring)
 	{
-		entitystring = sv.worldmodel->entities;
+		ED_LoadFromFile (entitystring);
+	}
+	else
+	{
+		ED_LoadFromFile (sv.worldmodel->entities);
 	}
 
-	ED_LoadFromFile (entitystring);
 
 	sv.active = true;
 
 	// all setup is completed, any further precache statements are errors
 	sv.state = ss_active;
-   
+
 	// run two frames to allow everything to settle
 	host_frametime = 0.1;
 	SV_Physics ();
@@ -1495,6 +1502,9 @@ void SV_SpawnServer (char *server)
 	for (i=0,host_client = svs.clients ; i<svs.maxclients ; i++, host_client++)
 		if (host_client->active)
 			SV_SendServerinfo (host_client);
-   
+
 	Com_DPrintf(DEVELOPER_MSG_SERVER, "Server spawned.\n");
+
+	if (!loadgame && svs.maxclients == 1 && !deathmatch->intValue && !coop->intValue)
+		sv.doAutoSave = true;
 }

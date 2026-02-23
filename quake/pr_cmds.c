@@ -940,9 +940,9 @@ void PF_ftos (void)
 	v = G_FLOAT(OFS_PARM0);
 	
 	if (v == (int)v)
-		sprintf (pr_string_temp, "%d",(int)v);
+		Com_sprintf (pr_string_temp, sizeof(pr_string_temp), "%d",(int)v);
 	else
-		sprintf (pr_string_temp, "%5.1f",v);
+		Com_sprintf (pr_string_temp, sizeof(pr_string_temp), "%5.1f",v);
 	G_INT(OFS_RETURN) = pr_string_temp - pr_strings;
 }
 
@@ -955,7 +955,7 @@ void PF_fabs (void)
 
 void PF_vtos (void)
 {
-	sprintf (pr_string_temp, "'%5.1f %5.1f %5.1f'", G_VECTOR(OFS_PARM0)[0], G_VECTOR(OFS_PARM0)[1], G_VECTOR(OFS_PARM0)[2]);
+	Com_sprintf (pr_string_temp, sizeof(pr_string_temp), "'%5.1f %5.1f %5.1f'", G_VECTOR(OFS_PARM0)[0], G_VECTOR(OFS_PARM0)[1], G_VECTOR(OFS_PARM0)[2]);
 	G_INT(OFS_RETURN) = pr_string_temp - pr_strings;
 }
 
@@ -987,7 +987,10 @@ void PF_Find (void)
 	f = G_INT(OFS_PARM1);
 	s = G_STRING(OFS_PARM2);
 	if (!s)
+	{
 		PR_RunError ("PF_Find: bad search string");
+		return;
+	}
 		
 	for (e++ ; e < sv.num_edicts ; e++)
 	{
@@ -1303,7 +1306,7 @@ void PF_aim (void)
 	VectorMA (start, 2048, dir, end);
 	tr = SV_Move (start, vec3_origin, vec3_origin, end, false, ent);
 	if (tr.ent && tr.ent->v.takedamage == DAMAGE_AIM
-	&& (!teamplay->value || ent->v.team <=0 || ent->v.team != tr.ent->v.team) )
+	&& (!teamplay->intValue || ent->v.team <=0 || ent->v.team != tr.ent->v.team) )
 	{
 		VectorCopy (pr_global_struct->v_forward, G_VECTOR(OFS_RETURN));
 		return;
@@ -1322,7 +1325,7 @@ void PF_aim (void)
 			continue;
 		if (check == ent)
 			continue;
-		if (teamplay->value && ent->v.team > 0 && ent->v.team == check->v.team)
+		if (teamplay->intValue && ent->v.team > 0 && ent->v.team == check->v.team)
 			continue;	// don't aim at teammate
 		for (j=0 ; j<3 ; j++)
 			end[j] = check->v.origin[j]
@@ -1429,7 +1432,10 @@ sizebuf_t *WriteDest (void)
 		ent = PROG_TO_EDICT(pr_global_struct->msg_entity);
 		entnum = NUM_FOR_EDICT(ent);
 		if (entnum < 1 || entnum > svs.maxclients)
+		{
 			PR_RunError ("WriteDest: not a client");
+			return NULL;
+		}
 		return &svs.clients[entnum-1].message;
 		
 	case MSG_ALL:

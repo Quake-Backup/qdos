@@ -357,7 +357,7 @@ void V_ParseDamage (void)
 	if (cl.cshifts[CSHIFT_DAMAGE].percent > 150)
 		cl.cshifts[CSHIFT_DAMAGE].percent = 150;
 
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_DAMAGE].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_DAMAGE].destcolor[1] = 0;
@@ -411,7 +411,7 @@ V_cshift_f
 */
 void V_cshift_f (void)
 {
-	if(!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if(!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cshift_empty.destcolor[0] = 0;
 		cshift_empty.destcolor[1] = 0;
@@ -437,7 +437,7 @@ When you run over an item, the server sends this command
 */
 void V_BonusFlash_f (void)
 {
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_BONUS].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_BONUS].destcolor[1] = 0;
@@ -462,7 +462,7 @@ Underwater, lava, etc each has a color shift
 */
 void V_SetContentsColor (int contents)
 {
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_CONTENTS] = cshift_empty;
 		return;
@@ -494,7 +494,7 @@ V_CalcPowerupCshift
 */
 void V_CalcPowerupCshift (void)
 {
-	if (!v_contentblend->value)
+	if (!v_contentblend->intValue)
 	{
 		cl.cshifts[CSHIFT_POWERUP].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[1] = 0;
@@ -551,7 +551,7 @@ void V_CalcBlend (void)
 
 	for (j=0 ; j<NUM_CSHIFTS ; j++)	
 	{
-		if (!gl_cshiftpercent->value)
+		if (!gl_cshiftpercent->intValue)
 			continue;
 
 		a2 = ((cl.cshifts[j].percent * gl_cshiftpercent->value) / 100.0) / 255.0;
@@ -995,13 +995,13 @@ void V_CalcRefdef (void)
 // fudge position around to keep amount of weapon visible
 // roughly equal with different FOV
 
-	if (scr_viewsize->value == 110)
+	if (scr_viewsize->intValue == 110)
 		view->origin[2] += 1;
-	else if (scr_viewsize->value == 100)
+	else if (scr_viewsize->intValue == 100)
 		view->origin[2] += 2;
-	else if (scr_viewsize->value == 90)
+	else if (scr_viewsize->intValue == 90)
 		view->origin[2] += 1;
-	else if (scr_viewsize->value == 80)
+	else if (scr_viewsize->intValue == 80)
 		view->origin[2] += 0.5;
 
 	view->model = cl.model_precache[cl.stats[STAT_WEAPON]];
@@ -1032,7 +1032,7 @@ if (cl.onground && ent->origin[2] - oldz > 0)
 else
 	oldz = ent->origin[2];
 
-	if (chase_active->value)
+	if (chase_active->intValue)
 		Chase_Update ();
 }
 
@@ -1071,7 +1071,7 @@ void V_RenderView (void)
 
 	R_PushDlights ();
 
-	if (lcd_x->value)
+	if (lcd_x->intValue)
 	{
 		//
 		// render two interleaved views
@@ -1108,7 +1108,7 @@ void V_RenderView (void)
 	}
 
 #ifndef GLQUAKE
-        if (crosshair->value)
+        if (crosshair->intValue)
                 Draw_Crosshair();
 #endif
 }
@@ -1140,31 +1140,31 @@ void V_Init (void)
 	v_ipitch_level = Cvar_Get("v_ipitch_level", "0.3", 0);
 
 	v_contentblend = Cvar_Get("v_contentblend", "1", CVAR_ARCHIVE);
-	v_contentblend->description = "Disable palette blends."; /* FS: Fucking hate palette blends */
+	Cvar_Set_Description("v_contentblend", "Disable palette blends."); /* FS: Fucking hate palette blends */
 
 	/* FS: For Mod Compatibility */
 #ifndef GLQUAKE
 	r_wateralpha = Cvar_Get("r_wateralpha", "1", 0);
-	r_wateralpha->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("r_wateralpha", "Unused CVAR for mod compatibility.");
 #endif
 	fog = Cvar_Get("fog", "0", 0);
-	fog->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("fog", "Unused CVAR for mod compatibility.");
 	r_oldsky = Cvar_Get("r_oldsky", "0", 0);
-	r_oldsky->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("r_oldsky", "Unused CVAR for mod compatibility.");
 	gl_fogenable = Cvar_Get("gl_fogenable", "0", 0);
-	gl_fogenable->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("gl_fogenable", "Unused CVAR for mod compatibility.");
 	gl_fogdensity = Cvar_Get("gl_fogdensity", "0", 0);
-	gl_fogdensity->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("gl_fogdensity", "Unused CVAR for mod compatibility.");
 	gl_fogred = Cvar_Get ("gl_fogred", "0", 0);
-	gl_fogred->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("gl_fogred", "Unused CVAR for mod compatibility.");
 	gl_foggreen = Cvar_Get ("gl_foggreen", "0", 0);
-	gl_foggreen->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("gl_foggreen", "Unused CVAR for mod compatibility.");
 	gl_fogblue = Cvar_Get ("gl_fogbluge", "0", 0);
-	gl_fogblue->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("gl_fogblue", "Unused CVAR for mod compatibility.");
 	r_waterripple = Cvar_Get ("r_waterripple", "0", 0);
-	r_waterripple->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("r_waterripple", "Unused CVAR for mod compatibility.");
 	r_skyfog = Cvar_Get ("r_skyfog", "0", 0);
-	r_skyfog->description = "Unused CVAR for mod compatibility.";
+	Cvar_Set_Description("r_skyfog", "Unused CVAR for mod compatibility.");
 
 	v_idlescale = Cvar_Get("v_idlescale", "0", 0);
 	crosshaircolor = Cvar_Get("crosshaircolor", "79", CVAR_ARCHIVE);

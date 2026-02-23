@@ -40,7 +40,7 @@ void loutportb (int port, int val)
 VideoRegisterSet
 ================
 */
-void VideoRegisterSet (int *pregset)
+void VideoRegisterSet (const int *pregset)
 {
 	int		port, temp0, temp1, temp2;
 

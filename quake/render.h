@@ -138,6 +138,7 @@ extern	struct texture_s	*r_notexture_mip;
 
 
 void R_Init (void);
+void R_Shutdown (void);
 void R_InitTextures (void);
 void R_InitEfrags (void);
 void R_RenderView (void);		// must set r_refdef first
@@ -164,6 +165,7 @@ void R_TeleportSplash (vec3_t org);
 
 void R_PushDlights (void);
 void R_InitParticles (void);
+void R_ShutdownParticles (void);
 void R_ClearParticles (void);
 void R_DrawParticles (void);
 void R_DrawWaterSurfaces (void);
@@ -178,8 +180,11 @@ extern qboolean	r_cache_thrash;	// set if thrashing the surface cache
 int	D_SurfaceCacheForRes (int width, int height);
 void D_FlushCaches (void);
 void D_DeleteSurfaceCache (void);
-void D_InitCaches (void *buffer, int size);
+void D_InitCaches (void *buffer, size_t size);
 void R_SetVrect (vrect_t *pvrect, vrect_t *pvrectin, int lineadj);
 void R_Restart_f (void);
+
+
+extern	int			r_viewcluster, r_oldviewcluster;
 
 #endif // __RENDER_H

@@ -34,7 +34,7 @@ int  IPX_Broadcast (int socket, byte *buf, int len);
 char *IPX_AddrToString (struct qsockaddr *addr);
 int  IPX_StringToAddr (char *string, struct qsockaddr *addr);
 int  IPX_GetSocketAddr (int socket, struct qsockaddr *addr);
-int  IPX_GetNameFromAddr (struct qsockaddr *addr, char *name);
+int  IPX_GetNameFromAddr (struct qsockaddr *addr, char *name, size_t namelen);
 int  IPX_GetAddrFromName (char *name, struct qsockaddr *addr);
 int  IPX_AddrCompare (struct qsockaddr *addr1, struct qsockaddr *addr2);
 int  IPX_GetSocketPort (struct qsockaddr *addr);

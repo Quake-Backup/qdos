@@ -415,7 +415,7 @@ void CL_Record_f (void)
 //
 // open the demo file
 //
-	COM_DefaultExtension (name, ".qwd");
+	COM_DefaultExtension (name, ".qwd", sizeof(name));
 
 	cls.demofile = fopen (name, "wb");
 	if (!cls.demofile)
@@ -674,7 +674,8 @@ void CL_ReRecord_f (void)
 		return;
 	}
 
-        if (!*cls.servername->str) {
+	if (!*cls.servername)
+	{
 		Com_Printf("No server to reconnect to...\n");
 		return;
 	}
@@ -687,7 +688,7 @@ void CL_ReRecord_f (void)
 //
 // open the demo file
 //
-	COM_DefaultExtension (name, ".qwd");
+	COM_DefaultExtension (name, ".qwd", sizeof(name));
 
 	cls.demofile = fopen (name, "wb");
 	if (!cls.demofile)
@@ -713,14 +714,11 @@ play [demoname]
 */
 void CL_PlayDemo_f (void)
 {
-	dstring_t *name;
-
-	name = dstring_new();
+	char	name[MAX_OSPATH];
 
 	if (Cmd_Argc() != 2)
 	{
 		Com_Printf ("play <demoname> : plays a demo\n");
-		dstring_delete(name);
 		return;
 	}
 
@@ -732,17 +730,16 @@ void CL_PlayDemo_f (void)
 //
 // open the demo file
 //
-	dstring_copystr(name, Cmd_Argv(1));
+	Com_sprintf(name, sizeof(name), "%s", Cmd_Argv(1));
 
-	COM_DefaultExtension (name->str, ".qwd");
+	COM_DefaultExtension (name, ".qwd", sizeof(name));
 
-	Com_Printf ("Playing demo from %s.\n", name->str);
-	COM_FOpenFile (name->str, &cls.demofile);
+	Com_Printf ("Playing demo from %s.\n", name);
+	COM_FOpenFile (name, &cls.demofile);
 	if (!cls.demofile)
 	{
-    	Com_Printf ("ERROR: couldn't open %s.\n", name->str); /* FS: let's know what it is */
+		Com_Printf ("ERROR: couldn't open %s.\n", name); /* FS: let's know what it is */
 		cls.demonum = -1;		// stop demo loop
-		dstring_delete(name);
 		return;
 	}
 
@@ -750,7 +747,6 @@ void CL_PlayDemo_f (void)
 	cls.state = ca_demostart;
 	Netchan_Setup (&cls.netchan, net_from, 0);
 	realtime = 0;
-	dstring_delete(name);
 }
 
 /*

@@ -71,18 +71,29 @@ void W_LoadWadFile (char *filename)
 	wadinfo_t		*header;
 	unsigned		i;
 	int				infotableofs;
-	
-	wad_base = COM_LoadHunkFile (filename);
+
+	if (wad_base)
+	{
+		Z_Free(wad_base);
+	}
+
+	wad_base = COM_LoadFile(filename);
 	if (!wad_base)
+	{
 		Sys_Error ("W_LoadWadFile: couldn't load %s", filename);
+		return;
+	}
 
 	header = (wadinfo_t *)wad_base;
 	
 	if (header->identification[0] != 'W'
-	|| header->identification[1] != 'A'
-	|| header->identification[2] != 'D'
-	|| header->identification[3] != '2')
-		Sys_Error ("Wad file %s doesn't have WAD2 id\n",filename);
+		|| header->identification[1] != 'A'
+		|| header->identification[2] != 'D'
+		|| header->identification[3] != '2')
+	{
+		Sys_Error ("Wad file %s doesn't have WAD2 id\n", filename);
+		return;
+	}
 		
 	wad_numlumps = LittleLong(header->numlumps);
 	infotableofs = LittleLong(header->infotableofs);

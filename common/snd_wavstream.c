@@ -311,7 +311,7 @@ void S_StreamWAVBackgroundTrack(void)
 void S_UpdateWavTrack(void)
 {
 	// stop music if paused
-	if (trk_status == BGM_PLAY)// && !cl_paused->value)
+	if (trk_status == BGM_PLAY)// && !cl_paused->intValue)
 		S_StreamWAVBackgroundTrack();
 }
 
@@ -400,7 +400,7 @@ void S_WAV_Shutdown (void)
 		free(wav_filelist);
 
 	// Remove console commands
-//	Cmd_RemoveCommand("wav"); /* FS: Add this someday... */
+	Cmd_RemoveCommand("wav");
 
 	wav_started = false;
 }

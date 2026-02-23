@@ -733,7 +733,7 @@ typedef struct _TargaHeader {
 SCR_ScreenShot_f
 ================== 
 */  
-void SCR_ScreenShot_f (void) 
+void SCR_ScreenShot_f (void)
 {
 	byte		*buffer;
 	char		pcxname[80]; 
@@ -742,13 +742,13 @@ void SCR_ScreenShot_f (void)
 // 
 // find a file name to save it to 
 // 
-	strcpy(pcxname,"quake00.tga");
+	Q_strlcpy(pcxname, "quake00.tga", sizeof(pcxname));
 		
 	for (i=0 ; i<=99 ; i++) 
 	{ 
 		pcxname[5] = i/10 + '0'; 
 		pcxname[6] = i%10 + '0'; 
-		sprintf (checkname, "%s/%s", com_gamedir, pcxname);
+		Com_sprintf (checkname, sizeof(checkname), "%s/%s", com_gamedir, pcxname);
 		if (Sys_FileTime(checkname) == -1)
 			break;	// file doesn't exist
 	} 
@@ -760,6 +760,11 @@ void SCR_ScreenShot_f (void)
 
 
 	buffer = malloc(glwidth*glheight*3 + 18);
+	if (!buffer)
+	{
+		Sys_Error("SCR_ScreenShot_f: out of memory");
+		return;
+	}
 	memset (buffer, 0, 18);
 	buffer[2] = 2;		// uncompressed type
 	buffer[12] = glwidth&255;
@@ -796,7 +801,7 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx_t	*pcx;
 	byte		*pack;
 	  
-	pcx = Hunk_TempAlloc (width*height*2+1000);
+	pcx = Z_Malloc (width*height*2+1000);
 	if (pcx == NULL)
 	{
 		Com_Printf("SCR_ScreenShot_f: not enough memory\n");
@@ -813,11 +818,11 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx->ymax = LittleShort((short)(height-1));
 	pcx->hres = LittleShort((short)width);
 	pcx->vres = LittleShort((short)height);
-	Q_memset (pcx->palette,0,sizeof(pcx->palette));
+	memset (pcx->palette,0,sizeof(pcx->palette));
 	pcx->color_planes = 1;		// chunky image
 	pcx->bytes_per_line = LittleShort((short)width);
 	pcx->palette_type = LittleShort(2);		// not a grey scale
-	Q_memset (pcx->filler,0,sizeof(pcx->filler));
+	memset (pcx->filler,0,sizeof(pcx->filler));
 
 // pack the image
 	pack = &pcx->data;
@@ -853,6 +858,8 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 		CL_StartUpload((void *)pcx, length);
 	else
 		COM_WriteFile (filename, pcx, length);
+
+	Z_Free(pcx);
 } 
  
 
@@ -965,6 +972,11 @@ void SCR_RSShot_f (void)
 // save the pcx file 
 // 
 	newbuf = malloc(glheight * glwidth * 3);
+	if (!newbuf)
+	{
+		Sys_Error("SCR_RSShot_f: out of memory");
+		return;
+	}
 
 	glReadPixels_fp (glx, gly, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, newbuf ); 
 
@@ -1018,11 +1030,11 @@ void SCR_RSShot_f (void)
 	}
 
 	time(&now);
-	strcpy(st, ctime(&now));
+	Q_strlcpy(st, ctime(&now), sizeof(st));
 	st[strlen(st) - 1] = 0;
 	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 1, w);
 
-	strncpy(st, cls.servername->str, sizeof(st));
+	strncpy(st, cls.servername, sizeof(st));
 	st[sizeof(st) - 1] = 0;
 	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 11, w);
 

@@ -34,7 +34,7 @@ int  WINS_Broadcast (int socket, byte *buf, int len);
 char *WINS_AddrToString (struct qsockaddr *addr);
 int  WINS_StringToAddr (char *string, struct qsockaddr *addr);
 int  WINS_GetSocketAddr (int socket, struct qsockaddr *addr);
-int  WINS_GetNameFromAddr (struct qsockaddr *addr, char *name);
+int  WINS_GetNameFromAddr (struct qsockaddr *addr, char *name, size_t namelen);
 int  WINS_GetAddrFromName (char *name, struct qsockaddr *addr);
 int  WINS_AddrCompare (struct qsockaddr *addr1, struct qsockaddr *addr2);
 int  WINS_GetSocketPort (struct qsockaddr *addr);

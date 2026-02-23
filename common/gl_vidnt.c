@@ -374,7 +374,7 @@ qboolean VID_SetFullDIBMode (int modenum)
 int VID_SetMode (int modenum, unsigned char *palette)
 {
 	int				original_mode, temp;
-	qboolean		stat;
+	qboolean		stat = false;
     MSG				msg;
 
 	if ((windowed && (modenum != 0)) ||
@@ -398,7 +398,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 	// Set either the fullscreen or windowed mode
 	if (modelist[modenum].type == MS_WINDOWED)
 	{
-		if (_windowed_mouse->value && key_dest == key_game)
+		if (_windowed_mouse->intValue && key_dest == key_game)
 		{
 			stat = VID_SetWindowedMode(modenum);
 			IN_ActivateMouse ();
@@ -638,20 +638,18 @@ GL_Init
 */
 void GL_Init (void)
 {
-	gl_vendor = glGetString (GL_VENDOR);
-	Com_Printf ("GL_VENDOR: %s\n", gl_vendor);
+	gl_vendor = (const char *)glGetString_fp (GL_VENDOR);
+	Com_SafePrintf ("GL_VENDOR: %s\n", gl_vendor);
 	gl_renderer = (const char *)glGetString_fp (GL_RENDERER);
-	Com_Printf ("GL_RENDERER: %s\n", gl_renderer);
+	Com_SafePrintf ("GL_RENDERER: %s\n", gl_renderer);
 
 	gl_version = (const char *)glGetString_fp (GL_VERSION);
-	Com_Printf ("GL_VERSION: %s\n", gl_version);
+	Com_SafePrintf ("GL_VERSION: %s\n", gl_version);
 	gl_extensions = (const char *)glGetString_fp (GL_EXTENSIONS);
 	Con_SafeDPrintf (DEVELOPER_MSG_VIDEO, "GL_EXTENSIONS: %s\n", gl_extensions);
 
-//	Com_Printf ("%s %s\n", gl_renderer, gl_version);
-
-    if (strnicmp(gl_renderer,"PowerVR",7)==0)
-         fullsbardraw = true;
+	if (strnicmp(gl_renderer,"PowerVR",7)==0)
+		fullsbardraw = true;
 
 	CheckTextureExtensions ();
 
@@ -688,7 +686,7 @@ void GL_EndRendering (void)
 // handle the mouse state when windowed if that's changed
 	if (modestate == MS_WINDOWED)
 	{
-		if (!_windowed_mouse->value) {
+		if (!_windowed_mouse->intValue) {
 			if (windowed_mouse)	{
 				IN_DeactivateMouse ();
 				IN_ShowMouse ();
@@ -788,6 +786,8 @@ void	VID_Shutdown (void)
 
 	if (vid_initialized)
 	{
+		R_Shutdown();
+
 		vid_canalttab = false;
 		hRC = wglGetCurrentContext();
     	hDC = wglGetCurrentDC();
@@ -813,32 +813,27 @@ void	VID_Shutdown (void)
 
 //==========================================================================
 
+static PIXELFORMATDESCRIPTOR pfd;
 
 BOOL bSetupPixelFormat(HDC hDC)
 {
-    static PIXELFORMATDESCRIPTOR pfd = {
-	sizeof(PIXELFORMATDESCRIPTOR),	// size of this pfd
-	1,				// version number
-	PFD_DRAW_TO_WINDOW 		// support window
-	|  PFD_SUPPORT_OPENGL 	// support OpenGL
-	|  PFD_DOUBLEBUFFER ,	// double buffered
-	PFD_TYPE_RGBA,			// RGBA type
-	24,				// 24-bit color depth
-	0, 0, 0, 0, 0, 0,		// color bits ignored
-	0,				// no alpha buffer
-	0,				// shift bit ignored
-	0,				// no accumulation buffer
-	0, 0, 0, 0, 			// accum bits ignored
-	32,				// 32-bit z-buffer	
-	0,				// no stencil buffer
-	0,				// no auxiliary buffer
-	PFD_MAIN_PLANE,			// main layer
-	0,				// reserved
-	0, 0, 0				// layer masks ignored
-    };
     int pixelformat;
 
-    if ( (pixelformat = ChoosePixelFormat(hDC, &pfd)) == 0 )
+	memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+
+	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW |			// support window
+		PFD_SUPPORT_OPENGL |			// support OpenGL
+		PFD_DOUBLEBUFFER;				// double buffered
+
+	pfd.iPixelType = PFD_TYPE_RGBA;
+	pfd.cDepthBits = 24;	// Knightmare changed 2/22/13, was 32
+	pfd.cStencilBits = 8;	// Knightmare added 2/22/13
+	pfd.iLayerType = PFD_MAIN_PLANE;
+
+	pixelformat = ChoosePixelFormat(hDC, &pfd);
+    if ( pixelformat == 0 )
     {
         MessageBox(NULL, "ChoosePixelFormat failed", "Error", MB_OK);
         return FALSE;
@@ -971,7 +966,7 @@ void AppActivate(BOOL fActive, BOOL minimize)
 				ShowWindow(cl_hwnd, SW_SHOWNORMAL);
 			}
 		}
-		else if ((modestate == MS_WINDOWED) && _windowed_mouse->value && key_dest == key_game)
+		else if ((modestate == MS_WINDOWED) && _windowed_mouse->intValue && key_dest == key_game)
 		{
 			IN_ActivateMouse ();
 			IN_HideMouse ();
@@ -989,7 +984,7 @@ void AppActivate(BOOL fActive, BOOL minimize)
 				vid_wassuspended = true;
 			}
 		}
-		else if ((modestate == MS_WINDOWED) && _windowed_mouse->value)
+		else if ((modestate == MS_WINDOWED) && _windowed_mouse->intValue)
 		{
 			IN_DeactivateMouse ();
 			IN_ShowMouse ();
@@ -1172,7 +1167,7 @@ char *VID_GetModeDescription (int mode)
 	}
 	else
 	{
-		sprintf (temp, "Desktop resolution (%dx%d)",
+		Com_sprintf (temp, sizeof(temp), "Desktop resolution (%dx%d)",
 				 modelist[MODE_FULLSCREEN_DEFAULT].width,
 				 modelist[MODE_FULLSCREEN_DEFAULT].height);
 		pinfo = temp;
@@ -1197,11 +1192,11 @@ char *VID_GetExtModeDescription (int mode)
 	{
 		if (!leavecurrentmode)
 		{
-			sprintf(pinfo,"%s fullscreen", pv->modedesc);
+			Com_sprintf(pinfo, sizeof(pinfo), "%s fullscreen", pv->modedesc);
 		}
 		else
 		{
-			sprintf (pinfo, "Desktop resolution (%dx%d)",
+			Com_sprintf(pinfo, sizeof(pinfo), "Desktop resolution (%dx%d)",
 					 modelist[MODE_FULLSCREEN_DEFAULT].width,
 					 modelist[MODE_FULLSCREEN_DEFAULT].height);
 		}
@@ -1209,9 +1204,9 @@ char *VID_GetExtModeDescription (int mode)
 	else
 	{
 		if (modestate == MS_WINDOWED)
-			sprintf(pinfo, "%s windowed", pv->modedesc);
+			Com_sprintf(pinfo, sizeof(pinfo), "%s windowed", pv->modedesc);
 		else
-			sprintf(pinfo, "windowed");
+			Com_sprintf(pinfo, sizeof(pinfo), "windowed");
 	}
 
 	return pinfo;
@@ -1253,7 +1248,7 @@ void VID_DescribeMode_f (void)
 {
 	int		t, modenum;
 	
-	modenum = Q_atoi (Cmd_Argv(1));
+	modenum = atoi (Cmd_Argv(1));
 
 	t = leavecurrentmode;
 	leavecurrentmode = 0;
@@ -1313,7 +1308,7 @@ void VID_InitDIB (HINSTANCE hInstance)
 	modelist[0].type = MS_WINDOWED;
 
 	if (COM_CheckParm("-width"))
-		modelist[0].width = Q_atoi(com_argv[COM_CheckParm("-width")+1]);
+		modelist[0].width = atoi(com_argv[COM_CheckParm("-width")+1]);
 	else
 		modelist[0].width = 640;
 
@@ -1321,14 +1316,14 @@ void VID_InitDIB (HINSTANCE hInstance)
 		modelist[0].width = 320;
 
 	if (COM_CheckParm("-height"))
-		modelist[0].height= Q_atoi(com_argv[COM_CheckParm("-height")+1]);
+		modelist[0].height= atoi(com_argv[COM_CheckParm("-height")+1]);
 	else
 		modelist[0].height = modelist[0].width * 240/320;
 
 	if (modelist[0].height < 240)
 		modelist[0].height = 240;
 
-	sprintf (modelist[0].modedesc, "%dx%d",
+	Com_sprintf (modelist[0].modedesc, sizeof(modelist[0].modedesc), "%dx%d",
 			 modelist[0].width, modelist[0].height);
 
 	modelist[0].modenum = MODE_WINDOWED;
@@ -1381,7 +1376,7 @@ void VID_InitFullDIB (HINSTANCE hInstance)
 				modelist[nummodes].dib = 1;
 				modelist[nummodes].fullscreen = 1;
 				modelist[nummodes].bpp = devmode.dmBitsPerPel;
-				sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+				Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 						 devmode.dmPelsWidth, devmode.dmPelsHeight,
 						 devmode.dmBitsPerPel);
 
@@ -1393,7 +1388,7 @@ void VID_InitFullDIB (HINSTANCE hInstance)
 					{
 						modelist[nummodes].width >>= 1;
 						modelist[nummodes].halfscreen = 1;
-						sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+						Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 								 modelist[nummodes].width,
 								 modelist[nummodes].height,
 								 modelist[nummodes].bpp);
@@ -1446,7 +1441,7 @@ void VID_InitFullDIB (HINSTANCE hInstance)
 				modelist[nummodes].dib = 1;
 				modelist[nummodes].fullscreen = 1;
 				modelist[nummodes].bpp = devmode.dmBitsPerPel;
-				sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+				Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 						 devmode.dmPelsWidth, devmode.dmPelsHeight,
 						 devmode.dmBitsPerPel);
 
@@ -1535,7 +1530,7 @@ static void Check_Gamma (unsigned char *pal)
 		else
 			vid_gamma = 0.7; // default to 0.7 on non-3dfx hardware
 	} else
-		vid_gamma = Q_atof(com_argv[i+1]);
+		vid_gamma = atof(com_argv[i+1]);
 
 	for (i=0 ; i<768 ; i++)
 	{
@@ -1576,12 +1571,12 @@ void	VID_Init (unsigned char *palette)
 	vid_config_y = Cvar_Get("vid_config_y","600", CVAR_ARCHIVE);
 	vid_stretch_by_2 = Cvar_Get("vid_stretch_by_2","1", CVAR_ARCHIVE);
 	_windowed_mouse = Cvar_Get("_windowed_mouse","1", CVAR_ARCHIVE);
-	gl_ztrick = Cvar_Get("gl_ztrick", "1", 0);
-	gl_ztrick->description = "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.";
+	gl_ztrick = Cvar_Get("gl_ztrick", "1", CVAR_ARCHIVE);
+	Cvar_Set_Description("gl_ztrick", "Toggles the use of a trick to prevent the clearing of the z-buffer between frames. When this variable is set to 1 the game will not clear the z-buffer between frames. This will result in increased performance but might cause problems for some display hardware.");
 	gl_displayrefresh = Cvar_Get("gl_displayrefresh", "0", CVAR_ARCHIVE);
-	gl_displayrefresh->description = "Refresh rate for fullscreen modes.  Set to 0 to disable.";
+	Cvar_Set_Description("gl_displayrefresh", "Refresh rate for fullscreen modes.  Set to 0 to disable.");
 	gl_conscale = Cvar_Get("gl_conscale", "1", CVAR_ARCHIVE);
-	gl_conscale->description = "Set to 0 to make the console width and height equal to the current resolution.  Set to 1 to control it with conwidth and conheight cmdline.  Requires game restart.";
+	Cvar_Set_Description("gl_conscale", "Set to 0 to make the console width and height equal to the current resolution.Set to 1 to control it with conwidth and conheight cmdline.Requires game restart.");
 
 	Cmd_AddCommand ("vid_nummodes", VID_NumModes_f);
 	Cmd_AddCommand ("vid_describecurrentmode", VID_DescribeCurrentMode_f);
@@ -1623,7 +1618,7 @@ void	VID_Init (unsigned char *palette)
 
 		if (COM_CheckParm("-mode"))
 		{
-			vid_default = Q_atoi(com_argv[COM_CheckParm("-mode")+1]);
+			vid_default = atoi(com_argv[COM_CheckParm("-mode")+1]);
 		}
 		else
 		{
@@ -1640,7 +1635,7 @@ void	VID_Init (unsigned char *palette)
 			{
 				if (COM_CheckParm("-width"))
 				{
-					width = Q_atoi(com_argv[COM_CheckParm("-width")+1]);
+					width = atoi(com_argv[COM_CheckParm("-width")+1]);
 				}
 				else
 				{
@@ -1649,7 +1644,7 @@ void	VID_Init (unsigned char *palette)
 
 				if (COM_CheckParm("-bpp"))
 				{
-					bpp = Q_atoi(com_argv[COM_CheckParm("-bpp")+1]);
+					bpp = atoi(com_argv[COM_CheckParm("-bpp")+1]);
 					findbpp = 0;
 				}
 				else
@@ -1659,7 +1654,13 @@ void	VID_Init (unsigned char *palette)
 				}
 
 				if (COM_CheckParm("-height"))
-					height = Q_atoi(com_argv[COM_CheckParm("-height")+1]);
+				{
+					height = atoi(com_argv[COM_CheckParm("-height") + 1]);
+				}
+				else
+				{
+					height = 480;
+				}
 
 			// if they want to force it, add the specified mode to the list
 				if (COM_CheckParm("-force") && (nummodes < MAX_MODE_LIST))
@@ -1672,7 +1673,7 @@ void	VID_Init (unsigned char *palette)
 					modelist[nummodes].dib = 1;
 					modelist[nummodes].fullscreen = 1;
 					modelist[nummodes].bpp = bpp;
-					sprintf (modelist[nummodes].modedesc, "%dx%dx%d",
+					Com_sprintf (modelist[nummodes].modedesc, sizeof(modelist[nummodes].modedesc), "%dx%dx%d",
 							 devmode.dmPelsWidth, devmode.dmPelsHeight,
 							 devmode.dmBitsPerPel);
 
@@ -1699,7 +1700,7 @@ void	VID_Init (unsigned char *palette)
 				{
 					if (COM_CheckParm("-height"))
 					{
-						height = Q_atoi(com_argv[COM_CheckParm("-height")+1]);
+						height = atoi(com_argv[COM_CheckParm("-height")+1]);
 
 						for (i=1, vid_default=0 ; i<nummodes ; i++)
 						{
@@ -1774,7 +1775,7 @@ void	VID_Init (unsigned char *palette)
 	else
 	{
 		if ((i = COM_CheckParm("-conwidth")) != 0)
-			vid.conwidth = Q_atoi(com_argv[i+1]);
+			vid.conwidth = atoi(com_argv[i+1]);
 		else
 			vid.conwidth = width; /* FS: Was 640 */
 
@@ -1787,7 +1788,7 @@ void	VID_Init (unsigned char *palette)
 		vid.conheight = vid.conwidth*3 / 4;
 
 		if ((i = COM_CheckParm("-conheight")) != 0)
-			vid.conheight = Q_atoi(com_argv[i+1]);
+			vid.conheight = atoi(com_argv[i+1]);
 		if (vid.conheight < 200)
 			vid.conheight = 200;
 	}
@@ -1809,13 +1810,19 @@ void	VID_Init (unsigned char *palette)
 
     baseRC = wglCreateContext( maindc );
 	if (!baseRC)
+	{
 		Sys_Error ("Could not initialize GL (wglCreateContext failed).\n\nMake sure you in are 65535 color mode, and try running -window.");
-    if (!wglMakeCurrent( maindc, baseRC ))
+		return;
+	}
+	if (!wglMakeCurrent(maindc, baseRC))
+	{
 		Sys_Error ("wglMakeCurrent failed");
+		return;
+	}
 
 	GL_Init();
 
-	sprintf (gldir, "%s/glquake", com_gamedir);
+	Com_sprintf (gldir, sizeof(gldir), "%s/glquake", com_gamedir);
 	Sys_mkdir (gldir);
 
 	vid_realmode = vid_modenum;
@@ -1826,7 +1833,7 @@ void	VID_Init (unsigned char *palette)
 	vid_menudrawfn = VID_MenuDraw;
 	vid_menukeyfn = VID_MenuKey;
 
-	strcpy (badmode.modedesc, "Bad mode");
+	Q_strlcpy (badmode.modedesc, "Bad mode", sizeof(badmode.modedesc));
 	vid_canalttab = true;
 
 	if (COM_CheckParm("-fullsbar"))

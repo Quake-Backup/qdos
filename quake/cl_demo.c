@@ -124,7 +124,11 @@ int CL_GetMessage (void)
 
 		net_message.cursize = LittleLong (net_message.cursize);
 		if (net_message.cursize > MAX_MSGLEN)
+		{
 			Sys_Error ("Demo message > MAX_MSGLEN");
+			return 0;
+		}
+
 		r = fread (net_message.data, net_message.cursize, 1, cls.demofile);
 		if (r != 1)
 		{
@@ -244,7 +248,7 @@ void CL_Record_f (void)
 //
 // open the demo file
 //
-	COM_DefaultExtension (name, ".dem");
+	COM_DefaultExtension (name, ".dem", sizeof(name));
 
 	Com_Printf ("recording to %s.\n", name);
 	cls.demofile = fopen (name, "wb");
@@ -270,7 +274,7 @@ play [demoname]
 */
 void CL_PlayDemo_f (void)
 {
-	dstring_t *name;
+	char name[MAX_OSPATH];
 	int i, c;
 	qboolean neg;
 
@@ -291,18 +295,16 @@ void CL_PlayDemo_f (void)
 //
 // open the demo file
 //
-	name = dstring_new();
-	dstring_copystr (name, Cmd_Argv(1));
+	Q_strlcpy (name, Cmd_Argv(1), sizeof(name));
 
-	COM_DefaultExtension (name->str, ".dem");
+	COM_DefaultExtension (name, ".dem", sizeof(name));
 
-	Com_Printf ("Playing demo from %s.\n", name->str);
-	COM_FOpenFile (name->str, &cls.demofile);
+	Com_Printf ("Playing demo from %s.\n", name);
+	COM_FOpenFile (name, &cls.demofile);
 	if (!cls.demofile)
 	{
-		Com_Printf ("ERROR: couldn't open %s.\n", name->str);
+		Com_Printf ("ERROR: couldn't open %s.\n", name);
 		cls.demonum = -1;		// stop demo loop
-		dstring_delete(name);
 		return;
 	}
 
@@ -331,14 +333,11 @@ void CL_PlayDemo_f (void)
 		fclose (cls.demofile);
 		cls.demofile = NULL;
 		cls.demonum = -1;	// stop demo loop
-		Com_Printf ("ERROR: demo \"%s\" is invalid\n", name->str);
-		dstring_delete(name);
+		Com_Printf ("ERROR: demo \"%s\" is invalid\n", name);
 		return;
 	}
 	if (neg)
 		cls.forcetrack = -cls.forcetrack;
-
-	dstring_delete(name);
 
 	cls.demoplayback = true;
 	cls.state = ca_connected;

@@ -164,7 +164,7 @@ mspriteframe_t *R_GetSpriteFrame (entity_t *currententity)
 	int				i, numframes, frame;
 	float			*pintervals, fullinterval, targettime, time;
 
-	psprite = currententity->model->cache.data;
+	psprite = currententity->model->extradata;
 	frame = currententity->frame;
 
 	if ((frame >= psprite->numframes) || (frame < 0))
@@ -220,7 +220,7 @@ void R_DrawSpriteModel (entity_t *e)
 	// don't even bother culling, because it's just a single
 	// polygon without a surface cache
 	frame = R_GetSpriteFrame (e);
-	psprite = currententity->model->cache.data;
+	psprite = currententity->model->extradata;
 
 	if (psprite->type == SPR_ORIENTED)
 	{	// bullet marks on walls
@@ -538,7 +538,7 @@ void R_DrawAliasModel (entity_t *e)
 	//
 	// locate the proper data
 	//
-	paliashdr = (aliashdr_t *)Mod_Extradata (currententity->model);
+	paliashdr = (aliashdr_t *)clmodel->extradata;
 
 	c_alias_polys += paliashdr->numtris;
 
@@ -553,7 +553,7 @@ void R_DrawAliasModel (entity_t *e)
 
 	if (!strcmp (clmodel->name, "progs/eyes.mdl")
 #ifdef QUAKE1
-	 && gl_doubleeyes->value
+	 && gl_doubleeyes->intValue
 #endif
 	 ) {
 		glTranslatef_fp (paliashdr->scale_origin[0], paliashdr->scale_origin[1], paliashdr->scale_origin[2] - (22 + 8));
@@ -570,14 +570,14 @@ void R_DrawAliasModel (entity_t *e)
 	// we can't dynamically colormap textures, so they are cached
 	// seperately for the players.  Heads are just uncolored.
 #ifdef QUAKE1
-	if (currententity->colormap != vid.colormap && !gl_nocolors->value)
+	if (currententity->colormap != vid.colormap && !gl_nocolors->intValue)
 	{
 		i = currententity - cl_entities;
 		if (i >= 1 && i<=cl.maxclients)
 		    GL_Bind(playertextures - 1 + i);
 	}
 #else
-	if (currententity->scoreboard && !gl_nocolors->value)
+	if (currententity->scoreboard && !gl_nocolors->intValue)
 	{
 		i = currententity->scoreboard - cl.players;
 		if (!currententity->scoreboard->skin) {
@@ -589,11 +589,11 @@ void R_DrawAliasModel (entity_t *e)
 	}
 #endif
 
-	if (gl_smoothmodels->value)
+	if (gl_smoothmodels->intValue)
 		glShadeModel_fp (GL_SMOOTH);
 	glTexEnvf_fp(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-	if (gl_affinemodels->value)
+	if (gl_affinemodels->intValue)
 		glHint_fp (GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
 	R_SetupAliasFrame (currententity->frame, paliashdr);
@@ -601,12 +601,12 @@ void R_DrawAliasModel (entity_t *e)
 	glTexEnvf_fp(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
 	glShadeModel_fp (GL_FLAT);
-	if (gl_affinemodels->value)
+	if (gl_affinemodels->intValue)
 		glHint_fp (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 	glPopMatrix_fp ();
 
-	if (r_shadows->value)
+	if (r_shadows->intValue)
 	{
 		glPushMatrix_fp ();
 		R_RotateForEntity (e);
@@ -633,7 +633,7 @@ void R_DrawEntitiesOnList (void)
 {
 	int		i;
 
-	if (!r_drawentities->value)
+	if (!r_drawentities->intValue)
 		return;
 
 	// draw sprites seperately, because of alpha blending
@@ -696,7 +696,7 @@ void R_DrawViewModel (void)
 	int			ambientlight, shadelight;
 	qboolean	bDoGunFov = false;
 
-	if (!r_drawviewmodel->value
+	if (!r_drawviewmodel->intValue
 #ifdef QUAKEWORLD
 	 || !Cam_DrawViewModel()
 #endif
@@ -704,14 +704,14 @@ void R_DrawViewModel (void)
 		return;
 
 #ifdef QUAKE1
-	if (chase_active->value)
+	if (chase_active->intValue)
 		return;
 #endif
 
 	if (envmap)
 		return;
 
-	if (!r_drawentities->value)
+	if (!r_drawentities->intValue)
 		return;
 
 #ifdef QUAKE1
@@ -731,7 +731,7 @@ void R_DrawViewModel (void)
 	j = R_LightPoint (currententity->origin);
 
 	if (j < 24)
-		j = 24;		// allways give some light on gun
+		j = 24;		// always give some light on gun
 	ambientlight = j;
 	shadelight = j;
 
@@ -761,7 +761,7 @@ void R_DrawViewModel (void)
 		glMatrixMode_fp(GL_PROJECTION);
 		glPushMatrix_fp();
 		glLoadIdentity_fp();
-		MYgluPerspective(r_gunfov->value, (float)r_refdef.vrect.width/r_refdef.vrect.height, 4, gl_zfar_dist->value);
+		MYgluPerspective(r_gunfov->intValue, (float)r_refdef.vrect.width/r_refdef.vrect.height, 4, gl_zfar_dist->value);
 		glMatrixMode_fp(GL_MODELVIEW);
 	}
 
@@ -786,7 +786,7 @@ R_PolyBlend
 */
 void R_PolyBlend (void)
 {
-	if (!gl_polyblend->value)
+	if (!gl_polyblend->intValue)
 		return;
 	if (!v_blend[3])
 		return;
@@ -883,8 +883,8 @@ void R_SetupFrame (void)
 	if (cl.maxclients > 1)
 		Cvar_Set ("r_fullbright", "0");
 #else
-	r_fullbright->value = 0;
-	r_lightmap->value = 0;
+	r_fullbright->intValue = 0;
+	r_lightmap->intValue = 0;
 	if (!atoi(Info_ValueForKey(cl.serverinfo, "watervis")))
 		r_wateralpha->value = 1;
 #endif
@@ -1014,7 +1014,7 @@ void R_SetupGL (void)
 	//
 	// set drawing parms
 	//
-	if (gl_cull->value)
+	if (gl_cull->intValue)
 		glEnable_fp(GL_CULL_FACE);
 	else
 		glDisable_fp(GL_CULL_FACE);
@@ -1067,7 +1067,7 @@ void R_Clear (void)
 {
 	if (r_mirroralpha->value != 1.0)
 	{
-		if (gl_clear->value)
+		if (gl_clear->intValue)
 			glClear_fp (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		else
 			glClear_fp (GL_DEPTH_BUFFER_BIT);
@@ -1075,11 +1075,11 @@ void R_Clear (void)
 		gldepthmax = 0.5;
 		glDepthFunc_fp (GL_LEQUAL);
 	}
-	else if (gl_ztrick->value)
+	else if (gl_ztrick->intValue)
 	{
 		static int trickframe;
 
-		if (gl_clear->value)
+		if (gl_clear->intValue)
 			glClear_fp (GL_COLOR_BUFFER_BIT);
 
 		trickframe++;
@@ -1098,7 +1098,7 @@ void R_Clear (void)
 	}
 	else
 	{
-		if (gl_clear->value)
+		if (gl_clear->intValue)
 			glClear_fp (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		else
 			glClear_fp (GL_DEPTH_BUFFER_BIT);
@@ -1190,13 +1190,13 @@ void R_RenderView (void)
 {
 	double	time1 = 0, time2;
 
-	if (r_norefresh->value)
+	if (r_norefresh->intValue)
 		return;
 
 	if (!r_worldentity.model || !cl.worldmodel)
 		Sys_Error ("R_RenderView: NULL worldmodel");
 
-	if (r_speeds->value)
+	if (r_speeds->intValue)
 	{
 		glFinish_fp ();
 		time1 = Sys_DoubleTime();
@@ -1206,7 +1206,7 @@ void R_RenderView (void)
 
 	mirror = false;
 
-	if (gl_finish->value)
+	if (gl_finish->intValue)
 		glFinish_fp ();
 
 	R_Clear ();
@@ -1223,7 +1223,7 @@ void R_RenderView (void)
 
 	R_PolyBlend ();
 
-	if (r_speeds->value)
+	if (r_speeds->intValue)
 	{
 //		glFinish_fp ();
 		time2 = Sys_DoubleTime();

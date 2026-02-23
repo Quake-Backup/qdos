@@ -49,13 +49,12 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\common\win32,..\common\win32\dxsdk\sdk\inc,..\common\win32\scitech\include,winquake,..\common,.\"
 				PreprocessorDefinitions="QUAKEWORLD;WIN32;_DEBUG;_WINDOWS;OGG_SUPPORT;GAMESPY;USE_CURL"
-				MinimalRebuild="true"
 				RuntimeLibrary="1"
 				FloatingPointModel="2"
-				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -71,7 +70,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="..\common\win32\scitech\lib\win32\vc\mgllt.lib ..\common\win32\dxsdk\sdk\lib\dxguid.lib opengl32.lib ws2_32.lib odbc32.lib odbccp32.lib winmm.lib"
-				OutputFile=".\Debug/DWQWDOS.EXE"
+				OutputFile=".\Debug/WQWDOS.EXE"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				IgnoreDefaultLibraryNames="libc.lib"
@@ -196,7 +195,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="GL QW|Win32"
+			Name="GL QW Release|Win32"
 			OutputDirectory=".\release_gl"
 			IntermediateDirectory=".\release_gl"
 			ConfigurationType="1"
@@ -318,13 +317,12 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\common\win32,..\common\win32\dxsdk\sdk\inc,..\common\win32\scitech\include,winquake,..\common,.\"
 				PreprocessorDefinitions="QUAKEWORLD;WIN32;_DEBUG;_WINDOWS;OGG_SUPPORT;GAMESPY;USE_CURL;GLQUAKE"
-				MinimalRebuild="true"
 				RuntimeLibrary="1"
 				FloatingPointModel="2"
-				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -404,7 +402,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -444,7 +442,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -484,7 +482,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -524,7 +522,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -564,7 +562,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -604,7 +602,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -644,7 +642,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -684,7 +682,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -724,7 +722,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -764,7 +762,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -804,7 +802,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -848,7 +846,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -888,7 +886,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -928,7 +926,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -968,7 +966,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1008,7 +1006,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1048,7 +1046,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1088,7 +1086,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1129,7 +1127,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1169,7 +1167,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1209,7 +1207,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1249,7 +1247,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1289,7 +1287,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1329,7 +1327,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1369,7 +1367,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1409,7 +1407,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1449,7 +1447,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1466,6 +1464,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\q_shwin.c"
+				>
 			</File>
 			<File
 				RelativePath="r_part.c"
@@ -1489,7 +1491,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1529,7 +1531,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1569,7 +1571,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1609,7 +1611,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1649,7 +1651,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1689,7 +1691,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1730,7 +1732,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1770,7 +1772,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1810,7 +1812,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1850,7 +1852,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1890,7 +1892,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1930,7 +1932,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1971,7 +1973,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -2011,7 +2013,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2051,7 +2053,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2089,7 +2091,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCResourceCompilerTool"
@@ -2127,7 +2129,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="GL QW|Win32"
+					Name="GL QW Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2170,7 +2172,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2222,7 +2224,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2266,7 +2268,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2306,7 +2308,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2350,7 +2352,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2394,7 +2396,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2421,6 +2423,150 @@
 				Name="DOS"
 				>
 				<File
+					RelativePath="..\common\cd_audio.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\dos_dmesa.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\dos_fxmesa.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\dos_sage.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\dos_v2.c"
 					>
 					<FileConfiguration
@@ -2444,7 +2590,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -2461,6 +2607,114 @@
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\dxe.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\fx_gamma.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\gl_viddos.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2488,7 +2742,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -2532,7 +2786,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -2549,6 +2803,150 @@
 							Name="VCCLCompilerTool"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\q_shdos.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\snd_gus.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\snd_pci.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\snd_sb.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2576,7 +2974,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -2597,7 +2995,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="vid_dos.c"
+					RelativePath="..\common\vid_dos.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -2605,8 +3003,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2615,18 +3011,14 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2635,13 +3027,11 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="vid_ext.c"
+					RelativePath="..\common\vid_ext.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -2649,8 +3039,8 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2659,18 +3049,18 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2679,8 +3069,44 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\vid_vga.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2708,7 +3134,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -2756,7 +3182,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2798,7 +3224,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2840,7 +3266,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2902,7 +3328,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2944,7 +3370,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2986,7 +3412,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3028,7 +3454,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3070,7 +3496,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3112,7 +3538,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3154,7 +3580,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3196,7 +3622,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3238,7 +3664,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3280,7 +3706,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3364,7 +3790,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3406,7 +3832,8 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
+						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3416,6 +3843,7 @@
 					</FileConfiguration>
 					<FileConfiguration
 						Name="GL QW Debug|Win32"
+						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -3446,7 +3874,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3488,7 +3916,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3530,7 +3958,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3572,7 +4000,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3614,7 +4042,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3656,7 +4084,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3698,7 +4126,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3740,7 +4168,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3782,7 +4210,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3824,7 +4252,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3866,7 +4294,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3908,7 +4336,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3950,7 +4378,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -3992,7 +4420,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4034,7 +4462,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4076,7 +4504,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4118,7 +4546,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4160,7 +4588,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4202,7 +4630,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4244,7 +4672,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4286,7 +4714,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4328,7 +4756,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4370,7 +4798,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4412,7 +4840,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4454,7 +4882,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4496,7 +4924,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4538,7 +4966,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="GL QW|Win32"
+						Name="GL QW Release|Win32"
 						ExcludedFromBuild="true"
 						>
 						<Tool
@@ -4583,7 +5011,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4621,7 +5049,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4659,7 +5087,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4697,7 +5125,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4735,7 +5163,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4773,7 +5201,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4811,7 +5239,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4849,7 +5277,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4887,7 +5315,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4925,7 +5353,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -4963,7 +5391,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -5001,7 +5429,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -5039,7 +5467,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool
@@ -5077,7 +5505,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="GL QW|Win32"
+							Name="GL QW Release|Win32"
 							ExcludedFromBuild="true"
 							>
 							<Tool

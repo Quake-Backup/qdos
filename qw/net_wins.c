@@ -69,7 +69,7 @@ char	*NET_AdrToString (netadr_t a)
 {
 	static	char	s[64];
 	
-	sprintf (s, "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], ntohs(a.port));
+	Com_sprintf (s, sizeof(s), "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], ntohs(a.port));
 
 	return s;
 }
@@ -78,7 +78,7 @@ char	*NET_BaseAdrToString (netadr_t a)
 {
 	static	char	s[64];
 	
-	sprintf (s, "%i.%i.%i.%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3]);
+	Com_sprintf (s, sizeof(s), "%i.%i.%i.%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3]);
 
 	return s;
 }
@@ -106,7 +106,7 @@ qboolean	NET_StringToAdr (char *s, netadr_t *a)
 	
 	sadr.sin_port = 0;
 
-	strcpy (copy, s);
+	Q_strlcpy (copy, s, sizeof(copy));
 	// strip off a trailing :port if present
 	for (colon = copy ; *colon ; colon++)
 		if (*colon == ':')
@@ -182,7 +182,7 @@ qboolean NET_GetPacket (void)
 		if (errno == WSAEWOULDBLOCK)
 			return false;
 		if (errno == WSAEMSGSIZE) {
-			Con_Printf ("Warning:  Oversize packet from %s\n",
+			Com_Printf ("Warning:  Oversize packet from %s\n",
 				NET_AdrToString (net_from));
 			return false;
 		}
@@ -193,7 +193,7 @@ qboolean NET_GetPacket (void)
 	net_message.cursize = ret;
 	if (ret == sizeof(net_message_buffer) )
 	{
-		Con_Printf ("Oversize packet from %s\n", NET_AdrToString (net_from));
+		Com_Printf ("Oversize packet from %s\n", NET_AdrToString (net_from));
 		return false;
 	}
 
@@ -220,10 +220,10 @@ void NET_SendPacket (int length, const void *data, netadr_t to)
 
 #ifndef SERVERONLY
 		if (err == WSAEADDRNOTAVAIL)
-			Con_DPrintf(DEVELOPER_MSG_NET, "NET_SendPacket Warning: %i\n", err);
+			Com_DPrintf(DEVELOPER_MSG_NET, "NET_SendPacket Warning: %i\n", err);
 		else
 #endif
-			Con_Printf ("NET_SendPacket ERROR: %i\n", errno);
+			Com_Printf ("NET_SendPacket ERROR: %i\n", errno);
 	}
 }
 
@@ -237,16 +237,22 @@ int UDP_OpenSocket (int port)
 	int i;
 
 	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-		Sys_Error ("UDP_OpenSocket: socket:", strerror(errno));
+	{
+		Sys_Error ("UDP_OpenSocket: socket: %s", strerror(errno));
+		return -1;
+	}
 
 	if (ioctlsocket (newsocket, FIONBIO, &_true) == -1)
-		Sys_Error ("UDP_OpenSocket: ioctl FIONBIO:", strerror(errno));
+	{
+		Sys_Error ("UDP_OpenSocket: ioctl FIONBIO: %s", strerror(errno));
+		return -1;
+	}
 
 	address.sin_family = AF_INET;
 //ZOID -- check for interface binding option
 	if ((i = COM_CheckParm("-ip")) != 0 && i < com_argc) {
 		address.sin_addr.s_addr = inet_addr(com_argv[i+1]);
-		Con_Printf("Binding to IP Interface Address of %s\n",
+		Com_Printf("Binding to IP Interface Address of %s\n",
 				inet_ntoa(address.sin_addr));
 	} else
 		address.sin_addr.s_addr = INADDR_ANY;
@@ -274,10 +280,13 @@ void NET_GetLocalAddress (void)
 
 	namelen = sizeof(address);
 	if (getsockname (net_socket, (struct sockaddr *)&address, &namelen) == -1)
-		Sys_Error ("NET_Init: getsockname:", strerror(errno));
+	{
+		Sys_Error ("NET_Init: getsockname: %s", strerror(errno));
+		return;
+	}
 	net_local_adr.port = address.sin_port;
 
-	Con_Printf("IP address %s\n", NET_AdrToString (net_local_adr) );
+	Com_Printf("IP address %s\n", NET_AdrToString (net_local_adr) );
 }
 
 /*
@@ -313,7 +322,7 @@ void NET_Init (int port)
 	//
 	NET_GetLocalAddress ();
 
-	Con_Printf("UDP Initialized\n");
+	Com_Printf("UDP Initialized\n");
 }
 
 /*

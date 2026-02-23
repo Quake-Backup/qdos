@@ -153,8 +153,8 @@ Con_Clear_f
 */
 void Con_Clear_f (void)
 {
-	Q_memset (con_main.text, ' ', CON_TEXTSIZE);
-	Q_memset (con_chat.text, ' ', CON_TEXTSIZE);
+	memset (con_main.text, ' ', CON_TEXTSIZE);
+	memset (con_chat.text, ' ', CON_TEXTSIZE);
 }
 
 /*
@@ -215,7 +215,7 @@ void Con_Resize (console_t *con)
 		width = 38;
 		con_linewidth = width;
 		con_totallines = CON_TEXTSIZE / con_linewidth;
-		Q_memset (con->text, ' ', CON_TEXTSIZE);
+		memset (con->text, ' ', CON_TEXTSIZE);
 	}
 	else
 	{
@@ -233,8 +233,8 @@ void Con_Resize (console_t *con)
 		if (con_linewidth < numchars)
 			numchars = con_linewidth;
 
-		Q_memcpy (tbuf, con->text, CON_TEXTSIZE);
-		Q_memset (con->text, ' ', CON_TEXTSIZE);
+		memcpy (tbuf, con->text, CON_TEXTSIZE);
+		memset (con->text, ' ', CON_TEXTSIZE);
 
 		for (i=0 ; i<numlines ; i++)
 		{
@@ -282,11 +282,6 @@ void Con_afk_f (void) /* FS: EZQ Chat */
 	}
 }
 
-void Con_MemClear_f (void) /* FS: Force clear state */
-{
-	CL_ClearState();
-}
-
 /*
 ================
 Con_Init
@@ -306,9 +301,9 @@ void Con_Init (void)
 // register our commands
 //
 	con_notifytime = Cvar_Get("con_notifytime", "3", 0); //seconds
-	con_notifytime->description = "Time (in seconds) a console notification message is displayed.";
+	Cvar_Set_Description("con_notifytime", "Time (in seconds) a console notification message is displayed.");
 	con_logcenterprint = Cvar_Get("con_logcenterprint", "1", 0);  //johnfitz
-	con_logcenterprint->description = "Log centerprints to console.";
+	Cvar_Set_Description("con_logcenterprint", "Log centerprints to console.");
 	timestamp = Cvar_Get("timestamp", "0", 0); /* FS: Timestamp logs */
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
@@ -317,7 +312,6 @@ void Con_Init (void)
 	Cmd_AddCommand ("messagemode", Con_MessageMode_f);
 	Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
 	Cmd_AddCommand ("clear", Con_Clear_f);
-	Cmd_AddCommand ("memclear", Con_MemClear_f); /* FS: Force clear state */
 
 	con_initialized = true;
 }
@@ -334,7 +328,7 @@ void Con_Linefeed (void)
 	if (con->display == con->current)
 		con->display++;
 	con->current++;
-	Q_memset (&con->text[(con->current%con_totallines)*con_linewidth]
+	memset (&con->text[(con->current%con_totallines)*con_linewidth]
 	, ' ', con_linewidth);
 }
 
@@ -429,16 +423,13 @@ Handles cursor positioning, line wrapping, etc
 void Com_Printf (const char *fmt, ...)
 {
 	va_list argptr;
-	static dstring_t *msg;
+	char		msg[MAXPRINTMSG];
 #if 0
 	static qboolean	inupdate;
 #endif
 
-	if (!msg)
-		msg = dstring_new ();
-
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	/* FS: Timestamp code */
@@ -468,11 +459,11 @@ void Com_Printf (const char *fmt, ...)
 	}
 
 	// also echo to debugging console
-	Sys_Printf("%s",msg->str); // also echo to debugging console
+	Sys_Printf("%s",msg); // also echo to debugging console
 
 	// log all messages to file
 	if (con_debuglog)
-		Sys_DebugLog(va("%s/qconsole.log",com_gamedir), "%s", msg->str);
+		Sys_DebugLog(va("%s/qconsole.log",com_gamedir), "%s", msg);
 
 	if (!con_initialized)
 		return;
@@ -483,7 +474,7 @@ void Com_Printf (const char *fmt, ...)
 #endif
 
 	// write it to the scrollable buffer
-	Con_Print (msg->str);
+	Con_Print (msg);
 
 	// update the screen immediately if the console is displayed
 #if 0 /* FS: This makes scrolling painfully slow, and Quake 2 doesn't even use something like this */
@@ -508,17 +499,14 @@ Con_Warning -- johnfitz -- prints a warning to the console
 void Con_Warning (const char *fmt, ...)
 {
 	va_list argptr;
-	static dstring_t *msg;
-
-	if (!msg)
-		msg = dstring_new();
+	char msg[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	Com_SafePrintf ("\x02Warning: ");
-	Com_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg);
 }
 
 /*
@@ -531,28 +519,25 @@ A Com_Printf that only shows up if the "developer" cvar is set
 void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 {
 	va_list argptr;
-	static dstring_t *msg;
+	char msg[MAXPRINTMSG];
 	unsigned long devValue = 0; /* FS: Developer Flags */
 
-	if (!developer->value)
+	if (!developer->intValue)
 		return;			// don't confuse non-developers with techie stuff...
-
-	if (!msg)
-		msg = dstring_new();
 
 	devValue = (unsigned long)developer->value;
 	
-	if (developer->value == 1)
+	if (developer->intValue == 1)
 		devValue = 65534;
 
 	if (!(devValue & developerFlags))
 		return;
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 	
-	Com_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg);
 }
 
 /*
@@ -560,25 +545,21 @@ void Com_DPrintf (unsigned long developerFlags, const char *fmt, ...)
 Con_CenterPrintf -- johnfitz -- pad each line with spaces to make it appear centered
 ================
 */
-#define MAXPRINTMSG	8192
 void Con_CenterPrintf (int linewidth, char *fmt, ...)
 {
 	va_list	argptr;
-	static dstring_t *msg; //the original message
+	char msg[MAXPRINTMSG]; //the original message
 	char line[MAXPRINTMSG]; //one line from the message
 	char spaces[21]; //buffer for spaces
 	char *src, *dst;
 	int	 len, s;
 
-	if (!msg)
-		msg = dstring_new();
-
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	linewidth = MIN(linewidth, con_linewidth);
-	for (src = msg->str; *src; )
+	for (src = msg; *src; )
 	{
 		dst = line;
 		while (*src && *src != '\n')
@@ -611,13 +592,13 @@ void Con_LogCenterPrint (char *str)
 		return; //ignore duplicates
 
 #ifdef QUAKE1
-	if (cl.gametype == GAME_DEATHMATCH && con_logcenterprint->value != 2)
+	if (cl.gametype == GAME_DEATHMATCH && con_logcenterprint->intValue != 2)
 		return; //don't log in deathmatch
 #endif
 
-	strcpy(con_lastcenterstring, str);
+	Q_strlcpy(con_lastcenterstring, str, sizeof(con_lastcenterstring));
 
-	if (con_logcenterprint->value)
+	if (con_logcenterprint->intValue)
 	{
 		Com_Printf (Con_Quakebar(40));
 		Con_CenterPrintf (40, "%s\n", str);
@@ -808,10 +789,10 @@ void Con_DrawConsole (int lines)
 	// figure out width
 	if (cls.download)
 	{
-		if ((text = strrchr(cls.downloadname->str, '/')) != NULL)
+		if ((text = strrchr(cls.downloadname, '/')) != NULL)
 				text++;
 		else
-			text = cls.downloadname->str;
+			text = cls.downloadname;
 
 		x = con_linewidth - ((con_linewidth * 7) / 40);
 
@@ -838,13 +819,14 @@ void Con_DrawConsole (int lines)
 		if (strlen(text) > i)
 		{
 			y = x - i - 11;
-			strncpy(dlbar, text, i);
-			dlbar[i] = 0;
-			strcat(dlbar, "...");
+			Q_strlcpy(dlbar, text, i);
+			Q_strlcat(dlbar, "...", sizeof(dlbar));
 		}
 		else
-			strcpy(dlbar, text);
-		strcat(dlbar, ": ");
+		{
+			Q_strlcpy(dlbar, text, sizeof(dlbar));
+		}
+		Q_strlcat(dlbar, ": ", sizeof(dlbar));
 		i = strlen(dlbar);
 		dlbar[i++] = '\x80';
 		// where's the dot go?
@@ -861,7 +843,7 @@ void Con_DrawConsole (int lines)
 		dlbar[i++] = '\x82';
 		dlbar[i] = 0;
 
-//		sprintf(dlbar + strlen(dlbar), " %02d%%", cls.downloadpercent);
+//		Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar), " %02d%%", cls.downloadpercent);
 		if (cls.downloadrate > 0.0f)
 			Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar)-strlen(dlbar), " %2d%% (%4.2fKB/s)", cls.downloadpercent, cls.downloadrate);
 		else
@@ -885,13 +867,14 @@ void Con_DrawConsole (int lines)
 		if (strlen(text) > i)
 		{
 			y = x - i - 11;
-			strncpy(dlbar, text, i);
-			dlbar[i] = 0;
-			strcat(dlbar, "...");
+			Q_strlcpy(dlbar, text, i);
+			Q_strlcat(dlbar, "...", sizeof(dlbar));
 		}
 		else
-			strcpy(dlbar, text);
-		strcat(dlbar, ": ");
+		{
+			Q_strlcpy(dlbar, text, sizeof(dlbar));
+		}
+		Q_strlcat(dlbar, ": ", sizeof(dlbar));
 
 		i = strlen(dlbar);
 		dlbar[i++] = '\x80';
@@ -909,7 +892,7 @@ void Con_DrawConsole (int lines)
 		dlbar[i++] = '\x82';
 		dlbar[i] = 0;
 
-		sprintf(dlbar + strlen(dlbar), " %02d%%", cls.gamespypercent);
+		Com_sprintf(dlbar + strlen(dlbar), sizeof(dlbar), " %02d%%", cls.gamespypercent);
 
 		// draw it
 		y = con_vislines-22 + 8;
@@ -968,19 +951,16 @@ void Com_SafePrintf (const char *fmt, ...)
 {
 	va_list				argptr;
 	int					temp;
-	static dstring_t	*msg;
-
-	if(!msg)
-		msg = dstring_new();
+	char msg[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
-	Com_Printf ("%s", msg->str);
+	Com_Printf ("%s", msg);
 
 	scr_disabled_for_loading = temp;
 }
@@ -996,19 +976,16 @@ void Con_SafeDPrintf (unsigned long developerFlags, const char *fmt, ...)
 {
 	va_list				argptr;
 	int					temp;
-	static dstring_t	*msg;
-
-	if(!msg)
-		msg = dstring_new();
+	char	msg[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
-	dvsprintf (msg,fmt,argptr);
+	Q_vsnprintf (msg, sizeof(msg), fmt,argptr);
 	va_end (argptr);
 
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
-	Com_DPrintf (developerFlags, "%s", msg->str);
+	Com_DPrintf (developerFlags, "%s", msg);
 
 	scr_disabled_for_loading = temp;
 }

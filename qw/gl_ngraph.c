@@ -111,11 +111,11 @@ void R_NetGraph (void)
 	M_DrawTextBox (x, y, NET_TIMINGS/8, NET_GRAPHHEIGHT/8 + 1);
 	y += 8;
 
-	sprintf(st, "%3i%% packet loss", lost);
+	Com_sprintf(st, sizeof(st), "%3i%% packet loss", lost);
 	Draw_String(8, y, st);
 	y += 8;
 	
-    GL_Bind(netgraphtexture);
+	GL_Bind(netgraphtexture);
 
 	glTexImage2D_fp (GL_TEXTURE_2D, 0, gl_alpha_format, 
 		NET_TIMINGS, NET_GRAPHHEIGHT, 0, GL_RGBA, 

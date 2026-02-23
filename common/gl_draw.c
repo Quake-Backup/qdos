@@ -83,7 +83,7 @@ int			numgltextures;
 
 void GL_Bind (int texnum)
 {
-	if (gl_nobind->value)
+	if (gl_nobind->intValue)
 		texnum = char_texture;
 	if (currenttexture == texnum)
 		return;
@@ -252,16 +252,23 @@ qpic_t	*Draw_CachePic (char *path)
 			return &pic->pic;
 
 	if (menu_numcachepics == MAX_CACHED_PICS)
+	{
 		Sys_Error ("menu_numcachepics == MAX_CACHED_PICS");
+		return NULL;
+	}
 	menu_numcachepics++;
-	strcpy (pic->name, path);
+	Q_strlcpy (pic->name, path, sizeof(pic->name));
 
 //
 // load the pic from disk
 //
-	dat = (qpic_t *)COM_LoadTempFile (path);	
+	dat = (qpic_t *)COM_LoadFile (path);
 	if (!dat)
+	{
 		Sys_Error ("Draw_CachePic: failed to load %s", path);
+		return NULL;
+	}
+
 	SwapPic (dat);
 
 	// HACK HACK HACK --- we need to keep the bytes for
@@ -398,24 +405,20 @@ void Draw_Init (void)
 #endif
 	char	ver[40];
 	glpic_t	*gl;
-	int start;
 	byte    *ncdata;
+	GLint value = 0;
 
 	gl_nobind = Cvar_Get("gl_nobind", "0", 0);
-	gl_max_size = Cvar_Get("gl_max_size", "1024", 0);
+	gl_max_size = Cvar_Get("gl_max_size", "1024", CVAR_NOSET);
 	gl_picmip = Cvar_Get("gl_picmip", "0", 0);
 
-	// 3dfx can only handle 256 wide textures
-	if (!Q_strncasecmp ((char *)gl_renderer, "3dfx",4) ||
-		strstr((char *)gl_renderer, "Glide"))
-	{
-		/* FS: VSA-100 can handle 2048x2048 */
-		if((!strstr ((char *)gl_renderer, "Voodoo4")) &&
-			(!strstr ((char *)gl_renderer, "Voodoo5")))
-		{
-			Cvar_Set ("gl_max_size", "256");
-		}
-	}
+	/* Knighmare- added max texture size */
+	glGetIntegerv_fp(GL_MAX_TEXTURE_SIZE, &value);
+	if (value <= 0)	// catch if driver doesn't have this
+		value = 256;
+	Cvar_ForceSet("gl_max_size", va("%d", value));
+	Com_Printf ("GL_MAX_TEXTURE_SIZE: %d\n", value);
+	/* end Knigthmare */
 
 	// load the console background and the charset
 	// by hand, because we need to write the version
@@ -431,30 +434,28 @@ void Draw_Init (void)
 //	Draw_CrosshairAdjust();
 	cs_texture = GL_LoadTexture ("crosshair", 8, 8, cs_data, false, true);
 
-	start = Hunk_LowMark();
-
-#ifdef QUAKE1
-	cb = (qpic_t *)COM_LoadTempFile ("gfx/conback.lmp");
-#else
-	cb = (qpic_t *)COM_LoadHunkFile ("gfx/conback.lmp");
-#endif
+	cb = (qpic_t *)COM_LoadFile ("gfx/conback.lmp");
 	if (!cb)
+	{
 		Sys_Error ("Couldn't load gfx/conback.lmp");
+		return;
+	}
+
 	SwapPic (cb);
 
 #ifdef QUAKE1
 	// hack the version number directly into the pic
 #if defined(__linux__)
-	sprintf (ver, "(Linux %2.2f, gl %4.2f) %4.2f", (float)LINUX_VERSION, (float)GLQUAKE_VERSION, (float)VERSION);
+	Com_sprintf (ver, sizeof(ver), "(Linux %2.2f, gl %4.2f) %4.2f", (float)LINUX_VERSION, (float)GLQUAKE_VERSION, (float)VERSION);
 #else
-	sprintf (ver, "(gl %4.2f) %4.2f", (float)GLQUAKE_VERSION, (float)VERSION);
+	Com_sprintf (ver, sizeof(ver), "(gl %4.2f) %4.2f", (float)GLQUAKE_VERSION, (float)VERSION);
 #endif // __linux__
 	dest = cb->data + 320*186 + 320 - 11 - 8*strlen(ver);
 	y = strlen(ver);
 	for (x=0 ; x<y ; x++)
 		Draw_CharToConback (ver[x], dest+(x<<3));
 #else
-	sprintf (ver, "%4.2f", VERSION);
+	Com_sprintf (ver, sizeof(ver), "%4.2f", VERSION);
 	dest = cb->data + 320 + 320*186 - 11 - 8*strlen(ver);
 	for (x=0 ; x<strlen(ver) ; x++)
 		Draw_CharToConback (ver[x], dest+(x<<3));
@@ -477,7 +478,7 @@ void Draw_Init (void)
 	conback->height = vid.conheight;
 
 	// free loaded console
-	Hunk_FreeToLowMark (start);
+	Z_Free(cb);
 
 	// save a texture slot for translated picture
 	translate_texture = texture_extension_number++;
@@ -492,7 +493,6 @@ void Draw_Init (void)
 	draw_disc = Draw_PicFromWad ("disc");
 	draw_backtile = Draw_PicFromWad ("backtile");
 }
-
 
 
 /*
@@ -574,7 +574,7 @@ void Draw_Crosshair(void)
 	extern vrect_t		scr_vrect;
 	unsigned char *pColor;
 
-	if (crosshair->value == 2) {
+	if (crosshair->intValue == 2) {
 		x = scr_vrect.x + scr_vrect.width/2 - 3 + cl_crossx->value; 
 		y = scr_vrect.y + scr_vrect.height/2 - 3 + cl_crossy->value;
 
@@ -595,24 +595,10 @@ void Draw_Crosshair(void)
 		glEnd_fp ();
 		
 		glTexEnvf_fp ( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-	} else if (crosshair->value)
+	} else if (crosshair->intValue)
 		Draw_Character (scr_vrect.x + scr_vrect.width/2-4 + cl_crossx->value, 
 			scr_vrect.y + scr_vrect.height/2-4 + cl_crossy->value, 
 			'+');
-}
-
-
-/*
-================
-Draw_DebugChar
-
-Draws a single character directly to the upper right corner of the screen.
-This is for debugging lockups by drawing different chars in different parts
-of the code.
-================
-*/
-void Draw_DebugChar (char num)
-{
 }
 
 /*
@@ -718,6 +704,7 @@ void Draw_TransPic (int x, int y, qpic_t *pic)
 		 (unsigned)(y + pic->height) > vid.height)
 	{
 		Sys_Error ("Draw_TransPic: bad coordinates");
+		return;
 	}
 		
 	Draw_Pic (x, y, pic);
@@ -799,9 +786,9 @@ void Draw_ConsoleBackground (int lines)
 	y = lines-14;
 	if (!cls.download) {
 #ifdef __linux__
-		sprintf (ver, "LinuxGL (%4.2f) QuakeWorld", LINUX_VERSION);
+		Com_sprintf (ver, sizeof(ver), "LinuxGL (%4.2f) QuakeWorld", LINUX_VERSION);
 #else
-		sprintf (ver, "GL (%4.2f) QuakeWorld", GLQUAKE_VERSION);
+		Com_sprintf (ver, sizeof(ver), "GL (%4.2f) QuakeWorld", GLQUAKE_VERSION);
 #endif // __linux__
 		x = vid.conwidth - (strlen(ver)*8 + 11) - (vid.conwidth*8/320)*7;
 		for (i=0 ; i<strlen(ver) ; i++)
@@ -1105,16 +1092,19 @@ static	unsigned	scaled[1024*512];	// [512*256];
 	for (scaled_height = 1 ; scaled_height < height ; scaled_height<<=1)
 		;
 
-	scaled_width >>= (int)gl_picmip->value;
-	scaled_height >>= (int)gl_picmip->value;
+	scaled_width >>= gl_picmip->intValue;
+	scaled_height >>= gl_picmip->intValue;
 
-	if (scaled_width > gl_max_size->value)
-		scaled_width = gl_max_size->value;
-	if (scaled_height > gl_max_size->value)
-		scaled_height = gl_max_size->value;
+	if (scaled_width > gl_max_size->intValue)
+		scaled_width = gl_max_size->intValue;
+	if (scaled_height > gl_max_size->intValue)
+		scaled_height = gl_max_size->intValue;
 
-	if (scaled_width * scaled_height > sizeof(scaled)/4)
+	if (scaled_width * scaled_height > sizeof(scaled) / 4)
+	{
 		Sys_Error ("GL_LoadTexture: too big");
+		return;
+	}
 
 	samples = alpha ? gl_alpha_format : gl_solid_format;
 
@@ -1206,16 +1196,19 @@ void GL_Upload8_EXT (byte *data, int width, int height,  qboolean mipmap, qboole
 	for (scaled_height = 1 ; scaled_height < height ; scaled_height<<=1)
 		;
 
-	scaled_width >>= (int)gl_picmip->value;
-	scaled_height >>= (int)gl_picmip->value;
+	scaled_width >>= gl_picmip->intValue;
+	scaled_height >>= gl_picmip->intValue;
 
-	if (scaled_width > gl_max_size->value)
-		scaled_width = gl_max_size->value;
-	if (scaled_height > gl_max_size->value)
-		scaled_height = gl_max_size->value;
+	if (scaled_width > gl_max_size->intValue)
+		scaled_width = gl_max_size->intValue;
+	if (scaled_height > gl_max_size->intValue)
+		scaled_height = gl_max_size->intValue;
 
 	if (scaled_width * scaled_height > sizeof(scaled))
+	{
 		Sys_Error ("GL_LoadTexture: too big");
+		return;
+	}
 
 	texels += scaled_width * scaled_height;
 
@@ -1296,8 +1289,12 @@ static	unsigned	trans[640*480];		// FIXME, temporary
 	}
 	else
 	{
-		if (s&3)
+		if (s & 3)
+		{
 			Sys_Error ("GL_Upload8: s&3");
+			return;
+		}
+
 		for (i=0 ; i<s ; i+=4)
 		{
 			trans[i] = d_8to24table[data[i]];
@@ -1322,7 +1319,6 @@ GL_LoadTexture
 
 ================
 */
-#if 1
 /* FS: From DarkPlaces 1.05 for cache mismatch issues */
 int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolean mipmap, qboolean alpha)
 {
@@ -1330,7 +1326,7 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 	unsigned short crc;
 	gltexture_t *glt;
 #ifdef QUAKE1
-	extern	qboolean isDedicated;
+	extern	qboolean isDedicated; /* FS: FIXME: What the fuck was this all about? */
 #endif
 
 	// LordHavoc: do a checksum to confirm the data really is the same as previous
@@ -1350,7 +1346,6 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 				if (crc != glt->crc || width != glt->width || height != glt->height)
 				{
 					Com_DPrintf(DEVELOPER_MSG_VIDEO, "GL_LoadTexture: cache mismatch, replacing old texture\n");
-
 					goto GL_LoadTexture_setup; // drop out with glt pointing to the texture to replace
 				}
 				return glt->texnum;
@@ -1362,7 +1357,7 @@ int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolea
 	// whoever at id or threewave must've been half asleep...
 	glt = &gltextures[numgltextures++];
 	glt->texnum = texture_extension_number++;
-	strcpy (glt->identifier, identifier);
+	Q_strlcpy (glt->identifier, identifier, sizeof(glt->identifier));
 
 // LordHavoc: label to drop out of the loop into the setup code
 GL_LoadTexture_setup:
@@ -1381,44 +1376,6 @@ GL_LoadTexture_setup:
 
 	return glt->texnum;
 }
-#else
-int GL_LoadTexture (char *identifier, int width, int height, byte *data, qboolean mipmap, qboolean alpha)
-{
-	int			i;
-	gltexture_t	*glt;
-
-	// see if the texture is allready present
-	if (identifier[0])
-	{
-		for (i=0, glt=gltextures ; i<numgltextures ; i++, glt++)
-		{
-			if (!strcmp (identifier, glt->identifier))
-			{
-				if (width != glt->width || height != glt->height)
-					Sys_Error ("GL_LoadTexture: cache mismatch");
-				return gltextures[i].texnum;
-			}
-		}
-	}
-	else
-		glt = &gltextures[numgltextures];
-	numgltextures++;
-
-	strcpy (glt->identifier, identifier);
-	glt->texnum = texture_extension_number;
-	glt->width = width;
-	glt->height = height;
-	glt->mipmap = mipmap;
-
-	GL_Bind(texture_extension_number );
-
-	GL_Upload8 (data, width, height, mipmap, alpha);
-
-	texture_extension_number++;
-
-	return texture_extension_number-1;
-}
-#endif
 
 /*
 ================
@@ -1459,4 +1416,19 @@ void GL_SelectTexture (GLenum target)
 	}
 
 	currenttarget = target;
+}
+
+void GL_ShutdownTexures (void)
+{
+	int i;
+	cachepic_t *pic;
+
+	numgltextures = 0;
+
+	for (pic = menu_cachepics, i = 0; i < menu_numcachepics; pic++, i++)
+	{
+		memset(pic, 0, sizeof(*pic));
+	}
+
+	menu_numcachepics = 0;
 }

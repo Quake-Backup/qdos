@@ -714,7 +714,7 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx_t	*pcx;
 	byte		*pack;
 	  
-	pcx = Hunk_TempAlloc (width*height*2+1000);
+	pcx = Z_Malloc (width*height*2+1000);
 	if (pcx == NULL)
 	{
 		Com_Printf("SCR_ScreenShot_f: not enough memory\n");
@@ -731,11 +731,11 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 	pcx->ymax = LittleShort((short)(height-1));
 	pcx->hres = LittleShort((short)width);
 	pcx->vres = LittleShort((short)height);
-	Q_memset (pcx->palette,0,sizeof(pcx->palette));
+	memset (pcx->palette,0,sizeof(pcx->palette));
 	pcx->color_planes = 1;		// chunky image
 	pcx->bytes_per_line = LittleShort((short)width);
 	pcx->palette_type = LittleShort(2);		// not a grey scale
-	Q_memset (pcx->filler,0,sizeof(pcx->filler));
+	memset (pcx->filler,0,sizeof(pcx->filler));
 
 // pack the image
 	pack = &pcx->data;
@@ -767,7 +767,9 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 		CL_StartUpload((void *)pcx, length);
 	else
 		COM_WriteFile (filename, pcx, length);
-} 
+
+	Z_Free(pcx);
+}
  
 
 
@@ -785,7 +787,7 @@ void SCR_ScreenShot_f (void)
 // 
 // find a file name to save it to 
 // 
-	strcpy(pcxname,"quake00.pcx");
+	Q_strlcpy(pcxname, "quake00.pcx", sizeof(pcxname));
 		
 	for (i=0 ; i<=99 ; i++) 
 	{ 
@@ -975,11 +977,11 @@ void SCR_RSShot_f (void)
 	}
 
 	time(&now);
-	strcpy(st, ctime(&now));
+	Q_strlcpy(st, ctime(&now), sizeof(st));
 	st[strlen(st) - 1] = 0;
 	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, 0, w);
 
-	strncpy(st, cls.servername->str, sizeof(st));
+	strncpy(st, cls.servername, sizeof(st));
 	st[sizeof(st) - 1] = 0;
 	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, 10, w);
 

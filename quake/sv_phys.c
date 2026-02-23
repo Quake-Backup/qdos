@@ -456,7 +456,6 @@ void SV_PushMove (edict_t *pusher, float movetime)
    int         num_moved;
    edict_t     **moved_edict; //johnfitz -- dynamically allocate
    vec3_t      *moved_from; //johnfitz -- dynamically allocate
-   int         mark; //johnfitz
 
    if (!pusher->v.velocity[0] && !pusher->v.velocity[1] && !pusher->v.velocity[2])
    {
@@ -480,9 +479,8 @@ void SV_PushMove (edict_t *pusher, float movetime)
    SV_LinkEdict (pusher, false);
 
    //johnfitz -- dynamically allocate
-   mark = Hunk_LowMark ();
-   moved_edict = Hunk_Alloc (sv.num_edicts*sizeof(edict_t *));
-   moved_from = Hunk_Alloc (sv.num_edicts*sizeof(vec3_t));
+   moved_edict = Z_Malloc (sv.num_edicts*sizeof(edict_t *));
+   moved_from = Z_Malloc (sv.num_edicts*sizeof(vec3_t));
    //johnfitz
 
 // see if any solid entities are inside the final position
@@ -563,13 +561,13 @@ void SV_PushMove (edict_t *pusher, float movetime)
             VectorCopy (moved_from[i], moved_edict[i]->v.origin);
             SV_LinkEdict (moved_edict[i], false);
          }
-         Hunk_FreeToLowMark (mark); //johnfitz
+		 Z_Free(moved_from);
+         Z_Free(moved_edict);
          return;
       }  
    }
-
-   Hunk_FreeToLowMark (mark); //johnfitz
-
+	Z_Free(moved_from);
+	Z_Free(moved_edict);
 }
 
 /*
@@ -834,7 +832,7 @@ void SV_WalkMove (edict_t *ent)
    if (ent->v.movetype != MOVETYPE_WALK)
       return;     // gibbed by a trigger
    
-   if (sv_nostep->value)
+   if (sv_nostep->intValue)
       return;
    
    if ( (int)sv_player->v.flags & FL_WATERJUMP )

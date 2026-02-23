@@ -88,13 +88,13 @@ VID_Init
 void    VID_Init (unsigned char *palette)
 {
 	vid_mode = Cvar_Get("vid_mode","0", 0);
-	vid_mode->description = "Current video mode.";
+	Cvar_Set_Description("vid_mode", "Current video mode.");
 	vid_wait = Cvar_Get("vid_wait","0", CVAR_ARCHIVE);
-	vid_wait->description = "Vsync modes.  0 - off.  1 - on.  2 - Double buffer no vsync.";
+	Cvar_Set_Description("vid_wait", "Vsync modes.  0 - off.  1 - on.  2 - Double buffer no vsync.");
 	vid_nopageflip = Cvar_Get("vid_nopageflip","0", CVAR_ARCHIVE);
-	vid_nopageflip->description = "Disable page flipping for modes that support it.";
+	Cvar_Set_Description("vid_nopageflip", "Disable page flipping for modes that support it.");
 	_vid_wait_override = Cvar_Get("_vid_wait_override", "0", CVAR_ARCHIVE);
-	_vid_wait_override->description = "Allow the engine to control the vsync automatically.  0 will override vid_wait for no vsync on double buffered modes.";
+	Cvar_Set_Description("_vid_wait_override", "Allow the engine to control the vsync automatically.  0 will override vid_wait for no vsync on double buffered modes.");
 	_vid_default_mode = Cvar_Get("_vid_default_mode","0", CVAR_ARCHIVE);
 	_vid_default_mode_win = Cvar_Get("_vid_default_mode_win","1", CVAR_ARCHIVE);
 	vid_config_x = Cvar_Get("vid_config_x","800", CVAR_ARCHIVE);
@@ -122,7 +122,7 @@ void    VID_Init (unsigned char *palette)
 
 	vid_testingmode = 0;
 
-	vid_modenum = vid_mode->value;
+	vid_modenum = vid_mode->intValue;
 
 	VID_SetMode (vid_modenum, palette);
 
@@ -228,6 +228,8 @@ int VID_SetMode (int modenum, unsigned char *palette)
 	if (pnewmode == pcurrentmode)
 		return 1;	// already in the desired mode
 
+	R_Shutdown(); /* FS: Free memory stuff first. */
+
 // initialize the new mode
 	poldmode = pcurrentmode;
 	pcurrentmode = pnewmode;
@@ -289,7 +291,7 @@ VID_SetPalette
 void    VID_SetPalette (unsigned char *palette)
 {
 	if (palette != vid_current_palette)
-		Q_memcpy(vid_current_palette, palette, 768);
+		memcpy(vid_current_palette, palette, 768);
 	(*pcurrentmode->setpalette)(&vid, pcurrentmode, vid_current_palette);
 }
 
@@ -313,6 +315,7 @@ VID_Shutdown
 */
 void VID_Shutdown (void)
 {
+	R_Shutdown();
 
 	regs.h.ah = 0;
 	regs.h.al = 0x3;
@@ -329,13 +332,13 @@ VID_Update
 */
 void    VID_Update (vrect_t *rects)
 {
-	if (firstupdate && _vid_default_mode->value)
+	if (firstupdate && _vid_default_mode->intValue)
 	{
-		if(_vid_default_mode->value >= numvidmodes)
+		if(_vid_default_mode->intValue >= numvidmodes)
 			Cvar_SetValue ("_vid_default_mode", 0);
 
 		firstupdate = 0;
-		Cvar_SetValue ("vid_mode", _vid_default_mode->value);
+		Cvar_SetValue ("vid_mode", _vid_default_mode->intValue);
 	}
 
 	(*pcurrentmode->swapbuffers)(&vid, pcurrentmode, rects);
@@ -352,9 +355,9 @@ void    VID_Update (vrect_t *rects)
 		}
 		else
 		{
-			if (vid_mode->value != vid_realmode)
+			if (vid_mode->intValue != vid_realmode)
 			{
-				VID_SetMode ((int)vid_mode->value, vid_current_palette);
+				VID_SetMode (vid_mode->intValue, vid_current_palette);
 				Cvar_SetValue ("vid_mode", (float)vid_modenum);
 									// so if mode set fails, we don't keep on
 									//  trying to set that mode
@@ -402,7 +405,7 @@ void VID_DescribeMode_f (void)
 {
 	int		modenum;
 	
-	modenum = Q_atoi (Cmd_Argv(1));
+	modenum = atoi (Cmd_Argv(1));
 
 	Com_Printf ("%s\n", VID_ModeInfo (modenum, NULL));
 }
@@ -431,7 +434,7 @@ void VID_DescribeModes_f (void)
 			Com_Printf ("\n%s\n", pheader);
 
 		if (VGA_CheckAdequateMem (pv->width, pv->height, pv->rowbytes,
-			(pv->numpages == 1) || vid_nopageflip->value))
+			(pv->numpages == 1) || vid_nopageflip->intValue))
 		{
 			Com_Printf ("%2d: %s\n", i, pinfo);
 		}
@@ -463,7 +466,7 @@ char *VID_GetModeDescription (int mode)
 	pinfo = VID_ModeInfo (mode, &pheader);
 
 	if (VGA_CheckAdequateMem (pv->width, pv->height, pv->rowbytes,
-		(pv->numpages == 1) || vid_nopageflip->value))
+		(pv->numpages == 1) || vid_nopageflip->intValue))
 	{
 		return pinfo;
 	}
@@ -486,12 +489,12 @@ void VID_TestMode_f (void)
 
 	if (!vid_testingmode)
 	{
-		modenum = Q_atoi (Cmd_Argv(1));
+		modenum = atoi (Cmd_Argv(1));
 
 		if (VID_SetMode (modenum, vid_current_palette))
 		{
 			vid_testingmode = 1;
-			testduration = Q_atof (Cmd_Argv(2));
+			testduration = atof (Cmd_Argv(2));
 			if (testduration == 0)
 				testduration = 5.0;
 			vid_testendtime = realtime + testduration;
@@ -683,7 +686,7 @@ void VID_MenuDraw (void)
 		ptr = VID_GetModeDescription (vid_modenum);
 		Com_sprintf (temp, sizeof(temp), "D to make %s the default", ptr);
 		M_Print (6*8, 36 + MAX_COLUMN_SIZE * 8 + 8*5, temp);
-		ptr = VID_GetModeDescription ((int)_vid_default_mode->value);
+		ptr = VID_GetModeDescription (_vid_default_mode->intValue);
 
 		if (ptr)
 		{

@@ -240,7 +240,7 @@ void S_StreamBackgroundTrack (void)
 				}
 				else
 				{	// check if it's time to switch to the ambient track
-					if ( (ogg_loopcount->intValue > 0) && (++ogg_loopcounter >= (int)ogg_loopcount->value))
+					if ( (ogg_loopcount->intValue > 0) && (++ogg_loopcounter >= ogg_loopcount->intValue))
 					{	// Close the loop track
 						S_CloseBackgroundTrack(&s_bgTrack);
 
@@ -275,7 +275,7 @@ Streams background track
 void S_UpdateBackgroundTrack (void)
 {
 	// stop music if paused
-	if (trk_status == BGM_PLAY)// && !cl_paused->value)
+	if (trk_status == BGM_PLAY)// && !cl_paused->intValue)
 		S_StreamBackgroundTrack ();
 }
 

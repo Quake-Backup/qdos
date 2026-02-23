@@ -177,7 +177,7 @@ qboolean	CL_CheckOrDownloadFile (char *filename, qboolean queue)
 
 	//ZOID - can't download when recording
 	if (cls.demorecording) {
-		Com_Printf("Unable to download %s in record mode.\n", cls.downloadname->str);
+		Com_Printf("Unable to download %s in record mode.\n", cls.downloadname);
 		return true;
 	}
 	//ZOID - can't download when playback
@@ -193,20 +193,20 @@ qboolean	CL_CheckOrDownloadFile (char *filename, qboolean queue)
 	else
 		cls.download_queue++;
 
-	dstring_copystr (cls.downloadname, filename);
+	Com_sprintf(cls.downloadname, sizeof(cls.downloadname), "%s", filename);
 	if(cls.download_queue && cls.download_queue_total)
-		Com_Printf("Downloading %s [%d remaining files]...\n", cls.downloadname->str, cls.download_queue_total-cls.download_queue);
+		Com_Printf("Downloading %s [%d remaining files]...\n", cls.downloadname, cls.download_queue_total-cls.download_queue);
 	else
-		Com_Printf ("Downloading %s...\n", cls.downloadname->str);
+		Com_Printf ("Downloading %s...\n", cls.downloadname);
 
 	// download to a temp name, and only rename
 	// to the real name when done, so if interrupted
 	// a runt file wont be left
-	COM_StripExtension (cls.downloadname->str, cls.downloadtempname->str);
-	strcat (cls.downloadtempname->str, ".tmp");
+	COM_StripExtension (cls.downloadname, cls.downloadtempname);
+	Q_strlcat (cls.downloadtempname, ".tmp", sizeof(cls.downloadtempname));
 
 	MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
-	MSG_WriteString (&cls.netchan.message, va("download %s", cls.downloadname->str));
+	MSG_WriteString (&cls.netchan.message, va("download %s", cls.downloadname));
 
 	cls.downloadnumber++;
 
@@ -282,9 +282,8 @@ void Model_Precache (void)
 	}
 
 	// all done
-	cl.worldmodel = cl.model_precache[1];	
+	cl.worldmodel = cl.model_precache[1];
 	R_NewMap ();
-	Hunk_Check ();		// make sure nothing is hurt
 
 	// done with modellist, request first of static signon messages
 	MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
@@ -359,36 +358,32 @@ void Sound_Precache (void)
 
 qboolean CL_CreateDownload(int size, qboolean extended)
 {
-//	char    *name; // taniwha
-	dstring_t *name;
+	char name[MAX_OSPATH];
 
-	name = dstring_new();
-
-	if (strncmp(cls.downloadtempname->str,"skins/",6))
-		dsprintf(name, "%s/%s", com_gamedir, cls.downloadtempname->str);
+	if (strncmp(cls.downloadtempname,"skins/",6))
+		Com_sprintf(name, sizeof(name), "%s/%s", com_gamedir, cls.downloadtempname);
 	else
-		dsprintf(name, "qw/%s", cls.downloadtempname->str);
+		Com_sprintf(name, sizeof(name), "qw/%s", cls.downloadtempname);
 
-	COM_CreatePath (name->str);
+	COM_CreatePath (name);
 
-	cls.download = fopen (name->str, "wb");
+	cls.download = fopen (name, "wb");
 	if (!cls.download)
 	{
 		if(!extended)
 			msg_readcount += size;
-		Com_Printf ("Failed to open %s\n", cls.downloadtempname->str);
+		Com_Printf ("Failed to open %s\n", cls.downloadtempname);
 		CL_FinishDownload(false);
-		dstring_delete(name);
 		return false;
 	}
-	dstring_delete(name);
+
 	return true;
 }
 void CL_FinishDownload(qboolean rename_files)
 {
-	dstring_t	*oldn;
-	dstring_t	*newn;
-	dstring_t	*oldrate;
+	char	oldn[MAX_OSPATH];
+	char	newn[MAX_OSPATH];
+	char	oldrate[32];
 	int	r;
 
 	if (cls.download)
@@ -400,30 +395,26 @@ void CL_FinishDownload(qboolean rename_files)
 
 	if(rename_files)
 	{
-		oldn = dstring_new();
-		newn = dstring_new();
 		// rename the temp file to it's final name
-		if (strcmp(cls.downloadtempname->str, cls.downloadname->str))
+		if (strcmp(cls.downloadtempname, cls.downloadname))
 		{
-			if (strncmp(cls.downloadtempname->str,"skins/",6))
+			if (strncmp(cls.downloadtempname,"skins/",6))
 			{
-				dsprintf (oldn, "%s/%s", com_gamedir, cls.downloadtempname->str);
-				dsprintf (newn, "%s/%s", com_gamedir, cls.downloadname->str);
+				Com_sprintf(oldn, sizeof(oldn), "%s/%s", com_gamedir, cls.downloadtempname);
+				Com_sprintf(newn, sizeof(newn), "%s/%s", com_gamedir, cls.downloadname);
 			}
 			else
 			{
-				dsprintf (oldn, "qw/%s", cls.downloadtempname->str);
-				dsprintf (newn, "qw/%s", cls.downloadname->str);
+				Com_sprintf(oldn, sizeof(oldn), "qw/%s", cls.downloadtempname);
+				Com_sprintf(newn, sizeof(newn), "qw/%s", cls.downloadname);
 			}
-			Com_DPrintf(DEVELOPER_MSG_IO, "oldn: %s\n", oldn->str);
-			Com_DPrintf(DEVELOPER_MSG_IO, "newn: %s\n", newn->str);
-			r = rename (oldn->str, newn->str);
+			Com_DPrintf(DEVELOPER_MSG_IO, "oldn: %s\n", oldn);
+			Com_DPrintf(DEVELOPER_MSG_IO, "newn: %s\n", newn);
+			r = rename (oldn, newn);
 
 			if (r)
 				Com_Printf ("failed to rename. r: %i\n", r); /* FS: Added */
 		}
-		dstring_delete(oldn);
-		dstring_delete(newn);
 	}
 
 	cls.download = NULL;
@@ -432,11 +423,9 @@ void CL_FinishDownload(qboolean rename_files)
 
 	if (cl_downloadrate_hack->intValue && (rate->intValue > 0 && cls.downloadoldrate > 0)) /* FS: FIXME Shitty hack to accelerate the downloading a bit */
 	{
-		oldrate = dstring_new();
-		dsprintf(oldrate, "%i", cls.downloadoldrate);
+		Com_sprintf(oldrate, sizeof(oldrate), "%d", cls.downloadoldrate);
 		Com_DPrintf(DEVELOPER_MSG_NET, "Changing rate from %i to %i\n", cls.downloadmaxrate, cls.downloadoldrate);
-		Cvar_Set("rate", oldrate->str);
-		dstring_delete(oldrate);
+		Cvar_Set("rate", oldrate);
 	}
 
 	// get another file if needed
@@ -547,7 +536,7 @@ void CL_ParseChunkedDownload(void)
 	int chunknum;
 	char data[DLBLOCKSIZE];
 	double tm;
-	dstring_t *maxrate;
+	char maxrate[32];
 
 	chunknum = MSG_ReadLong();
 	if (chunknum < 0)
@@ -597,13 +586,11 @@ void CL_ParseChunkedDownload(void)
 
 		if (cl_downloadrate_hack->intValue)
 		{
-			maxrate = dstring_new();
 			cls.downloadoldrate = rate->intValue;
 			cls.downloadmaxrate = 250000;
-			dsprintf(maxrate, "%i", cls.downloadmaxrate);
+			Com_sprintf(maxrate, sizeof(maxrate), "%i", cls.downloadmaxrate);
 			Com_DPrintf(DEVELOPER_MSG_NET, "Changing rate from %i to %i\n", cls.downloadoldrate, cls.downloadmaxrate);
-			Cvar_Set("rate", maxrate->str);
-			dstring_delete(maxrate);
+			Cvar_Set("rate", maxrate);
 		}
 
 		cls.downloadmethod  = DL_QWCHUNKS;
@@ -622,7 +609,7 @@ void CL_ParseChunkedDownload(void)
 
 	MSG_ReadData(data, DLBLOCKSIZE);
 
-	if (!cls.download) 
+	if (!cls.download)
 	{ 
 		return;
 	}
@@ -752,14 +739,14 @@ void CL_ParseDownload (void)
 		const char *newname;
 
 		url = MSG_ReadString ();
-		dstring_copystr (cls.downloadurl, url);
+		Com_sprintf (cls.downloadurl, sizeof(cls.downloadurl), "%s", url);
 
 		newname = MSG_ReadString ();
 		if (*newname)
 		{
-			if (strncmp (newname, cls.downloadname->str,
-						 strlen (cls.downloadname->str))
-				|| strstr (newname + strlen (cls.downloadname->str), "/")) {
+			if (strncmp (newname, cls.downloadname,
+						 strlen (cls.downloadname))
+				|| strstr (newname + strlen (cls.downloadname), "/")) {
 				Con_Warning("Server tried to give a strange new name: %s\n", newname);
 				CL_RequestNextDownload ();
 				return;
@@ -769,7 +756,7 @@ void CL_ParseDownload (void)
 				fclose(cls.download);
 
 			}
-			dstring_copystr (cls.downloadname, newname);
+			Com_sprintf(cls.downloadname, sizeof(cls.downloadname), "%s", newname);
 		}
 		CL_HTTP_StartDownload ();
 #else
@@ -1036,8 +1023,11 @@ void CL_ParseSoundlist (void)
 			break;
 		numsounds++;
 		if (numsounds == MAX_SOUNDS)
+		{
 			Host_EndGame ("Server sent too many sound_precache");
-		strcpy (cl.sound_name[numsounds], str);
+			return;
+		}
+		Q_strlcpy (cl.sound_name[numsounds], str, sizeof(cl.sound_name[numsounds]));
 	}
 
 	n = MSG_ReadByte();
@@ -1072,17 +1062,23 @@ void CL_ParseModellist (qboolean extended)
 		str = MSG_ReadString ();
 		if (!str[0])
 			break;
-		#if defined (PROTOCOL_VERSION_FTE) && defined (FTE_PEXT_MODELDBL)
+#if defined (PROTOCOL_VERSION_FTE) && defined (FTE_PEXT_MODELDBL)
 		nummodels++;
 		if (nummodels >= MAX_MODELS) //Spike: tweeked this, we still complain if the server exceeds the standard limit without using extensions.
+		{
 			Host_Error ("Server sent too many model_precache");
+			return;
+		}
 		
 		if (nummodels >= 256 && !(cls.fteprotocolextensions & FTE_PEXT_MODELDBL))
-		#else
+#else
 		if (++nummodels == MAX_MODELS)
-		#endif // PROTOCOL_VERSION_FTE
+#endif // PROTOCOL_VERSION_FTE
+		{
 			Host_EndGame ("Server sent too many model_precache");
-		strcpy (cl.model_name[nummodels], str);
+			return;
+		}
+		Q_strlcpy (cl.model_name[nummodels], str, sizeof(cl.model_name[nummodels]));
 
 		if (!strcmp(cl.model_name[nummodels],"progs/spike.mdl"))
 			cl_spikeindex = nummodels;
@@ -1332,7 +1328,7 @@ void CL_NewTranslation (int slot)
 
 	player = &cl.players[slot];
 
-	strcpy(s, Info_ValueForKey(player->userinfo, "skin"));
+	Q_strlcpy(s, Info_ValueForKey(player->userinfo, "skin"), sizeof(s));
 	COM_StripExtension(s, s);
 	if (player->skin && !stricmp(s, player->skin->name))
 		player->skin = NULL;
@@ -1695,8 +1691,11 @@ void CL_ParseServerMessage (void)
 		case svc_lightstyle:
 			i = MSG_ReadByte ();
 			if (i >= MAX_LIGHTSTYLES)
+			{
 				Sys_Error ("svc_lightstyle > MAX_LIGHTSTYLES");
-			Q_strcpy (cl_lightstyle[i].map,  MSG_ReadString());
+				return;
+			}
+			Q_strlcpy (cl_lightstyle[i].map,  MSG_ReadString(), sizeof(cl_lightstyle[i].map));
 			cl_lightstyle[i].length = Q_strlen(cl_lightstyle[i].map);
 			break;
 			
@@ -1713,21 +1712,30 @@ void CL_ParseServerMessage (void)
 			Sbar_Changed ();
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updatefrags > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].frags = MSG_ReadShort ();
 			break;			
 
 		case svc_updateping:
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updateping > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].ping = MSG_ReadShort ();
 			break;
 			
 		case svc_updatepl:
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updatepl > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].pl = MSG_ReadByte ();
 			break;
 			
@@ -1735,7 +1743,10 @@ void CL_ParseServerMessage (void)
 		// time is sent over as seconds ago
 			i = MSG_ReadByte ();
 			if (i >= MAX_CLIENTS)
+			{
 				Host_EndGame ("CL_ParseServerMessage: svc_updateentertime > MAX_SCOREBOARD");
+				return;
+			}
 			cl.players[i].entertime = realtime - MSG_ReadFloat ();
 			break;
 			
@@ -1791,9 +1802,7 @@ void CL_ParseServerMessage (void)
 		case svc_cdtrack:
 			/* FS: Stream from WAV or OGG if we can */
 			cl.cdtrack = MSG_ReadByte ();
-
 			CL_PlayBackgroundTrack(cl.cdtrack);
-
 			break;
 
 		case svc_intermission:
@@ -1956,14 +1965,14 @@ void CL_PlayBackgroundTrack (int track)
 	Com_sprintf (name, sizeof(name), "music/track%02i.", track);
 
 	p = name + strlen(name);
-	strcpy (p, "wav");
+	Q_strlcpy (p, "wav", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		Sys_FileClose(fakeHandle);
 		have_extmusic |= BGMUSIC_WAV;
 	}
 #ifdef OGG_SUPPORT
-	strcpy (p, "ogg");
+	Q_strlcpy (p, "ogg", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		Sys_FileClose(fakeHandle);
@@ -1974,13 +1983,13 @@ void CL_PlayBackgroundTrack (int track)
 	/* play whatever is found */
 	if ((have_extmusic&BGMUSIC_WAV) && (cl_wav_music->intValue || !(have_extmusic&BGMUSIC_OGG))) {
 		CDAudio_Stop();
-		strcpy (p, "wav");
+		Q_strlcpy (p, "wav", sizeof(name));
 		S_StartWAVBackgroundTrack(name, name);
 	}
 #ifdef OGG_SUPPORT
 	else if (have_extmusic&BGMUSIC_OGG) {
 		CDAudio_Stop();
-		strcpy (p, "ogg");
+		Q_strlcpy (p, "ogg", sizeof(name));
 		S_StartOGGBackgroundTrack(name, name);
 	}
 #endif

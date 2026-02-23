@@ -41,8 +41,6 @@ static int		VGA_buffersize;
 void	*vid_surfcache;
 int		vid_surfcachesize;
 
-int		VGA_highhunkmark;
-
 #include "vgamodes.h"
 
 #define NUMVIDMODES		(sizeof(vgavidmodes) / sizeof(vgavidmodes[0]))
@@ -239,7 +237,7 @@ void VGA_ClearVideoMem (int planar)
 		outportb (SC_DATA, 0x0F);
 	}
 
-	Q_memset (VGA_pagebase, 0, VGA_rowbytes * VGA_height);
+	memset (VGA_pagebase, 0, VGA_rowbytes * VGA_height);
 }
 
 /*
@@ -284,13 +282,11 @@ qboolean VGA_FreeAndAllocVidbuffer (viddef_t *lvid, int allocnewbuffer)
 	if (d_pzbuffer)
 	{
 		D_FlushCaches ();
-		Hunk_FreeToHighMark (VGA_highhunkmark);
+		free(d_pzbuffer);
 		d_pzbuffer = NULL;
 	}
 
-	VGA_highhunkmark = Hunk_HighMark ();
-
-	d_pzbuffer = Hunk_HighAllocName (VGA_buffersize, "video");
+	d_pzbuffer = malloc(VGA_buffersize);
 
 	vid_surfcache = (byte *)d_pzbuffer
 		+ lvid->width * lvid->height * sizeof (*d_pzbuffer);
@@ -391,7 +387,7 @@ int VGA_InitMode (viddef_t *lvid, vmode_t *pcurrentmode)
 
 	VGA_ClearVideoMem (pcurrentmode->planar);
 
-	if (_vid_wait_override->value)
+	if (_vid_wait_override->intValue)
 	{
 		Cvar_SetValue ("vid_wait", (float)VID_WAIT_VSYNC);
 	}
@@ -533,7 +529,7 @@ void VGA_SwapBuffers (viddef_t *lvid, vmode_t *pcurrentmode, vrect_t *rects)
 {
 	UNUSED(lvid);
 
-	if (vid_wait->value == VID_WAIT_VSYNC)
+	if (vid_wait->intValue == VID_WAIT_VSYNC)
 		VGA_WaitVsync ();
 
 	VGA_SwapBuffersCopy (lvid, pcurrentmode, rects);

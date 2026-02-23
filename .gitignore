@@ -1,3 +1,6 @@
+# vs crap
+.vs/
+
 # ignore all make dependency files
 *.d
 *.o
@@ -15,6 +18,8 @@ Debug/
 debug_gl/
 Release/
 release_gl/
+GL Debug ASAN/
+GL Debug/
 out.txt
 gas2masm.exe
 gas2masm.ilk
@@ -22,6 +27,10 @@ qw.exe
 qwdosfx.exe
 qdos.exe
 qdosfx.exe
+wqdos.exe
+wqwdos.exe
+glquake2.exe
+glqw2.exe
 gspydos.exe
 relwqwexe.bat
 relqwexe.bat
@@ -36,3 +45,10 @@ fsbldno.exe
 fxinline.h
 gendate.h
 #matypes.h
+
+# PVS Studio
+*.PVS-Studio.*
+*.suppress
+*.xcuserstate
+*.xcscheme
+*.xcbkptlist

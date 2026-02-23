@@ -28,6 +28,7 @@ typedef unsigned char 		byte;
 #define BYTE_DEFINED 1
 #endif
 
+// KJB Undefined true and false defined in SciTech's DEBUG.H header
 #undef true
 #undef false
 
@@ -42,10 +43,37 @@ char *strtok_r(char *s, const char *delim, char **last);
 
 /* from Quake3 */
 #ifdef _WIN32
-#define Q_vsnprintf _vsnprintf
+__inline int Q_vsnprintf (char *Dest, size_t Count, const char *Format, va_list Args)
+{
+	int ret = _vsnprintf(Dest, Count, Format, Args);
+	Dest[Count - 1] = 0;	// null terminate
+	return ret;
+}
 #else
 #define Q_vsnprintf  vsnprintf
 #endif
+
+// FIXME: DG: the following is a duplication from qcommon.h
+#ifdef __GNUC__ // gcc or clang
+
+// validate arguments for printf-like functions
+// STRIDX: index of format string in function arguments (first arg == 1)
+// FIRSTARGIDX: index of first argument for the format string (usually STRIDX+1)
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX) __attribute__ ((format (printf, STRIDX, FIRSTARGIDX)))
+
+#else // MSVC and other compilers
+
+// sorry, no printf-style-format validation for you :P
+#define ATTRIBUTE_PRINTF(STRIDX, FIRSTARGIDX)
+#pragma warning (disable:4996)
+
+#endif // __GNUC__
+
+#define MAX_INFO_STRING 1024 /* FS: Was 196 */
+#define MAX_SERVERINFO_STRING 2048  /* FS: Was 1024 */
+#define MAX_LOCALINFO_STRING    32768 /* JASON upped from 512 -- Spoike */
+
+#define qbool qboolean /* FS: Tired of importing code from EZQ and getting errors related to this */
 
 //============================================================================
 
@@ -58,8 +86,9 @@ typedef struct sizebuf_s
 	int			cursize;
 } sizebuf_t;
 
+void SZ_InitEx (sizebuf_t *buf, byte *data, int length, qbool allowoverflow); /* FS: From EZQ */
+void SZ_Init (sizebuf_t *buf, byte *data, int length); /* FS: From EZQ */
 void SZ_Alloc (sizebuf_t *buf, int startsize);
-void SZ_Free (sizebuf_t *buf);
 void SZ_Clear (sizebuf_t *buf);
 void *SZ_GetSpace (sizebuf_t *buf, int length);
 void SZ_Write (sizebuf_t *buf, void *data, int length);
@@ -89,18 +118,6 @@ void InsertLinkAfter (link_t *l, link_t *after);
 #define NULL ((void *)0)
 #endif
 
-#define Q_MAXCHAR	((char)0x7f)
-#define Q_MAXSHORT	((short)0x7fff)
-#define Q_MAXINT	((int)0x7fffffff)
-#define Q_MAXLONG	((int)0x7fffffff)
-#define Q_MAXFLOAT	((int)0x7fffffff)
-
-#define Q_MINCHAR	((char)0x80)
-#define Q_MINSHORT	((short)0x8000)
-#define Q_MININT	((int)0x80000000)
-#define Q_MINLONG	((int)0x80000000)
-#define Q_MINFLOAT	((int)0x7fffffff)
-
 //============================================================================
 
 extern	qboolean	bigendien;
@@ -118,6 +135,47 @@ extern	float	(*LittleFloat) (float l);
 #define SHOW_POPULATED_SERVERS 1
 #define SHOW_ALL_SERVERS 2
 
+/* FS: FIXME TODO HACK.  The MSG_Write/Read for PEXT_FLOATCOORDS is read before protocol.h, so i'm putting it here. */
+// fte protocol extensions.
+#define PROTOCOL_VERSION_FTE	(('F'<<0) + ('T'<<8) + ('E'<<16) + ('X' << 24)) //fte extensions.
+
+#ifdef PROTOCOL_VERSION_FTE 
+
+//#define	FTE_PEXT_TRANS				0x00000008	// .alpha support
+//#define FTE_PEXT_ACCURATETIMINGS	0x00000040
+#define FTE_PEXT_HLBSP				0x00000200	//stops fte servers from complaining
+#define FTE_PEXT_MODELDBL			0x00001000
+#define FTE_PEXT_ENTITYDBL			0x00002000	//max of 1024 ents instead of 512
+#define FTE_PEXT_ENTITYDBL2			0x00004000	//max of 1024 ents instead of 512
+#define FTE_PEXT_FLOATCOORDS		0x00008000	//supports floating point origins.
+#define FTE_PEXT_SPAWNSTATIC2		0x00400000	//Sends an entity delta instead of a baseline.
+#define FTE_PEXT_256PACKETENTITIES	0x01000000	//Client can recieve 256 packet entities.
+#define FTE_PEXT_CHUNKEDDOWNLOADS	0x20000000	//alternate file download method. Hopefully it'll give quadroupled download speed, especially on higher pings.
+
+#endif
+
+#ifdef FTE_PEXT_FLOATCOORDS
+
+typedef union {	//note: reading from packets can be misaligned
+	int b4;
+	float f;
+	short b2;
+	char b[4];
+} coorddata;
+
+extern int msg_coordsize; // 2 or 4.
+extern int msg_anglesize; // 1 or 2.
+
+float MSG_FromCoord(coorddata c, int bytes);
+coorddata MSG_ToCoord(float f, int bytes);	//return value should be treated as (char*)&ret;
+coorddata MSG_ToAngle(float f, int bytes);	//return value is NOT byteswapped.
+
+#endif
+
+struct usercmd_s;
+
+extern struct usercmd_s nullcmd;
+
 void MSG_WriteChar (sizebuf_t *sb, int c);
 void MSG_WriteByte (sizebuf_t *sb, int c);
 void MSG_WriteShort (sizebuf_t *sb, int c);
@@ -127,38 +185,34 @@ void MSG_WriteString (sizebuf_t *sb, char *s);
 void MSG_WriteCoord (sizebuf_t *sb, float f);
 void MSG_WriteAngle (sizebuf_t *sb, float f);
 void MSG_WriteAngle16 (sizebuf_t *sb, float f); //johnfitz
+void MSG_WriteDeltaUsercmd (sizebuf_t *sb, struct usercmd_s *from, struct usercmd_s *cmd);
+void MSG_ReadData (void *data, int len); /* FS: For chunked downloads */
 
 extern	int			msg_readcount;
 extern	qboolean	msg_badread;		// set if a read goes beyond end of message
 
 void MSG_BeginReading (void);
+int MSG_GetReadCount(void);
 int MSG_ReadChar (void);
 int MSG_ReadByte (void);
 int MSG_ReadShort (void);
 int MSG_ReadLong (void);
 float MSG_ReadFloat (void);
 char *MSG_ReadString (void);
+char *MSG_ReadStringLine (void);
 
 float MSG_ReadCoord (void);
 float MSG_ReadAngle (void);
 float MSG_ReadAngle16 (void); //johnfitz
+void MSG_ReadDeltaUsercmd (struct usercmd_s *from, struct usercmd_s *cmd);
 
 //============================================================================
 
-void Q_memset (void *dest, int fill, int count);
-void Q_memcpy (void *dest, void *src, int count);
-int Q_memcmp (void *m1, void *m2, int count);
-void Q_strcpy (char *dest, char *src);
-void Q_strncpy (char *dest, char *src, int count);
-int Q_strlen (char *str);
-char *Q_strrchr (char *s, char c);
-void Q_strcat (char *dest, char *src);
-int Q_strcmp (char *s1, char *s2);
-int Q_strncmp (char *s1, char *s2, int count);
-int Q_strcasecmp (char *s1, char *s2);
-int Q_strncasecmp (char *s1, char *s2, int n);
-int	Q_atoi (char *str);
-float Q_atof (char *str);
+int Q_strlen (const char *str);
+int Q_strcmp (const char *s1, const char *s2);
+int Q_strncmp (const char *s1, const char *s2, int count);
+int Q_strcasecmp (const char *s1, const char *s2);
+int Q_strncasecmp (const char *s1, const char *s2, int n);
 size_t Q_strlcpy (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 size_t Q_strlcat (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 
@@ -174,25 +228,22 @@ extern	int		com_argc;
 extern	char	**com_argv;
 
 int COM_CheckParm (char *parm);
-
+void COM_AddParm (char *parm);
 /* FS: Quake 2 stuff */
 int COM_Argc (void);
 char *COM_Argv (int arg);
 void COM_ClearArgv (int arg);
 
-void COM_Init (char *path);
+void COM_Init (void);
 void COM_InitArgv (int argc, char **argv);
 
 char *COM_SkipPath (char *pathname);
 void COM_StripExtension (char *in, char *out);
-void COM_FileBase (char *in, char *out);
 void COM_FilePath (char *in, char *out);
-void COM_DefaultExtension (char *path, char *extension);
+void COM_DefaultExtension (char *path, const char *extension, size_t pathlen);
 
 // does a varargs printf into a temp buffer
-char	*va(const char *format, ...) __attribute__((format(printf,1,2)));
-// does a varargs printf into a malloced buffer
-char	*nva(const char *format, ...) __attribute__((format(printf,1,2)));
+char	*va(const char *format, ...) ATTRIBUTE_PRINTF(1, 2);
 
 //============================================================================
 
@@ -201,15 +252,15 @@ struct cache_user_s;
 
 extern	char	com_gamedir[MAX_OSPATH];
 
-void COM_WriteFile (char *filename, void *data, int len);
-int COM_OpenFile (char *filename, int *hndl);
-int COM_FOpenFile (char *filename, FILE **file);
+void COM_WriteFile (const char *filename, void *data, int len);
+int COM_OpenFile (const char *filename, int *hndl);
+int COM_FOpenFile (const char *filename, FILE **file);
 void COM_CloseFile (int h);
 
-byte *COM_LoadStackFile (char *path, void *buffer, int bufsize);
-byte *COM_LoadTempFile (char *path);
-byte *COM_LoadHunkFile (char *path);
-void COM_LoadCacheFile (char *path, struct cache_user_s *cu);
+void COM_FreeFile (void *buffer);
+byte *COM_LoadFile (const char *path);
+void COM_CreatePath (char *path);
+void COM_Gamedir (char *dir);
 
 /* FS: New stuff */
 int Q_tolower(int c);
@@ -226,8 +277,20 @@ extern	struct cvar_s	*registered;
 extern	qboolean	standard_quake, rogue, hipnotic;
 extern	qboolean	warpspasm, nehahra, extended_mod; /* FS: For Nehara */
 
+char *Info_ValueForKey (char *s, char *key);
+void Info_RemoveKey (char *s, char *key);
+void Info_RemovePrefixedKeys (char *start, char prefix);
+void Info_SetValueForKey (char *s, char *key, char *value, size_t maxsize);
+void Info_SetValueForStarKey (char *s, char *key, const char *value, size_t maxsize);
+void Info_Print (char *s);
+
+unsigned Com_BlockChecksum (void *buffer, int length);
+void Com_BlockFullChecksum (void *buffer, int len, unsigned char *outbuf);
+byte    COM_BlockSequenceCheckByte (byte *base, int length, int sequence, unsigned mapchecksum);
+byte    COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
+
+int build_number( void );
 void CompleteCommand (void); /* FS: Autocomplete commands */
-void Com_sprintf (char *dest, int size, char *fmt, ...); /* FS: Added */
-void Com_strcpy (char *dest, int destSize, const char *src); /* FS: Added */
+void Com_sprintf (char *dest, size_t size, char *fmt, ...); /* FS: Added */
 
 #endif // __COMMON_H

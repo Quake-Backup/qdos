@@ -360,13 +360,13 @@ void VID_InitExtra (void)
 			{
 				if (modeinfo.height > 999)
 				{
-					sprintf (&names[nummodes][0], "%4dx%4d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%4dx%4d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][9] = 0;
 				}
 				else
 				{
-					sprintf (&names[nummodes][0], "%4dx%3d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%4dx%3d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][8] = 0;
 				}
@@ -375,13 +375,13 @@ void VID_InitExtra (void)
 			{
 				if (modeinfo.height > 999)
 				{
-					sprintf (&names[nummodes][0], "%3dx%4d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%3dx%4d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][8] = 0;
 				}
 				else
 				{
-					sprintf (&names[nummodes][0], "%3dx%3d", modeinfo.width,
+					Com_sprintf (&names[nummodes][0], sizeof(names[nummodes]), "%3dx%3d", modeinfo.width,
 							 modeinfo.height);
 					names[nummodes][7] = 0;
 				}
@@ -590,7 +590,7 @@ int VID_ExtraInitMode (viddef_t *lvid, vmode_t *pcurrentmode)
 
 	pextra = pcurrentmode->pextradata;
 
-	if (vid_nopageflip->value)
+	if (vid_nopageflip->intValue)
 		lvid->numpages = 1;
 	else
 		lvid->numpages = pcurrentmode->numpages;
@@ -631,7 +631,7 @@ int VID_ExtraInitMode (viddef_t *lvid, vmode_t *pcurrentmode)
 	if (!pextra->vga_incompatible  &&
 		(lvid->numpages == 3)      &&
 		de_exists                  &&
-		(_vid_wait_override->value == 0.0))
+		(_vid_wait_override->intValue == 0))
 	{
 		Cvar_SetValue ("vid_wait", (float)VID_WAIT_DISPLAY_ENABLE);
 
@@ -640,7 +640,7 @@ int VID_ExtraInitMode (viddef_t *lvid, vmode_t *pcurrentmode)
 	}
 	else
 	{
-		if ((lvid->numpages == 1) && (_vid_wait_override->value == 0.0))
+		if ((lvid->numpages == 1) && (_vid_wait_override->intValue == 0))
 		{
 			Cvar_SetValue ("vid_wait", (float)VID_WAIT_NONE);
 			VID_displayedpage = VID_currentpage = 0;
@@ -728,9 +728,9 @@ void VID_ExtraSwapBuffers (viddef_t *lvid, vmode_t *pcurrentmode,
 	// page flipped
 		regs.x.ax = 0x4f07;
 	
-		if (vid_wait->value != VID_WAIT_VSYNC)
+		if (vid_wait->intValue != VID_WAIT_VSYNC)
 		{
-			if ((vid_wait->value == VID_WAIT_DISPLAY_ENABLE) && de_exists)
+			if ((vid_wait->intValue == VID_WAIT_DISPLAY_ENABLE) && de_exists)
 				VID_ExtraWaitDisplayEnable ();
 	
 			regs.x.bx = VESA_DONT_WAIT_VSYNC;
@@ -772,7 +772,7 @@ void VID_ExtraSwapBuffers (viddef_t *lvid, vmode_t *pcurrentmode,
 	else
 	{
 	// non-page-flipped
-		if (vsync_exists && (vid_wait->value == VID_WAIT_VSYNC))
+		if (vsync_exists && (vid_wait->intValue == VID_WAIT_VSYNC))
 		{
 			VGA_WaitVsync ();
 		}

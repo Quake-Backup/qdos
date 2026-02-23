@@ -149,7 +149,7 @@ void Host_Game_f (void)
 	if (Cmd_Argc() > 1)
 	{
 
-		if (!registered->value) //disable command for shareware quake
+		if (!registered->intValue) //disable command for shareware quake
 		{
 			Com_Printf("You must have the registered version to use modified games\n");
 			return;
@@ -161,7 +161,7 @@ void Host_Game_f (void)
 			return;
 		}
 
-		strcpy (pakfile, va("%s/%s", host_parms.basedir, Cmd_Argv(1)));
+		Q_strlcpy (pakfile, va("%s/%s", host_parms.basedir, Cmd_Argv(1)), sizeof(pakfile));
 		if (!stricmp(pakfile, com_gamedir)) //no change
 		{
 			Com_Printf("\"game\" is already \"%s\"\n", COM_SkipPath(com_gamedir));
@@ -181,12 +181,12 @@ void Host_Game_f (void)
 		if (NumGames(com_searchpaths) > 1 + com_nummissionpacks)
 			KillGameDir(com_searchpaths);
 
-		strcpy (com_gamedir, pakfile);
+		Q_strlcpy (com_gamedir, pakfile, sizeof(com_gamedir));
 
 		if (stricmp(Cmd_Argv(1), GAMENAME)) //game is not id1
 		{
 			search = Z_Malloc(sizeof(searchpath_t));
-			strcpy (search->filename, pakfile);
+			Q_strlcpy (search->filename, pakfile, sizeof(search->filename));
 			search->next = com_searchpaths;
 			com_searchpaths = search;
 
@@ -203,9 +203,6 @@ void Host_Game_f (void)
 				com_searchpaths = search;
 			}
 		}
-
-		//clear out and reload appropriate data
-		Cache_Flush ();
 
 		ExtraMaps_NewGame ();
 		//Cbuf_InsertText ("exec quake.rc\n");
@@ -238,7 +235,7 @@ void ExtraMaps_Add (char *name)
 			return;
 
 	level = Z_Malloc(sizeof(extralevel_t));
-	strcpy (level->name, name);
+	Q_strlcpy (level->name, name, sizeof(level->name));
 
 	//insert each entry in alphabetical order
     if (extralevels == NULL || stricmp(level->name, extralevels->name) < 0) //insert at front
@@ -363,7 +360,7 @@ void Modlist_Add (char *name)
 			return;
 
 	mod = Z_Malloc(sizeof(mod_t));
-	strcpy (mod->name, name);
+	Q_strlcpy (mod->name, name, sizeof(mod->name));
 
 	//insert each entry in alphabetical order
     if (modlist == NULL || _stricmp(mod->name, modlist->name) < 0) //insert at front
@@ -553,7 +550,7 @@ void Host_God_f (void)
 			SV_ClientPrintf ("godmode ON\n");
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			sv_player->v.flags = (int)sv_player->v.flags | FL_GODMODE;
 			SV_ClientPrintf ("godmode ON\n");
@@ -598,7 +595,7 @@ void Host_Notarget_f (void)
 			SV_ClientPrintf ("notarget ON\n");
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			sv_player->v.flags = (int)sv_player->v.flags | FL_NOTARGET;
 			SV_ClientPrintf ("notarget ON\n");
@@ -652,7 +649,7 @@ void Host_Noclip_f (void)
 		}
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			noclip_anglehack = true;
 			sv_player->v.movetype = MOVETYPE_NOCLIP;
@@ -706,7 +703,7 @@ void Host_Fly_f (void)
 		}
 		break;
 	case 2:
-		if (Q_atof(Cmd_Argv(1)))
+		if (atof(Cmd_Argv(1)))
 		{
 			sv_player->v.movetype = MOVETYPE_FLY;
 			SV_ClientPrintf ("flymode ON\n");
@@ -804,27 +801,27 @@ void Host_Map_f (void)
 
 	for (i=0 ; i<Cmd_Argc() ; i++)
 	{
-		strcat (cls.mapstring, Cmd_Argv(i));
-		strcat (cls.mapstring, " ");
+		Q_strlcat (cls.mapstring, Cmd_Argv(i), sizeof(cls.mapstring));
+		Q_strlcat (cls.mapstring, " ", sizeof(cls.mapstring));
 	}
-	strcat (cls.mapstring, "\n");
+	Q_strlcat (cls.mapstring, "\n", sizeof(cls.mapstring));
 
 	svs.serverflags = 0;			// haven't completed an episode yet
-	strcpy (name, Cmd_Argv(1));
+	Q_strlcpy (name, Cmd_Argv(1), sizeof(name));
 
-	SV_SpawnServer (name);
+	SV_SpawnServer (name, false);
 
 	if (!sv.active)
 		return;
 	
 	if (cls.state != ca_dedicated)
 	{
-		strcpy (cls.spawnparms, "");
+		Q_strlcpy (cls.spawnparms, "", sizeof(cls.spawnparms));
 
 		for (i=2 ; i<Cmd_Argc() ; i++)
 		{
-			strcat (cls.spawnparms, Cmd_Argv(i));
-			strcat (cls.spawnparms, " ");
+			Q_strlcat (cls.spawnparms, Cmd_Argv(i), sizeof(cls.spawnparms));
+			Q_strlcat (cls.spawnparms, " ", sizeof(cls.spawnparms));
 		}
 		
 		Cmd_ExecuteString ("connect local", src_command);
@@ -862,8 +859,8 @@ void Host_Changelevel_f (void)
 	//johnfitz
 
 	SV_SaveSpawnparms ();
-	strcpy (level, Cmd_Argv(1));
-	SV_SpawnServer (level);
+	Q_strlcpy (level, Cmd_Argv(1), sizeof(level));
+	SV_SpawnServer (level, false);
 	// also issue an error if spawn failed -- O.S.
 	if (!sv.active)
 		Host_Error ("cannot run map %s", level);
@@ -885,8 +882,8 @@ void Host_Restart_f (void)
 
 	if (cmd_source != src_command)
 		return;
-	strcpy (mapname, sv.name);	// mapname gets cleared in spawnserver
-	SV_SpawnServer (mapname);
+	Q_strlcpy (mapname, sv.name, sizeof(mapname));	// mapname gets cleared in spawnserver
+	SV_SpawnServer (mapname, true);
 	if (!sv.active)
 		Host_Error ("cannot restart map %s", mapname);
 }
@@ -942,7 +939,7 @@ void Host_Connect_f (void)
 	}
 	else
 	{
-		net_hostport = Q_atoi(port);
+		net_hostport = atoi(port);
 	}
 
 	Q_strlcpy(name, Cmd_Argv(1), sizeof(name));
@@ -980,7 +977,7 @@ void Host_SavegameComment (char *text)
 	for (i=0 ; i<SAVEGAME_COMMENT_LENGTH ; i++)
 		text[i] = ' ';
 	memcpy (text, cl.levelname, MIN(strlen(cl.levelname),22)); //johnfitz -- only copy 22 chars.
-	sprintf (kills,"kills:%3i/%3i", cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
+	Com_sprintf (kills, sizeof(kills), "kills:%3i/%3i", cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
 	memcpy (text+22, kills, strlen(kills));
 // convert space to _ to make stdio happy
 	for (i=0 ; i<SAVEGAME_COMMENT_LENGTH ; i++)
@@ -1045,7 +1042,7 @@ void Host_Savegame_f (void)
 	}
 
 	Com_sprintf (name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
-	COM_DefaultExtension (name, ".sav");
+	COM_DefaultExtension (name, ".sav", sizeof(name));
 	
 	Com_Printf ("Saving game to %s...\n", name);
 	f = fopen (name, "w");
@@ -1116,7 +1113,7 @@ void Host_Loadgame_f (void)
 	cls.demonum = -1;		// stop demo loop in case this fails
 
 	Com_sprintf (name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
-	COM_DefaultExtension (name, ".sav");
+	COM_DefaultExtension (name, ".sav", sizeof(name));
 	
 // we can't call SCR_BeginLoadingPlaque, because too much stack space has
 // been used.  The menu calls it before stuffing loadgame command
@@ -1150,7 +1147,7 @@ void Host_Loadgame_f (void)
 
 	CL_Disconnect_f ();
 
-	SV_SpawnServer (mapname);
+	SV_SpawnServer (mapname, true);
 
 	if (!sv.active)
 	{
@@ -1165,9 +1162,11 @@ void Host_Loadgame_f (void)
 
 	for (i=0 ; i<MAX_LIGHTSTYLES ; i++)
 	{
+		size_t len;
 		fscanf (f, "%s\n", str);
-		sv.lightstyles[i] = Hunk_Alloc (strlen(str)+1);
-		strcpy (sv.lightstyles[i], str);
+		len = strlen(str) + 1;
+		sv.lightstyles[i] = Z_TagMalloc (len, TAG_LEVEL);
+		Q_strlcpy (sv.lightstyles[i], str, len);
 	}
 
 // load the edicts out of the savegame file
@@ -1271,7 +1270,7 @@ void Host_Name_f (void)
 	if (host_client->name[0] && strcmp(host_client->name, "unconnected") )
 		if (Q_strcmp(host_client->name, newName) != 0)
 			Com_Printf ("%s renamed to %s\n", host_client->name, newName);
-	Q_strcpy (host_client->name, newName);
+	Q_strlcpy (host_client->name, newName, sizeof(host_client->name));
 	host_client->edict->v.netname = host_client->name - pr_strings;
 	
 // send notification to all clients
@@ -1329,22 +1328,22 @@ void Host_Say(qboolean teamonly)
 
 // turn on color set 1
 	if (!fromServer)
-		sprintf (text, "%c%s: ", 1, save->name);
+		Com_sprintf (text, sizeof(text), "%c%s: ", 1, save->name);
 	else
-		sprintf (text, "%c<%s> ", 1, hostname->string);
+		Com_sprintf (text, sizeof(text), "%c<%s> ", 1, hostname->string);
 
 	j = sizeof(text) - 2 - Q_strlen(text);  // -2 for /n and null terminator
 	if (Q_strlen(p) > j)
 		p[j] = 0;
 
-	strcat (text, p);
-	strcat (text, "\n");
+	Q_strlcat (text, p, sizeof(text));
+	Q_strlcat (text, "\n", sizeof(text));
 
 	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
 	{
 		if (!client || !client->active || !client->spawned)
 			continue;
-		if (teamplay->value && teamonly && client->edict->v.team != save->edict->v.team)
+		if (teamplay->intValue && teamonly && client->edict->v.team != save->edict->v.team)
 			continue;
 		host_client = client;
 		SV_ClientPrintf("%s", text);
@@ -1384,8 +1383,8 @@ void Host_Tell_f(void)
 	if (Cmd_Argc () < 3)
 		return;
 
-	Q_strcpy(text, host_client->name);
-	Q_strcat(text, ": ");
+	Q_strlcpy(text, host_client->name, sizeof(text));
+	Q_strlcat(text, ": ", sizeof(text));
 
 	p = Cmd_Args();
 
@@ -1401,8 +1400,8 @@ void Host_Tell_f(void)
 	if (Q_strlen(p) > j)
 		p[j] = 0;
 
-	strcat (text, p);
-	strcat (text, "\n");
+	Q_strlcat (text, p, sizeof(text));
+	Q_strlcat (text, "\n", sizeof(text));
 
 	save = host_client;
 	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
@@ -1431,7 +1430,7 @@ void Host_Color_f(void)
 	
 	if (Cmd_Argc() == 1)
 	{
-		Com_Printf ("\"color\" is \"%i %i\"\n", ((int)cl_color->value) >> 4, ((int)cl_color->value) & 0x0f);
+		Com_Printf ("\"color\" is \"%i %i\"\n", (cl_color->intValue) >> 4, (cl_color->intValue) & 0x0f);
 		Com_Printf ("color <0-13> [0-13]\n");
 		return;
 	}
@@ -1508,7 +1507,7 @@ void Host_Pause_f (void)
 		Cmd_ForwardToServer ();
 		return;
 	}
-	if (!pausable->value)
+	if (!pausable->intValue)
 		SV_ClientPrintf ("Pause not allowed.\n");
 	else
 	{
@@ -1730,7 +1729,7 @@ void Host_Kick_f (void)
 
 	if (Cmd_Argc() > 2 && Q_strcmp(Cmd_Argv(1), "#") == 0)
 	{
-		i = Q_atof(Cmd_Argv(2)) - 1;
+		i = atof(Cmd_Argv(2)) - 1;
 		if (i < 0 || i >= svs.maxclients)
 			return;
 		if (!svs.clients[i].active)
@@ -2098,7 +2097,7 @@ void PrintFrameName (model_t *m, int frame)
 	aliashdr_t 			*hdr;
 	maliasframedesc_t	*pframedesc;
 
-	hdr = (aliashdr_t *)Mod_Extradata (m);
+	hdr = (aliashdr_t *)m->extradata;
 	if (!hdr)
 		return;
 
@@ -2308,5 +2307,5 @@ void Host_InitCommands (void)
 
 	 /* FS: Disable startup demos */
 	cl_demos = Cvar_Get("cl_demos", "1", CVAR_ARCHIVE);
-	cl_demos->description = "Set to 0 to disable startup demos.";
+	Cvar_Set_Description("cl_demos", "Set to 0 to disable startup demos.");
 }

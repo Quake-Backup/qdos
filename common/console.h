@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define         CON_TEXTSIZE    65536 /* FS: Was 16384 */
 
 /* FS: Developer flags for developer cvar and DPrintf's */
-/* FS: No 0x00000001 because that would be developer->value 1 and we use that to show it all! */
+/* FS: No 0x00000001 because that would be developer->intValue 1 and we use that to show it all! */
 #define DEVELOPER_MSG_STANDARD		0x00000002 // 2
 #define DEVELOPER_MSG_SOUND			0x00000004 // 4
 #define DEVELOPER_MSG_NET			0x00000008 // 8

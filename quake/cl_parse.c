@@ -148,7 +148,7 @@ entity_t	*CL_EntityNum (int num)
 
 	if (num >= cl.num_entities)
 	{
-		if (num >= cl_max_edicts) //johnfitz -- no more MAX_EDICTS
+		if (num >= MAX_EDICTS)
 			Host_Error ("CL_EntityNum: %i is an invalid number",num);
 		while (cl.num_entities<=num)
 		{
@@ -212,7 +212,7 @@ void CL_ParseStartSoundPacket(void)
 		Host_Error ("CL_ParseStartSoundPacket: %i > MAX_SOUNDS", sound_num);
 	//johnfitz
 
-	if (ent > cl_max_edicts) //johnfitz -- no more MAX_EDICTS
+	if (ent > MAX_EDICTS)
 		Host_Error ("CL_ParseStartSoundPacket: ent = %i", ent);
 	
 	for (i=0 ; i<3 ; i++)
@@ -326,7 +326,7 @@ void CL_ParseServerInfo (void)
 	{
 		Host_Error ("Bad maxclients (%u) from server", cl.maxclients);
 	}
-	cl.scores = Hunk_AllocName (cl.maxclients*sizeof(*cl.scores), "scores");
+	cl.scores = Z_TagMalloc (cl.maxclients*sizeof(*cl.scores), TAG_LEVEL);
 
 // parse gametype
 	cl.gametype = MSG_ReadByte ();
@@ -358,8 +358,8 @@ void CL_ParseServerInfo (void)
 		{
 			Host_Error ("Server sent too many model precaches");
 		}
-		strcpy (model_precache[nummodels], str);
-		Mod_TouchModel (str);
+		Q_strlcpy (model_precache[nummodels], str, sizeof(model_precache[nummodels]));
+		Mod_ForName(str, false);
 	}
 
 // johnfitz -- check for excessive models
@@ -368,7 +368,8 @@ void CL_ParseServerInfo (void)
 // johnfitz
 
 // precache sounds
-	memset (cl.sound_precache, 0, sizeof(cl.sound_precache));
+	memset(cl.sound_precache, 0, sizeof(cl.sound_precache));
+	memset(cl.sound_precache_str, 0, sizeof(cl.sound_precache_str));
 	for (numsounds=1 ; ; numsounds++)
 	{
 		str = MSG_ReadString ();
@@ -377,10 +378,13 @@ void CL_ParseServerInfo (void)
 		if (numsounds==MAX_SOUNDS)
 		{
 			Host_Error ("Server sent too many sound precaches");
+			return;
 		}
-		strcpy (sound_precache[numsounds], str);
+		Q_strlcpy(sound_precache[numsounds], str, sizeof(sound_precache[numsounds]));
+		Q_strlcpy(cl.sound_precache_str[numsounds], str, sizeof(cl.sound_precache_str[numsounds])); /* FS: Save a copy of the name for snd_restart. */
 		S_TouchSound (str);
 	}
+	cl.numsounds = numsounds;
 
 	//johnfitz -- check for excessive sounds
 	if (numsounds >= 256)
@@ -397,18 +401,16 @@ void CL_ParseServerInfo (void)
 		if (cl.model_precache[i] == NULL)
 		{
 			Host_Error ("Model %s not found", model_precache[i]);
+			return;
 		}
 		CL_KeepaliveMessage ();
 	}
 
-	S_BeginPrecaching ();
 	for (i=1 ; i<numsounds ; i++)
 	{
 		cl.sound_precache[i] = S_PrecacheSound (sound_precache[i]);
 		CL_KeepaliveMessage ();
 	}
-	S_EndPrecaching ();
-
 
 // local state
 	cl_entities[0].model = cl.worldmodel = cl.model_precache[1];
@@ -419,8 +421,6 @@ void CL_ParseServerInfo (void)
 	//messages to be duplicates if the map has changed in between
 	con_lastcenterstring[0] = 0;
 	//johnfitz
-
-	Hunk_Check ();		// make sure nothing is hurt
 
 	noclip_anglehack = false;		// noclip is turned off at start
 
@@ -949,7 +949,7 @@ void CL_ParseStaticSound (int version) //johnfitz -- added argument
 }
 
 
-#define SHOWNET(x) if(cl_shownet->value==2)Com_Printf ("%3i:%s\n", msg_readcount-1, x);
+#define SHOWNET(x) if(cl_shownet->intValue==2)Com_Printf ("%3i:%s\n", msg_readcount-1, x);
 
 /*
 =====================
@@ -966,9 +966,9 @@ void CL_ParseServerMessage (void)
 //
 // if recording demos, copy the message out
 //
-	if (cl_shownet->value == 1)
+	if (cl_shownet->intValue == 1)
 		Com_Printf ("%i ",net_message.cursize);
-	else if (cl_shownet->value == 2)
+	else if (cl_shownet->intValue == 2)
 		Com_Printf ("------------------\n");
 	
 	cl.onground = false;	// unless the server says otherwise	
@@ -1031,6 +1031,7 @@ void CL_ParseServerMessage (void)
 			
 			case svc_disconnect:
 				Host_EndGame ("Server disconnected\n");
+				break;
 
 			case svc_print:
 				str = MSG_ReadString();
@@ -1084,8 +1085,11 @@ void CL_ParseServerMessage (void)
 			case svc_lightstyle:
 				i = MSG_ReadByte ();
 				if (i >= MAX_LIGHTSTYLES)
+				{
 					Sys_Error ("svc_lightstyle > MAX_LIGHTSTYLES");
-				Q_strcpy (cl_lightstyle[i].map,  MSG_ReadString());
+					return;
+				}
+				Q_strlcpy (cl_lightstyle[i].map,  MSG_ReadString(), sizeof(cl_lightstyle[i].map));
 				cl_lightstyle[i].length = Q_strlen(cl_lightstyle[i].map);
 				//johnfitz -- save extra info
 				if (cl_lightstyle[i].length)
@@ -1117,15 +1121,21 @@ void CL_ParseServerMessage (void)
 				Sbar_Changed ();
 				i = MSG_ReadByte ();
 				if (i >= cl.maxclients)
+				{
 					Host_Error ("CL_ParseServerMessage: svc_updatename > MAX_SCOREBOARD");
-				strcpy (cl.scores[i].name, MSG_ReadString ());
+					return;
+				}
+				Q_strlcpy (cl.scores[i].name, MSG_ReadString (), sizeof(cl.scores[i].name));
 				break;
 			
 			case svc_updatefrags:
 				Sbar_Changed ();
 				i = MSG_ReadByte ();
 				if (i >= cl.maxclients)
+				{
 					Host_Error ("CL_ParseServerMessage: svc_updatefrags > MAX_SCOREBOARD");
+					return;
+				}
 				cl.scores[i].frags = MSG_ReadShort ();
 				break;
 
@@ -1133,7 +1143,10 @@ void CL_ParseServerMessage (void)
 				Sbar_Changed ();
 				i = MSG_ReadByte ();
 				if (i >= cl.maxclients)
+				{
 					Host_Error ("CL_ParseServerMessage: svc_updatecolors > MAX_SCOREBOARD");
+					return;
+				}
 				cl.scores[i].colors = MSG_ReadByte ();
 				CL_NewTranslation (i);
 				break;
@@ -1174,14 +1187,17 @@ void CL_ParseServerMessage (void)
 			case svc_signonnum:
 				i = MSG_ReadByte ();
 				if (i <= cls.signon)
+				{
 					Host_Error ("Received signon %i when at %i", i, cls.signon);
+					return;
+				}
 				cls.signon = i;
 				//johnfitz -- if signonnum==2, signon packet has been fully parsed, so check for excessive static ents and efrags
 				if (i == 2)
 				{
 					if (cl.num_statics > 128)
 						Con_Warning ("%i static entities exceeds standard limit of 128.\n", cl.num_statics);
-//					R_CheckEfrags ();
+//					R_CheckEfrags (); /* FS: FIXME? */
 				}
 				//johnfitz
 				CL_SignonReply ();
@@ -1198,7 +1214,10 @@ void CL_ParseServerMessage (void)
 			case svc_updatestat:
 				i = MSG_ReadByte ();
 				if (i < 0 || i >= MAX_CL_STATS)
+				{
 					Sys_Error ("svc_updatestat: %i is invalid", i);
+					return;
+				}
 				cl.stats[i] = MSG_ReadLong ();;
 				break;
 			
@@ -1338,14 +1357,14 @@ void CL_PlayBackgroundTrack (int track)
 	Com_sprintf (name, sizeof(name), "music/track%02i.", track);
 
 	p = name + strlen(name);
-	strcpy (p, "wav");
+	Q_strlcpy (p, "wav", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		COM_CloseFile(fakeHandle);
 		have_extmusic |= BGMUSIC_WAV;
 	}
 #ifdef OGG_SUPPORT
-	strcpy (p, "ogg");
+	Q_strlcpy (p, "ogg", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		COM_CloseFile(fakeHandle);
@@ -1356,13 +1375,13 @@ void CL_PlayBackgroundTrack (int track)
 	/* play whatever is found */
 	if ((have_extmusic&BGMUSIC_WAV) && (cl_wav_music->intValue || !(have_extmusic&BGMUSIC_OGG))) {
 		CDAudio_Stop();
-		strcpy (p, "wav");
+		Q_strlcpy (p, "wav", sizeof(name));
 		S_StartWAVBackgroundTrack(name, name);
 	}
 #ifdef OGG_SUPPORT
 	else if (have_extmusic&BGMUSIC_OGG) {
 		CDAudio_Stop();
-		strcpy (p, "ogg");
+		Q_strlcpy (p, "ogg", sizeof(name));
 		S_StartOGGBackgroundTrack(name, name);
 	}
 #endif

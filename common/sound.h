@@ -46,12 +46,6 @@ typedef struct
 extern portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];
 extern int s_paintbuffer_size;
 
-typedef struct sfx_s
-{
-	char			name[MAX_QPATH];
-	cache_user_t	cache;
-} sfx_t;
-
 // !!! if this is changed, it much be changed in asm_i386.h too !!!
 typedef struct
 {
@@ -63,6 +57,12 @@ typedef struct
 	byte	data[1];		// variable sized
 	int		music;			// Knightmare added
 } sfxcache_t;
+
+typedef struct sfx_s
+{
+	char			name[MAX_QPATH];
+	sfxcache_t		*cache;
+} sfx_t;
 
 // Knightmare - added from Q2E
 typedef struct {
@@ -142,9 +142,6 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data, q
 
 sfx_t *S_PrecacheSound (char *sample);
 void S_TouchSound (char *sample);
-void S_ClearPrecache (void);
-void S_BeginPrecaching (void);
-void S_EndPrecaching (void);
 void S_PaintChannels(int endtime);
 void S_InitPaintChannels (void);
 
@@ -178,14 +175,6 @@ extern	channel_t   channels[MAX_CHANNELS];
 
 extern	int			total_channels;
 
-//
-// Fake dma is a synchronous faking of the DMA progress used for
-// isolating performance in the renderer.  The fakedma_updates is
-// number of times S_Update() is called per second.
-//
-
-extern qboolean fakedma;
-extern int 		fakedma_updates;
 extern int		paintedtime;
 extern int		s_rawend; /* FS: Quake 2 raw wav streaming */
 
@@ -206,8 +195,6 @@ extern cvar_t	*s_mastervolume; /* FS: added */
 extern cvar_t	*s_primary;
 
 extern qboolean	snd_initialized;
-
-extern int		snd_blocked;
 
 void S_LocalSound (char *s);
 void S_GamespySound (char *s); /* FS: Added */
