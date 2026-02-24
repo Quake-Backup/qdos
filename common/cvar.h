@@ -56,6 +56,8 @@ cvar_t	*Cvar_Set (char *var_name, char *value);
 cvar_t	*Cvar_ForceSet (char *var_name, char *value);
 // will set the variable even if NOSET or LATCH
 
+cvar_t	*Cvar_ForceSetValue (char *var_name, float value);
+
 cvar_t	*Cvar_FullSet (char *var_name, char *value, int flags);
 
 void	Cvar_SetValue (char *var_name, float value);

@@ -454,6 +454,18 @@ cvar_t *Cvar_ForceSet (char *var_name, char *value)
 	return Cvar_Set2 (var_name, value, true);
 }
 
+cvar_t *Cvar_ForceSetValue (char *var_name, float value)
+{
+	char	val[32];
+
+	if (value == (int)value) /* FS: Weird zeros fix from QIP */
+		Com_sprintf(val, sizeof(val), "%d", (int)value);
+	else
+		Com_sprintf(val, sizeof(val), "%f", value);
+
+	return Cvar_Set2 (var_name, val, true);
+}
+
 /*
 ============
 Cvar_Set

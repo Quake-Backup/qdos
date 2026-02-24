@@ -1458,7 +1458,7 @@ void CL_SetInfo (void)
 /* FS: EZQ Chat */
 void	CL_ShowChat (char *name, int val)
 {
-	if (net_showchat->value)
+	if (net_showchat->intValue)
 	{
 		switch(val)
 		{

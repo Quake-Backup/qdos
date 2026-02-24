@@ -846,13 +846,13 @@ void Cmd_ChatInfo (int val)
 			case EZQ_CHAT_AFK:
 			case EZQ_CHAT_AFK_TYPING:
 				Cbuf_AddText( va("setinfo chat %i\n",val) );
-				chat->value = val;
+				Cvar_ForceSetValue("chat", val);
 				afk = val;
 				break;
 			default:
 				afk = 0;
 				Cbuf_AddText("setinfo chat \"\"\n");
-				chat->value = EZQ_CHAT_OFF;
+				Cvar_ForceSetValue("chat", EZQ_CHAT_OFF);
 				break;
 		}
 	}
