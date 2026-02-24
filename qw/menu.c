@@ -453,20 +453,20 @@ void M_AdjustSliders (int dir)
 		Cvar_SetValue ("sensitivity", sensitivity->value);
 		break;
 	case 6: // music volume
-		bgmvolume->value += dir * 0.1;
-		if (bgmvolume->value < 0)
-			bgmvolume->value = 0;
-		if (bgmvolume->value > 1)
-			bgmvolume->value = 1;
-		Cvar_SetValue ("bgmvolume", bgmvolume->value);
+		s_bgmvolume->value += dir * 0.1;
+		if (s_bgmvolume->value < 0)
+			s_bgmvolume->value = 0;
+		if (s_bgmvolume->value > 1)
+			s_bgmvolume->value = 1;
+		Cvar_SetValue ("s_bgmvolume", s_bgmvolume->value);
 		break;
 	case 7: // sfx volume
-		volume->value += dir * 0.1;
-		if (volume->value < 0)
-			volume->value = 0;
-		if (volume->value > 1)
-			volume->value = 1;
-		Cvar_SetValue ("volume", volume->value);
+		s_volume->value += dir * 0.1;
+		if (s_volume->value < 0)
+			s_volume->value = 0;
+		if (s_volume->value > 1)
+			s_volume->value = 1;
+		Cvar_SetValue ("s_volume", s_volume->value);
 		break;
 	case 8: // always run
 		if (cl_forwardspeed->value > 200)
@@ -555,11 +555,11 @@ void M_Options_Draw (void)
 	M_DrawSlider (220, 72, r);
 
 	M_Print (16, 80, "       CD Music Volume");
-	r = bgmvolume->value;
+	r = s_bgmvolume->value;
 	M_DrawSlider (220, 80, r);
 
 	M_Print (16, 88, "          Sound Volume");
-	r = volume->value;
+	r = s_volume->value;
 	M_DrawSlider (220, 88, r);
 
 	M_Print (16, 96,  "            Always Run");

@@ -319,7 +319,7 @@ int VID_Suspend (MGLDC *dc, int flags)
 		S_ClearBuffer ();
 
 		IN_RestoreOriginalMouseState ();
-		CDAudio_Pause ();
+		S_MusicPause (); /* FS */
 
 		// keep WM_PAINT from trying to redraw
 		in_mode_set = true;
@@ -1603,7 +1603,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 	scr_disabled_for_loading = true;
 	in_mode_set = true;
 
-	CDAudio_Pause ();
+	S_MusicPause (); /* FS */
 	S_ClearBuffer ();
 
 	if (vid_modenum == NO_MODE)

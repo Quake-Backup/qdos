@@ -142,10 +142,10 @@ OBJS=	$(SYSOBJ_DXE)        \
 	snd_mem.o  \
 	snd_mix.o  \
 	snd_mixa.o \
+	snd_ogg.o \
 	snd_pci.o  \
 	snd_sb.o   \
 	snd_strm.o \
-	snd_wavstream.o \
 	sv_main.o  \
 	sv_move.o  \
 	sv_phys.o  \

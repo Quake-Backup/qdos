@@ -24,11 +24,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define __SND_OGG_H
 
 // snd_stream.c
-void S_UpdateBackgroundTrack (void);
+void S_OGGUpdateBackgroundTrack (void);
 void S_StartOGGBackgroundTrack (const char *introTrack, const char *loopTrack);
 void S_StopOGGBackgroundTrack (void);
 void S_OGG_Init (void);
 void S_OGG_Shutdown (void);
 void S_OGG_Restart (void);
+void S_PauseOGGBackgroundTrack (void);
+void S_ResumeOGGBackgroundTrack (void);
 
 #endif // __SND_OGG_H

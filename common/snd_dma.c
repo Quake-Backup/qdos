@@ -77,13 +77,13 @@ int		sound_started = 0;
 
 int		havegus; /* FS: Is GUS our sound card? */
 
-cvar_t	*nosound;
-cvar_t	*volume;
-cvar_t	*precache;
-cvar_t	*loadas8bit;
-cvar_t	*bgmvolume;
-cvar_t	*ambient_level;
-cvar_t	*ambient_fade;
+cvar_t	*s_nosound;
+cvar_t	*s_volume;
+cvar_t	*s_precache;
+cvar_t	*s_loadas8bit;
+cvar_t	*s_bgmvolume;
+cvar_t	*s_ambient_level;
+cvar_t	*s_ambient_fade;
 cvar_t	*snd_noextraupdate;
 cvar_t	*snd_show;
 cvar_t	*s_mixahead;
@@ -133,7 +133,6 @@ void S_SoundInfo_f(void)
 	Com_Printf("%5d total_channels\n", total_channels);
 }
 
-
 /*
 ================
 S_Init
@@ -157,13 +156,13 @@ void S_Init (void)
 		return;
 	}
 	
-	nosound = Cvar_Get("nosound", "0", 0);
-	volume = Cvar_Get("volume", "0.7", CVAR_ARCHIVE);
-	precache = Cvar_Get("precache", "1", 0);
-	loadas8bit = Cvar_Get("loadas8bit", "0", 0);
-	bgmvolume = Cvar_Get("bgmvolume", "1", CVAR_ARCHIVE);
-	ambient_level = Cvar_Get("ambient_level", "0.3", 0);
-	ambient_fade = Cvar_Get("ambient_fade", "100", 0);
+	s_nosound = Cvar_Get("s_nosound", "0", 0);
+	s_volume = Cvar_Get("s_volume", "0.7", CVAR_ARCHIVE);
+	s_precache = Cvar_Get("s_precache", "1", 0);
+	s_loadas8bit = Cvar_Get("s_loadas8bit", "0", 0);
+	s_bgmvolume = Cvar_Get("s_bgmvolume", "1", CVAR_ARCHIVE);
+	s_ambient_level = Cvar_Get("s_ambient_level", "0.3", 0);
+	s_ambient_fade = Cvar_Get("s_ambient_fade", "100", 0);
 	snd_noextraupdate = Cvar_Get("snd_noextraupdate", "0", 0);
 	snd_show = Cvar_Get("snd_show", "0", 0);
 	s_mixahead = Cvar_Get("s_mixahead", "0.2", CVAR_ARCHIVE);
@@ -190,23 +189,22 @@ void S_Init (void)
 #ifdef OGG_SUPPORT
 	Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
 #endif
-	Cmd_AddCommand("wav_restart", S_WAV_Restart); /* FS: Added */
 
 	if (host_parms.memsize < 0x800000)
 	{
-		Cvar_Set ("loadas8bit", "1");
+		Cvar_Set ("s_loadas8bit", "1");
 		Com_Printf ("loading all sounds as 8bit\n");
 	}
 
-	if (volume->value < 0.0f)
-		Cvar_Set("volume", "0");
-	else if (volume->value > 1.0f)
-		Cvar_Set("volume", "1.0");
+	if (s_volume->value < 0.0f)
+		Cvar_Set("s_volume", "0");
+	else if (s_volume->value > 1.0f)
+		Cvar_Set("s_volume", "1.0");
 
-	if (bgmvolume->value < 0.0f)
-		Cvar_Set("bgmvolume", "0");
-	else if (bgmvolume->value > 1.0f)
-		Cvar_Set("bgmvolume", "1.0");
+	if (s_bgmvolume->value < 0.0f)
+		Cvar_Set("s_bgmvolume", "0");
+	else if (s_bgmvolume->value > 1.0f)
+		Cvar_Set("s_bgmvolume", "1.0");
 
 	if (s_musicvolume->value < 0.0f)
 		Cvar_Set("s_musicvolume", "0");
@@ -273,8 +271,8 @@ void S_Init (void)
 	if(!COM_CheckParm("-noogg"))
 		S_OGG_Init(); /* Knightmare added */
 #endif
-	if(!COM_CheckParm("-nowavstream"))
-		S_WAV_Init(); /* FS: Added */
+	if (!COM_CheckParm("-nostream"))
+		S_StreamInit();
 
 	S_StopAllSounds ();
 
@@ -305,13 +303,12 @@ void S_Shutdown(void)
 #ifdef OGG_SUPPORT
 		Cmd_RemoveCommand("ogg_restart"); /* Knightmare added */
 #endif
-		Cmd_RemoveCommand("wav_restart"); /* FS: Added */
 	}
 
 #ifdef OGG_SUPPORT
 	S_OGG_Shutdown(); /* Knightmare added */
 #endif
-	S_WAV_Shutdown(); /* FS: Added */
+	S_StreamShutdown(); /* FS */
 
 	SNDDMA_Shutdown();
 
@@ -404,13 +401,13 @@ sfx_t *S_PrecacheSound (char *name)
 {
 	sfx_t	*sfx;
 
-	if (!sound_started || nosound->intValue)
+	if (!sound_started || s_nosound->intValue)
 		return NULL;
 
 	sfx = S_FindName (name);
 
 // cache it in
-	if (precache->intValue)
+	if (s_precache->intValue)
 		S_LoadSound (sfx);
 
 	return sfx;
@@ -537,7 +534,7 @@ void S_StartSound(int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float f
 	if (!sfx)
 		return;
 
-	if (nosound->intValue)
+	if (s_nosound->intValue)
 		return;
 
 	vol = fvol*255;
@@ -717,7 +714,7 @@ void S_UpdateAmbientSounds (void)
 		return;
 
 	l = Mod_PointInLeaf (listener_origin, cl.worldmodel);
-	if (!l || !ambient_level->value)
+	if (!l || !s_ambient_level->value)
 	{
 		for (ambient_channel = 0 ; ambient_channel< NUM_AMBIENTS ; ambient_channel++)
 			channels[ambient_channel].sfx = NULL;
@@ -729,20 +726,20 @@ void S_UpdateAmbientSounds (void)
 		chan = &channels[ambient_channel];      
 		chan->sfx = ambient_sfx[ambient_channel];
 	
-		vol = ambient_level->value * l->ambient_sound_level[ambient_channel];
+		vol = s_ambient_level->value * l->ambient_sound_level[ambient_channel];
 		if (vol < 8)
 			vol = 0;
 
 	// don't adjust volume too fast
 		if (chan->master_vol < vol)
 		{
-			chan->master_vol += host_frametime * ambient_fade->value;
+			chan->master_vol += host_frametime * s_ambient_fade->value;
 			if (chan->master_vol > vol)
 				chan->master_vol = vol;
 		}
 		else if (chan->master_vol > vol)
 		{
-			chan->master_vol -= host_frametime * ambient_fade->value;
+			chan->master_vol -= host_frametime * s_ambient_fade->value;
 			if (chan->master_vol < vol)
 				chan->master_vol = vol;
 		}
@@ -766,7 +763,7 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	channel_t	*ch;
 	channel_t	*combine;
 
-	if (!sound_started)
+	if (!sound_started || cl.paused)
 		return;
 
 	/* FS: Don't allow dumb values. */
@@ -779,22 +776,22 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 		Cvar_ForceSet("s_mastervolume", "1.0");
 	}
 
-	if (volume->value < 0.0f)
+	if (s_volume->value < 0.0f)
 	{
-		Cvar_ForceSet("volume", "0.0");
+		Cvar_ForceSet("s_volume", "0.0");
 	}
-	else if (volume->value > 1.0f)
+	else if (s_volume->value > 1.0f)
 	{
-		Cvar_ForceSet("volume", "1.0");
+		Cvar_ForceSet("s_volume", "1.0");
 	}
 
-	if (bgmvolume->value < 0.0f)
+	if (s_bgmvolume->value < 0.0f)
 	{
-		Cvar_ForceSet("bgmvolume", "0.0");
+		Cvar_ForceSet("s_bgmvolume", "0.0");
 	}
-	else if (bgmvolume->value > 1.0f)
+	else if (s_bgmvolume->value > 1.0f)
 	{
-		Cvar_ForceSet("bgmvolume", "1.0");
+		Cvar_ForceSet("s_bgmvolume", "1.0");
 	}
 
 	if (s_musicvolume->value < 0.0f)
@@ -812,7 +809,7 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	}
 
 	// rebuild scale tables if volume is modified
-	if (s_mastervolume->modified || volume->modified)
+	if (s_mastervolume->modified || s_volume->modified)
 	{
 		S_InitScaletable ();
 	}
@@ -902,11 +899,10 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 		
 		Com_Printf ("----(%i)----\n", total);
 	}
-
 #ifdef OGG_SUPPORT
-	S_UpdateBackgroundTrack (); /* Knightmare added */
+	S_OGGUpdateBackgroundTrack();
 #endif
-	S_UpdateWavTrack(); /* FS: Added */
+	S_StreamUpdate(); /* FS */
 
 // mix some sound
 	S_Update_();
@@ -1096,7 +1092,7 @@ void S_LocalSound (char *sound)
 {
 	sfx_t	*sfx;
 
-	if (nosound->intValue)
+	if (s_nosound->intValue)
 		return;
 	if (!sound_started)
 		return;
@@ -1118,103 +1114,32 @@ void S_GamespySound (char *sound) /* FS: Added */
 }
 #endif
 
-/*
-============
-S_RawSamples
-
-Cinematic streaming and voice over network
-Streaming music support. Byte swapping
-of data must be handled by the codec.
-Expects data in signed 16 bit, or unsigned
-8 bit format.
-============
-*/
-void S_RawSamples (int samples, int rate, int width, int channels, byte *data, qboolean music)
+void S_MusicPause (void) /* FS */
 {
-	int i;
-	int src, dst;
-	float scale;
-	int intVolume;
+	S_AmbientOff();
+	CDAudio_Pause();
+#ifdef OGG_SUPPORT
+	S_PauseOGGBackgroundTrack();
+#endif
+	S_PauseStreamBackgroundTrack();
+}
 
-	if (!sound_started)
-		return;
-
-	if (s_rawend < paintedtime)
-		s_rawend = paintedtime;
-
-	scale = (float) rate / dma.speed;
-	if (music)
-		intVolume = (int) ((s_musicvolume->value * s_mastervolume->value) * 256);
-	else
-		intVolume = (int) ((volume->value * s_mastervolume->value) * 256);
-
-	if (channels == 2 && width == 2)
-	{
-		for (i = 0; ; i++)
-		{
-			src = i * scale;
-			if (src >= samples)
-				break;
-			dst = s_rawend & (s_rawsamples_size - 1);
-			s_rawend++;
-			s_rawsamples [dst].left = ((short *) data)[src * 2] * intVolume;
-			s_rawsamples [dst].right = ((short *) data)[src * 2 + 1] * intVolume;
-		}
-	}
-	else if (channels == 1 && width == 2)
-	{
-		for (i = 0; ; i++)
-		{
-			src = i * scale;
-			if (src >= samples)
-				break;
-			dst = s_rawend & (s_rawsamples_size - 1);
-			s_rawend++;
-			s_rawsamples [dst].left = ((short *) data)[src] * intVolume;
-			s_rawsamples [dst].right = ((short *) data)[src] * intVolume;
-		}
-	}
-	else if (channels == 2 && width == 1)
-	{
-		intVolume *= 256;
-
-		for (i = 0; ; i++)
-		{
-			src = i * scale;
-			if (src >= samples)
-				break;
-			dst = s_rawend & (s_rawsamples_size - 1);
-			s_rawend++;
-		//	s_rawsamples [dst].left = ((signed char *) data)[src * 2] * intVolume;
-		//	s_rawsamples [dst].right = ((signed char *) data)[src * 2 + 1] * intVolume;
-			s_rawsamples [dst].left = (((byte *) data)[src * 2] - 128) * intVolume;
-			s_rawsamples [dst].right = (((byte *) data)[src * 2 + 1] - 128) * intVolume;
-		}
-	}
-	else if (channels == 1 && width == 1)
-	{
-		intVolume *= 256;
-
-		for (i = 0; ; i++)
-		{
-			src = i * scale;
-			if (src >= samples)
-				break;
-			dst = s_rawend & (s_rawsamples_size - 1);
-			s_rawend++;
-		//	s_rawsamples [dst].left = ((signed char *) data)[src] * intVolume;
-		//	s_rawsamples [dst].right = ((signed char *) data)[src] * intVolume;
-			s_rawsamples [dst].left = (((byte *) data)[src] - 128) * intVolume;
-			s_rawsamples [dst].right = (((byte *) data)[src] - 128) * intVolume;
-		}
-	}
+void S_MusicResume (void) /* FS */
+{
+	S_AmbientOn();
+	CDAudio_Resume();
+#ifdef OGG_SUPPORT
+	S_ResumeOGGBackgroundTrack();
+#endif
+	S_ResumeStreamBackgroundTrack();
 }
 
 /* FS: So we can support both */
 void S_StopBackgroundTrack(void)
 {
-	S_StopWAVBackgroundTrack();
+	CDAudio_Stop();
 #ifdef OGG_SUPPORT
 	S_StopOGGBackgroundTrack();
 #endif
+	S_StopStreamBackgroundTrack();
 }

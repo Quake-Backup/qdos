@@ -1,608 +1,603 @@
 /*
-Copyright (C) 1997-2001 Id Software, Inc.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-// snd_stream.c -- Ogg Vorbis stuff
+// snd_strm.c
 
 
 #include "quakedef.h"
 
-#ifdef OGG_SUPPORT
+#define DR_WAV_IMPLEMENTATION
+#include "dr_wav.h"
 
-#define OV_EXCLUDE_STATIC_CALLBACKS
-#if defined(VORBIS_USE_TREMOR)
-/* for Tremor / Vorbisfile api differences,
- * see doc/diff.html in the Tremor package. */
-#include <tremor/ivorbisfile.h>
-#else
-#include <vorbis/vorbisfile.h>
-#endif
+#define DR_MP3_IMPLEMENTATION
+#include "dr_mp3.h"
 
-/* Vorbis codec can return the samples in a number of different
- * formats, we use the standard signed short format. */
-#define VORBIS_SAMPLEBITS 16
-#define VORBIS_SAMPLEWIDTH 2
-#define VORBIS_SIGNED_DATA 1
+#define DR_FLAC_IMPLEMENTATION
+#define DR_FLAC_NO_CRC
+#include "dr_flac.h"
 
-static bgTrack_t	s_bgTrack;
+static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, int width, int channels, const strm_int16_t *data, qboolean music);
 
-static qboolean	ogg_first_init = true;	// First initialization flag
-static qboolean	ogg_started = false;	// Initialization flag
-static bgm_status_t	trk_status;		// Status indicator
+stream_t stream_channels[MAX_STREAMS];
 
-#define MAX_OGGLIST 512
-static char		**ogg_filelist;		// List of Ogg Vorbis files
-static int		ogg_numfiles;		// Number of Ogg Vorbis files
-static int		ogg_loopcounter;
+void S_Stream_f (void);
 
-static cvar_t	*ogg_loopcount;
-static cvar_t	*ogg_ambient_track;
+/* 
 
-static void S_OGG_LoadFileList (void);
-static void S_OGG_ParseCmd (void);
-
-
-/*
-=======================================================================
-
-OGG VORBIS STREAMING
-
-=======================================================================
 */
+static qboolean bMixed = false;
 
-static size_t ovc_read (void *ptr, size_t size, size_t nmemb, void *datasource)
+void S_StreamInit (void)
 {
-	bgTrack_t	*track = (bgTrack_t *)datasource;
-
-	if (!size || !nmemb)
-		return 0;
-	return fread(ptr, 1, size * nmemb, track->file) / size;
-}
-
-static int ovc_seek (void *datasource, ogg_int64_t offset, int whence)
-{
-	bgTrack_t	*track = (bgTrack_t *)datasource;
-
-	switch (whence)
+	if (snd_initialized)
 	{
-	case SEEK_SET:
-	case SEEK_CUR:
-	case SEEK_END:
-		return fseek(track->file, (long)offset, whence);
-	}
-
-	return -1;
-}
-
-static int ovc_close (void *datasource)
-{
-	return 0;
-}
-
-static long ovc_tell (void *datasource)
-{
-	bgTrack_t	*track = (bgTrack_t *)datasource;
-	return ftell(track->file);
-}
-
-
-/*
-=================
-S_OpenBackgroundTrack
-=================
-*/
-static qboolean S_OpenBackgroundTrack (char *name, bgTrack_t *track)
-{
-	OggVorbis_File	*vorbisFile;
-	vorbis_info		*vorbisInfo;
-	ov_callbacks	vorbisCallbacks = {ovc_read, ovc_seek, ovc_close, ovc_tell};
-	char	filename[1024];
-	char	*path = NULL;
-
-//	Com_Printf("Opening background track: %s\n", name);
-	do {
-		path = COM_NextPath( path );
-		Com_sprintf( filename, sizeof(filename), "%s/%s", path, name );
-		if ( (track->file = fopen(filename, "rb")) != 0)
-			break;
-	} while ( path );
-
-	if (!track->file)
-	{
-		Com_Printf("S_OpenBackgroundTrack: couldn't find %s\n", name);
-		return false;
-	}
-
-	track->vorbisFile = vorbisFile = Z_Malloc(sizeof(OggVorbis_File));
-
-//	Com_Printf("Opening callbacks for background track\n");
-	if (ov_open_callbacks(track, vorbisFile, NULL, 0, vorbisCallbacks) < 0)
-	{
-		Com_Printf("S_OpenBackgroundTrack: couldn't open OGG stream (%s)\n", name);
-		return false;
-	}
-
-//	Com_Printf("Getting info for background track\n");
-	vorbisInfo = ov_info(vorbisFile, -1);
-	if (vorbisInfo->channels != 1 && vorbisInfo->channels != 2)
-	{
-		Com_Printf("S_OpenBackgroundTrack: only mono and stereo OGG files supported (%s)\n", name);
-		return false;
-	}
-
-	track->start = ov_raw_tell(vorbisFile);
-	track->rate = vorbisInfo->rate;
-	track->width = 2;
-	track->channels = vorbisInfo->channels; // Knightmare added
-
-//	Com_Printf("Vorbis info: frequency: %i channels: %i bitrate: %i\n",
-//		vorbisInfo->rate, vorbisInfo->channels, vorbisInfo->bitrate_nominal);
-
-	return true;
-}
-
-
-/*
-=================
-S_CloseBackgroundTrack
-=================
-*/
-static void S_CloseBackgroundTrack (bgTrack_t *track)
-{
-	if (track->vorbisFile)
-	{
-		ov_clear(track->vorbisFile);
-		Z_Free(track->vorbisFile);
-		track->vorbisFile = NULL;
-	}
-
-	if (track->file)
-	{
-		fclose(track->file);
-		track->file = NULL;
+		Cmd_AddCommand("stream", S_Stream_f);
 	}
 }
 
-/*
-============
-S_StreamBackgroundTrack
-============
-*/
-void S_StreamBackgroundTrack (void)
+void S_StreamShutdown (void)
 {
-	int		samples, maxSamples;
-	int		read, maxRead, total, dummy;
+	if (snd_initialized)
+	{
+		Cmd_RemoveCommand("stream");
+	}
+}
+
+void S_StreamUpdate (void)
+{
+	int		i;
+	int		numsamples, maxSamples;
+	int		read, maxRead, total;
+	unsigned int	channels, sampleRate;
 	float	scale;
+	strm_int16_t	data[SND_BUFFER_SIZE];
+	stream_t	*stream;
+	drmp3	*mp3_info;
+	drwav	*wav_info;
+	drflac	*flac_info;
 
-	if (!s_bgTrack.file || !s_musicvolume->value || !s_mastervolume->value || !cl_ogg_music->intValue)
+	/* FS: Save this stuff so we can mix in additional MP3 channels. */
+	int prev_rawend = s_rawend;
+	int prev_paintedtime = paintedtime;
+	int after_rawend = s_rawend;
+	int after_paintedtime = paintedtime;
+
+	bMixed = false;
+
+	for (i = 0; i < MAX_STREAMS; i++)
+	{
+		if (s_rawend < paintedtime)
+			s_rawend = paintedtime;
+
+		stream = &stream_channels[i];
+		if (!stream->active || !stream->handle)
+			continue;
+
+		wav_info = (drwav *)stream->handle->drwav;
+		if (wav_info)
+		{
+			sampleRate = wav_info->sampleRate;
+			channels = wav_info->channels;
+			mp3_info = NULL;
+			flac_info = NULL;
+		}
+		else
+		{
+			flac_info = (drflac *)stream->handle->drflac;
+			if (flac_info)
+			{
+				sampleRate = flac_info->sampleRate;
+				channels = flac_info->channels;
+				mp3_info = NULL;
+				wav_info = NULL;
+			}
+			else
+			{
+				mp3_info = (drmp3 *)stream->handle->drmp3;
+				if (!mp3_info || !mp3_info->pData)
+					continue;
+
+				sampleRate = mp3_info->sampleRate;
+				channels = mp3_info->channels;
+				wav_info = NULL;
+				flac_info = NULL;
+			}
+		}
+
+		scale = (float)sampleRate / dma.speed;
+		maxSamples = sizeof(data) / channels / 2; /* FS: DRMP3 uses signed 16-bit so width is 2. */
+
+		while (1)
+		{
+			read = 0;
+			numsamples = (paintedtime + s_rawsamples_size - s_rawend) * scale;
+			if (numsamples <= 0)
+				break;
+			if (numsamples > maxSamples)
+				numsamples = maxSamples;
+
+			maxRead = numsamples;
+
+			total = 0;
+			while (total < maxRead)
+			{
+				if (wav_info)
+					read = drwav_read_pcm_frames_s16(wav_info, maxRead - total, data);
+				else if (flac_info)
+					read = drflac_read_pcm_frames_s16(flac_info, maxRead - total, data);
+				else
+					read = drmp3_read_pcm_frames_s16(mp3_info, maxRead - total, data);
+
+				if (!read)
+				{	// End of file
+					if (!stream->looping)
+					{	
+						S_Destroy_Stream(stream);
+						break;
+					}
+					else
+					{
+						if (wav_info)
+							drwav_seek_to_pcm_frame(wav_info, 0);
+						else if (flac_info)
+							drflac_seek_to_pcm_frame(flac_info, 0);
+						else
+							drmp3_seek_to_pcm_frame(mp3_info, 0);
+					}
+				}
+
+				total += read;
+			}
+
+			if (read)
+				S_StreamRawSamples (stream, numsamples, sampleRate, s_loadas8bit->intValue ? 1 : 2, channels, data, true);
+			else
+				break;
+		}
+
+		after_paintedtime = paintedtime > after_paintedtime ? paintedtime : after_paintedtime;
+		after_rawend = s_rawend > after_rawend ? s_rawend : after_rawend;
+		s_rawend = prev_rawend;
+		paintedtime = prev_paintedtime;
+	}
+
+	s_rawend = after_rawend;
+	paintedtime = after_paintedtime;
+}
+
+static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, int width, int channels, const strm_int16_t *data, qboolean music)
+{
+	int i;
+	int src, dst;
+	float scale;
+	int intVolumeL, intVolumeR;
+
+	if (!sound_started)
 		return;
 
 	if (s_rawend < paintedtime)
 		s_rawend = paintedtime;
 
-	scale = (float)s_bgTrack.rate / dma.speed;
-	maxSamples = (sizeof(byte) * s_rawsamples_size) / s_bgTrack.channels / s_bgTrack.width;
-
-	while (1)
+	if (music)
 	{
-		samples = (paintedtime + s_rawsamples_size - s_rawend) * scale;
-		if (samples <= 0)
-			return;
-		if (samples > maxSamples)
-			samples = maxSamples;
-		maxRead = samples * s_bgTrack.channels * s_bgTrack.width;
-
-		total = 0;
-		while (total < maxRead)
+		intVolumeL = (int)((stream->volume * s_musicvolume->value) * 256);
+		intVolumeR = (int)((stream->volume * s_musicvolume->value) * 256);
+	}
+	else
+	{
+		if (stream->is3D)
 		{
-			/* # ov_read() from libvorbisfile returns the decoded PCM audio
-			 *   in requested endianness, signedness and word size.
-			 * # ov_read() from Tremor (libvorbisidec) returns decoded audio
-			 *   always in host-endian, signed 16 bit PCM format.
-			 * # For both of the libraries, if the audio is multichannel,
-			 *   the channels are interleaved in the output buffer.
-			 */
-			read = ov_read(s_bgTrack.vorbisFile, (char *)(s_streamDataPtr + total), maxRead - total,
-#if !defined(VORBIS_USE_TREMOR)
-											bigendien,
-											VORBIS_SAMPLEWIDTH,
-											VORBIS_SIGNED_DATA,
-#endif /* ! VORBIS_USE_TREMOR */
-											&dummy);
-			if (!read)
-			{	// End of file
-				if (!s_bgTrack.looping)
-				{	// Close the intro track
-					S_CloseBackgroundTrack(&s_bgTrack);
-
-					// Open the loop track
-					if (!S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack)) {
-						S_StopBackgroundTrack();
-						return;
-					}
-					s_bgTrack.looping = true;
-				}
-				else
-				{	// check if it's time to switch to the ambient track
-					if ( (ogg_loopcount->intValue > 0) && (++ogg_loopcounter >= ogg_loopcount->intValue))
-					{	// Close the loop track
-						S_CloseBackgroundTrack(&s_bgTrack);
-
-						if (!S_OpenBackgroundTrack(s_bgTrack.ambientName, &s_bgTrack)) {
-							if (!S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack)) {
-								S_StopBackgroundTrack();
-								return;
-							}
-						}
-						else
-							s_bgTrack.ambient_looping = true;
-					}
-				}
-
-				// Restart the track, skipping over the header
-				ov_raw_seek(s_bgTrack.vorbisFile, (ogg_int64_t)s_bgTrack.start);
-			}
-
-			total += read;
+			intVolumeL = stream->leftvol;
+			intVolumeR = stream->rightvol;
 		}
-		S_RawSamples (samples, s_bgTrack.rate, s_bgTrack.width, s_bgTrack.channels, s_streamDataPtr, true);
+		else
+		{
+			intVolumeL = (int)((stream->volume * s_volume->value) * 256);
+			intVolumeR = (int)((stream->volume * s_volume->value) * 256);
+		}
+	}
+
+	scale = (float)rate / dma.speed;
+
+	if (channels == 2 && width == 2)
+	{
+		if (bMixed) /* FS: Moved this out of for loop.  Don't need to check this every iteration.  Comes at a cost of code dupe. */
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left += (data[src * 2] * intVolumeL);
+				s_rawsamples[dst].right += (data[src * 2 + 1] * intVolumeR);
+			}
+		}
+		else
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left = (data[src * 2] * intVolumeL);
+				s_rawsamples[dst].right = (data[src * 2 + 1] * intVolumeR);
+			}
+		}
+
+		bMixed = true;
+	}
+	else if (channels == 1 && width == 2)
+	{
+		if (bMixed)
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left += (data[src] * intVolumeL);
+				s_rawsamples[dst].right += (data[src] * intVolumeR);
+			}
+		}
+		else
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left = (data[src] * intVolumeL);
+				s_rawsamples[dst].right = (data[src] * intVolumeR);
+			}
+		}
+
+		bMixed = true;
+	}
+	else if (channels == 2 && width == 1)
+	{
+		intVolumeL *= 256;
+		intVolumeR *= 256;
+
+		if (bMixed)
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left += ((data[src * 2] - 128) >> 8) * intVolumeL;
+				s_rawsamples[dst].right += ((data[src * 2 + 1] - 128) >> 8) * intVolumeR;
+
+			}
+		}
+		else
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left = ((data[src * 2] - 128) >> 8) * intVolumeL;
+				s_rawsamples[dst].right = ((data[src * 2 + 1] - 128) >> 8) * intVolumeR;
+			}
+		}
+
+		bMixed = true;
+	}
+	else if (channels == 1 && width == 1)
+	{
+		intVolumeL *= 256;
+		intVolumeR *= 256;
+
+		if (bMixed)
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left += ((data[src] - 128) >> 8) * intVolumeL;
+				s_rawsamples[dst].right += ((data[src] - 128) >> 8) * intVolumeR;
+
+			}
+		}
+		else
+		{
+			for (i = 0; ; i++)
+			{
+				src = i * scale;
+				if (src >= samples)
+					break;
+				dst = s_rawend & (s_rawsamples_size - 1);
+				s_rawend++;
+
+				s_rawsamples[dst].left = ((data[src] - 128) >> 8) * intVolumeL;
+				s_rawsamples[dst].right = ((data[src] - 128) >> 8) * intVolumeR;
+			}
+		}
+
+		bMixed = true;
+	}
+	else
+	{
+		Com_Printf("WARNING: Unknown raw sample type.  Channels: %d.  Width: %d\n", channels, width);
 	}
 }
 
-/*
-============
-S_UpdateBackgroundTrack
-
-Streams background track
-============
-*/
-void S_UpdateBackgroundTrack (void)
+hSTREAM *S_Open_Stream(const char *path)
 {
-	// stop music if paused
-	if (trk_status == BGM_PLAY)// && !cl_paused->intValue)
-		S_StreamBackgroundTrack ();
+	hSTREAM *ptr;
+
+	if (!snd_initialized || !sound_started)
+		return NULL;
+
+	if (!path || path[0] == '\0')
+		return NULL;
+
+	if (!stricmp(COM_FileExtension(path), "wav"))
+	{
+		drwav *wav;
+		drwav_uint64 pcmFrameCount = 0;
+
+		wav = (drwav *)calloc(1, sizeof(drwav));
+		if (!drwav_init_file(wav, path, NULL))
+		{
+			drwav_uninit(wav);
+			return NULL;
+			// Failed to open file
+		}
+
+		ptr = (hSTREAM *)Z_Malloc(sizeof(hSTREAM));
+		drwav_get_length_in_pcm_frames(wav, &pcmFrameCount);
+		ptr->totallen = pcmFrameCount;
+		ptr->datarate = wav->sampleRate;
+		ptr->drwav = wav;
+	}
+	else if (!stricmp(COM_FileExtension(path), "flac"))
+	{
+		drflac *flac;
+
+		flac = drflac_open_file(path, NULL);
+		if (!flac)
+		{
+			drflac_close(flac);
+			return NULL;
+			// Failed to open file
+		}
+
+		ptr = (hSTREAM *)Z_Malloc(sizeof(hSTREAM));
+		ptr->datarate = flac->sampleRate;
+		ptr->drflac = flac;
+	}
+	else if (!stricmp(COM_FileExtension(path), "mp3"))
+	{
+		drmp3 *mp3;
+		drmp3_uint64 mp3FrameCount = 0;
+		drmp3_uint64 pcmFrameCount = 0;
+
+		mp3 = (drmp3 *)calloc(1, sizeof(drmp3));
+		if (!drmp3_init_file(mp3, path, NULL))
+		{
+			drmp3_uninit(mp3);
+			return NULL;
+			// Failed to open file
+		}
+
+		ptr = (hSTREAM *)Z_Malloc(sizeof(hSTREAM));
+		drmp3_get_mp3_and_pcm_frame_count(mp3, &mp3FrameCount, &pcmFrameCount);
+		ptr->totallen = pcmFrameCount;
+		ptr->datarate = mp3->sampleRate;
+		ptr->drmp3 = mp3;
+	}
+	else
+	{
+		Com_Printf("S_Open_Stream: unsupported format '%s'\n", COM_FileExtension(path));
+		return NULL;
+	}
+
+	return ptr;
 }
 
-// =====================================================================
-
-/*
-=================
-S_StartBackgroundTrack
-=================
-*/
-void S_StartOGGBackgroundTrack (const char *introTrack, const char *loopTrack)
+void S_Destroy_Stream (stream_t *stream)
 {
-	if (!ogg_started) // was sound_started
+	if (!snd_initialized || !sound_started)
+		return;
+
+	if (!stream)
+		return;
+
+	if (stream->handle)
+	{
+		if (stream->handle->drmp3)
+		{
+			drmp3_uninit((drmp3 *)stream->handle->drmp3);
+			free(stream->handle->drmp3);
+		}
+		stream->handle->drmp3 = NULL;
+
+		if (stream->handle->drwav)
+		{
+			drwav_uninit((drwav *)stream->handle->drwav);
+			free(stream->handle->drwav);
+		}
+		stream->handle->drwav = NULL;
+
+		if (stream->handle->drflac)
+		{
+			drflac_close((drflac *)stream->handle->drflac);
+		}
+		stream->handle->drflac = NULL;
+
+		Z_Free(stream->handle);
+	}
+
+	stream->handle = NULL;
+	stream->name[0] = '\0';
+	stream->is3D = false;
+	stream->volume = 0.0f;
+	stream->leftvol = 0;
+	stream->rightvol = 0;
+	stream->active = false;
+	stream->looping = false;
+}
+
+void S_StartStreamBackgroundTrack (const char *name)
+{
+	char	filename[MAX_OSPATH];
+	char	*path = NULL;
+	FILE	*f = NULL;
+	stream_t *stream;
+
+	if (!snd_initialized || !sound_started || !name)
 		return;
 
 	// Stop any playing tracks
 	S_StopBackgroundTrack();
 
-	// Start it up
-	Q_strlcpy(s_bgTrack.introName, introTrack, sizeof(s_bgTrack.introName));
-	Q_strlcpy(s_bgTrack.loopName, loopTrack, sizeof(s_bgTrack.loopName));
-	Q_strlcpy(s_bgTrack.ambientName, va("music/%s.ogg", ogg_ambient_track->string), sizeof(s_bgTrack.ambientName));
-
-	// set a loop counter so that this track will change to the ambient track later
-	ogg_loopcounter = 0;
-
-	// Open the intro track
-	if (!S_OpenBackgroundTrack(s_bgTrack.introName, &s_bgTrack))
+	do
 	{
-		S_StopBackgroundTrack();
-		return;
-	}
-
-	trk_status = BGM_PLAY;
-
-	S_StreamBackgroundTrack();
-}
-
-/*
-=================
-S_StopOGGBackgroundTrack
-=================
-*/
-/* FS: Called from S_StopBackgroundTrack in snd_dma.c */
-void S_StopOGGBackgroundTrack (void)
-{
-	if (!ogg_started)
-		return;
-
-	S_CloseBackgroundTrack(&s_bgTrack);
-
-	trk_status = BGM_STOP;
-
-	memset(&s_bgTrack, 0, sizeof(bgTrack_t));
-}
-
-// =====================================================================
-
-/*
-==========
-S_OGG_Init
-
-Initialize the Ogg Vorbis subsystem
-Based on code by QuDos
-==========
-*/
-void S_OGG_Init (void)
-{
-	if (ogg_started)
-		return;
-
-	// Cvars
-	ogg_loopcount = Cvar_Get("ogg_loopcount", "5", CVAR_ARCHIVE);
-	ogg_ambient_track = Cvar_Get("ogg_ambient_track", "11", CVAR_ARCHIVE);
-
-	// Console commands
-	Cmd_AddCommand("ogg", S_OGG_ParseCmd);
-
-	// Build list of files
-	Com_Printf("Searching for Ogg Vorbis files...\n");
-	ogg_numfiles = 0;
-	S_OGG_LoadFileList ();
-	Com_Printf("%d Ogg Vorbis files found.\n", ogg_numfiles);
-
-	// Initialize variables
-	if (ogg_first_init) {
-		trk_status = BGM_STOP;
-		ogg_first_init = false;
-	}
-
-	ogg_started = true;
-}
-
-/*
-==========
-S_OGG_Shutdown
-
-Shutdown the Ogg Vorbis subsystem
-Based on code by QuDos
-==========
-*/
-void S_OGG_Shutdown (void)
-{
-	int		i;
-
-	if (!ogg_started)
-		return;
-
-	S_StopBackgroundTrack ();
-
-	// Free the list of files
-	for (i = 0; i < ogg_numfiles; i++)
-		free(ogg_filelist[i]);
-	if (ogg_numfiles > 0)
-		free(ogg_filelist);
-
-	ogg_started = false;
-}
-
-/*
-==========
-S_OGG_Restart
-
-Reinitialize the Ogg Vorbis subsystem
-Based on code by QuDos
-==========
-*/
-void S_OGG_Restart (void)
-{
-	S_OGG_Shutdown ();
-	S_OGG_Init ();
-}
-
-/*
-==========
-S_OGG_LoadFileList
-
-Load list of Ogg Vorbis files in music/
-Based on code by QuDos
-==========
-*/
-static void S_OGG_LoadFileList (void)
-{
-	char	*p, *path = NULL;
-	char	**list;			// List of .ogg files
-	char	findname[MAX_OSPATH];
-	char	lastPath[MAX_OSPATH];	// Knightmare added
-	int		i, numfiles = 0;
-
-	ogg_filelist = malloc(sizeof(char *) * MAX_OGGLIST);
-	memset( ogg_filelist, 0, sizeof( char * ) * MAX_OGGLIST );
-	lastPath[0] = 0;	// Knightmare added
-
-	// Set search path
-	path = COM_NextPath(path);
-	while (path) 
-	{
-		// Knightmare- catch repeated paths
-		if ( strlen(lastPath) > 0 && !strcmp (path, lastPath) ) {
-			path = COM_NextPath( path );
-			continue;
-		}
-
-		// Get file list
-		Com_sprintf( findname, sizeof(findname), "%s/music/*.ogg", path );
-		list = COM_ListFiles(findname, &numfiles, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM);
-
-		// Add valid Ogg Vorbis file to the list
-		for (i=0; i<numfiles && ogg_numfiles<MAX_OGGLIST; i++)
-		{
-			if (!list || !list[i])
-				continue;
-			p = list[i];
-
-			if (!strstr(p, ".ogg"))
-				continue;
-			if (!COM_ItemInList(p, ogg_numfiles, ogg_filelist)) // check if already in list
-			{
-				ogg_filelist[ogg_numfiles] = strdup (p);
-				ogg_numfiles++;
-			}
-		}
-		if (numfiles) // Free the file list
-			COM_FreeFileList(list, numfiles);
-
-		Q_strlcpy (lastPath, path, sizeof(lastPath));	// Knightmare- copy to lastPath
 		path = COM_NextPath( path );
-	}
-}
+		Com_sprintf( filename, sizeof(filename), "%s/%s", path, name );
+		if ((f = fopen(filename, "rb")) != NULL)
+			break;
+	} while ( path );
 
-// =====================================================================
-
-/*
-=================
-S_OGG_PlayCmd
-Based on code by QuDos
-=================
-*/
-static void S_OGG_PlayCmd (void)
-{
-	char	name[MAX_QPATH];
-
-	if (Cmd_Argc() < 3) {
-		Com_Printf("Usage: ogg play {track}\n");
+	if (!f)
+	{
+		Com_Printf("%s not found\n", name);
 		return;
 	}
-	Com_sprintf(name, sizeof(name), "music/%s.ogg", Cmd_Argv(2) );
-	S_StartOGGBackgroundTrack (name, name);
-}
 
-/*
-=================
-S_OGG_StatusCmd
-Based on code by QuDos
-=================
-*/
-static void S_OGG_StatusCmd (void)
-{
-	const char	*trackName;
+	fclose(f);
 
-	if (s_bgTrack.ambient_looping)
-		trackName = s_bgTrack.ambientName;
-	else if (s_bgTrack.looping)
-		trackName = s_bgTrack.loopName;
+	stream = &stream_channels[0];
+	stream->handle = S_Open_Stream(filename);
+	if (stream->handle)
+	{
+		Q_strlcpy(stream->name, name, sizeof(stream->name));
+		stream->volume = 1.0f;
+		stream->active = true;
+		stream->looping = true;
+	}
 	else
-		trackName = s_bgTrack.introName;
-
-	switch (trk_status) {
-	case BGM_PLAY:
-#if !defined(VORBIS_USE_TREMOR)
-		Com_Printf("Playing file %s at %0.2f seconds.\n",
-		    trackName, ov_time_tell(s_bgTrack.vorbisFile));
-#else
-		Com_Printf("Playing file %s at %0.2f seconds.\n",
-		    trackName, ov_time_tell(s_bgTrack.vorbisFile)/1000.0);
-#endif
-		break;
-	case BGM_PAUSE:
-#if !defined(VORBIS_USE_TREMOR)
-		Com_Printf("Paused file %s at %0.2f seconds.\n",
-		    trackName, ov_time_tell(s_bgTrack.vorbisFile));
-#else
-		Com_Printf("Paused file %s at %0.2f seconds.\n",
-		    trackName, ov_time_tell(s_bgTrack.vorbisFile)/1000.0);
-#endif
-		break;
-	case BGM_STOP:
-		Com_Printf("Stopped.\n");
-		break;
+	{
+		Com_Printf("Failed to get a handle for %s\n", name);
 	}
 }
 
-/*
-==========
-S_OGG_ListCmd
+void S_StopStreamBackgroundTrack (void)
+{
+	stream_t *stream;
 
-List Ogg Vorbis files
-Based on code by QuDos
-==========
-*/
-static void S_OGG_ListCmd (void)
+	stream = &stream_channels[0];
+	S_Destroy_Stream(stream);
+}
+
+void S_PauseStreamBackgroundTrack (void)
+{
+	stream_t *stream;
+
+	stream = &stream_channels[0];
+	stream->active = false;
+}
+
+void S_ResumeStreamBackgroundTrack (void)
+{
+	stream_t *stream;
+
+	stream = &stream_channels[0];
+	if (stream->handle)
+		stream->active = true;
+}
+
+void S_StreamStatus (void)
 {
 	int i;
+	stream_t	*stream;
 
-	if (ogg_numfiles <= 0) {
-		Com_Printf("No Ogg Vorbis files to list.\n");
+	Com_Printf("Total stream channels available: %d\n", MAX_STREAMS);
+
+	for (i = 0; i < MAX_STREAMS; i++)
+	{
+		stream = &stream_channels[i];
+		if (stream->handle)
+		{
+			if (stream->active)
+			{
+				Com_Printf(" %d: Playing %s.  Looped: %d\n", i, stream->name, stream->looping);
+			}
+			else
+			{
+				Com_Printf(" %d: Paused %s.  Looped: %d\n", i, stream->name, stream->looping);
+			}
+		}
+	}
+}
+
+void S_Stream_f (void)
+{
+	char	name[MAX_OSPATH];
+	char	*command;
+
+	if (!snd_initialized || !sound_started)
+	{
+		Com_Printf("Sound engine not started\n");
 		return;
 	}
 
-	for (i = 0; i < ogg_numfiles; i++)
-		Com_Printf("%d %s\n", i+1, ogg_filelist[i]);
-
-	Com_Printf("%d Ogg Vorbis files.\n", ogg_numfiles);
-}
-
-/*
-=================
-S_OGG_ParseCmd
-
-Parses OGG commands
-Based on code by QuDos
-=================
-*/
-static void S_OGG_ParseCmd (void)
-{
-	char	*command;
-
 	if (Cmd_Argc() < 2) {
-		Com_Printf("Usage: ogg {play | pause | resume | stop | status | list}\n");
+		Com_Printf("Usage: stream {play | pause | resume | stop | status}\n");
 		return;
 	}
 
 	command = Cmd_Argv (1);
 
 	if (Q_strcasecmp(command, "play") == 0) {
-		S_OGG_PlayCmd ();
+		Com_sprintf(name, sizeof(name), "music/%s.wav", Cmd_Argv(2));
+		S_StartStreamBackgroundTrack(name);
 		return;
 	}
 
 	if (Q_strcasecmp(command, "pause") == 0) {
-		if (trk_status == BGM_PLAY)
-			trk_status = BGM_PAUSE;
+		stream_channels[0].active = false;
 		return;
 	}
 
 	if (Q_strcasecmp(command, "resume") == 0) {
-		if (trk_status == BGM_PAUSE)
-			trk_status = BGM_PLAY;
+		if (stream_channels[0].handle)
+			stream_channels[0].active = true;
 		return;
 	}
 
 	if (Q_strcasecmp(command, "stop") == 0) {
-		S_StopBackgroundTrack ();
+		S_Destroy_Stream(&stream_channels[0]);
 		return;
 	}
 
 	if (Q_strcasecmp(command, "status") == 0) {
-		S_OGG_StatusCmd ();
+		S_StreamStatus ();
 		return;
 	}
-
-	if (Q_strcasecmp(command, "list") == 0) {
-		S_OGG_ListCmd ();
-		return;
-	}
-
-	Com_Printf("Usage: ogg {play | pause | resume | stop | status | list}\n");
 }
-
-#endif /* OGG_SUPPORT */

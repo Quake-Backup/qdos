@@ -1175,11 +1175,13 @@ void CL_ParseServerMessage (void)
 
 					if (cl.paused)
 					{
-						CDAudio_Pause ();
+						S_ClearBuffer();
+						S_MusicPause (); /* FS */
 					}
 					else
 					{
-						CDAudio_Resume ();
+						S_ClearBuffer();
+						S_MusicResume (); /* FS */
 					}
 				}
 				break;
@@ -1347,7 +1349,6 @@ void CL_PlayBackgroundTrack (int track)
 	if (track == 0)
 	{	// Stop any playing track
 		Com_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack: stopping\n");
-		CDAudio_Stop();
 		S_StopBackgroundTrack();
 		return;
 	}
@@ -1376,7 +1377,7 @@ void CL_PlayBackgroundTrack (int track)
 	if ((have_extmusic&BGMUSIC_WAV) && (cl_wav_music->intValue || !(have_extmusic&BGMUSIC_OGG))) {
 		CDAudio_Stop();
 		Q_strlcpy (p, "wav", sizeof(name));
-		S_StartWAVBackgroundTrack(name, name);
+		S_StartStreamBackgroundTrack(name);
 	}
 #ifdef OGG_SUPPORT
 	else if (have_extmusic&BGMUSIC_OGG) {

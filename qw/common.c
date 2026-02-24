@@ -933,18 +933,22 @@ void COM_StripExtension (char *in, char *out)
 COM_FileExtension
 ============
 */
-char *COM_FileExtension (char *in)
+const char *COM_FileExtension (const char *in)
 {
 	static char exten[8];
-	int	i;
+	int		i;
+	const char *s;
 
-	while (*in && *in != '.')
-		in++;
+	/* FS: Modified this to walk backwards instead, because DJGPP and probably Linux start at ./ which will mess this up. */
+	s = in + strlen(in) - 1;
+
+	while (s != in && *s != '.')
+		s--;
 	if (!*in)
 		return "";
-	in++;
-	for (i=0 ; i<7 && *in ; i++,in++)
-		exten[i] = *in;
+	s++;
+	for (i=0 ; i<7 && *s ; i++,s++)
+		exten[i] = *s;
 	exten[i] = 0;
 	return exten;
 }

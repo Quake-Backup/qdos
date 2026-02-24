@@ -1462,7 +1462,7 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 		else
 			Con_Warning("External ent file found!\n"); /* FS: Warn about non-standardness */
 
-		if (entitystring && strlen(entitystring) == 0) /* FS: Check to see if it's blank. */
+		if (entitystring && entitystring[0] != '\0') /* FS: Check to see if it's blank. */
 		{
 			Con_Warning("%s.ent is blank!  Defaulting to %s.bsp.\n", filename, server);
 			Z_Free(entitystring);

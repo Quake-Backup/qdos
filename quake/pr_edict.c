@@ -302,6 +302,11 @@ char *PR_ValueString (etype_t type, eval_t *val)
 		break;
 	case ev_field:
 		def = ED_FieldAtOfs ( val->_int );
+		if (!def)
+		{
+			Host_Error("ED_FieldAtOfs: def is null");
+			return NULL;
+		}
 		Com_sprintf (line, sizeof(line), ".%s", pr_strings + def->s_name);
 		break;
 	case ev_void:
@@ -354,6 +359,11 @@ char *PR_UglyValueString (etype_t type, eval_t *val)
 		break;
 	case ev_field:
 		def = ED_FieldAtOfs ( val->_int );
+		if (!def)
+		{
+			Host_Error("ED_FieldAtOfs: def is null");
+			return NULL;
+		}
 		Com_sprintf (line, sizeof(line), "%s", pr_strings + def->s_name);
 		break;
 	case ev_void:

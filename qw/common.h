@@ -305,5 +305,6 @@ byte    COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
 int build_number( void );
 void CompleteCommand (void); /* FS: Autocomplete commands */
 void Com_sprintf (char *dest, size_t size, char *fmt, ...); /* FS: Added */
+const char *COM_FileExtension (const char *in);
 
 #endif // __COMMON_H

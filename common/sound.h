@@ -23,10 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __SOUND_H
 #define __SOUND_H
 
-#ifdef OGG_SUPPORT	// Knightmare added- vorbis support
+#include "snd_strm.h" /* FS */
+#ifdef OGG_SUPPORT
 #include "snd_ogg.h"
 #endif
-#include "snd_wavstream.h" /* FS: Added */
 
 #define WAV_FORMAT_PCM	1
 
@@ -173,7 +173,9 @@ extern	channel_t   channels[MAX_CHANNELS];
 // MAX_DYNAMIC_CHANNELS to MAX_DYNAMIC_CHANNELS + NUM_AMBIENTS -1 = water, etc
 // MAX_DYNAMIC_CHANNELS + NUM_AMBIENTS to total_channels = static sounds
 
-extern	int			total_channels;
+extern	int		sound_started;
+
+extern	int		total_channels;
 
 extern int		paintedtime;
 extern int		s_rawend; /* FS: Quake 2 raw wav streaming */
@@ -185,9 +187,9 @@ extern vec3_t listener_up;
 extern dma_t dma;
 extern vec_t sound_nominal_clip_dist;
 
-extern cvar_t	*loadas8bit;
-extern cvar_t	*bgmvolume;
-extern cvar_t	*volume;
+extern cvar_t	*s_loadas8bit;
+extern cvar_t	*s_bgmvolume;
+extern cvar_t	*s_volume;
 extern cvar_t	*s_mixahead;
 extern cvar_t	*s_khz; /* FS: Added */
 extern cvar_t	*s_musicvolume; /* FS: Added */
@@ -198,7 +200,8 @@ extern qboolean	snd_initialized;
 
 void S_LocalSound (char *s);
 void S_GamespySound (char *s); /* FS: Added */
-void S_MusicPlay (int cdtrack); /* FS: Added */
+void S_MusicPause (void);
+void S_MusicResume (void);
 
 sfxcache_t *S_LoadSound (sfx_t *s);
 

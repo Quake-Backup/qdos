@@ -132,10 +132,10 @@ CLIENT = $(SYSOBJ_DXE)       \
 	snd_mem.o  \
 	snd_mix.o  \
 	snd_mixa.o \
+	snd_ogg.o \
 	snd_pci.o  \
 	snd_sb.o   \
 	snd_strm.o \
-	snd_wavstream.o \
 	sys_dos.o  \
 	sys_dosa.o \
 	sys_find.o \

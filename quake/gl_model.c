@@ -78,7 +78,7 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
 	
 	if (!model || !model->nodes)
 	{
-		Sys_Error ("Mod_PointInLeaf: bad model: %s", model->name); /* FS: Tell me the model name */
+		Sys_Error ("Mod_PointInLeaf: bad model: %s", model ? model->name : "UNKNOWN MODEL"); /* FS: Tell me the model name */
 		return NULL;
 	}
 

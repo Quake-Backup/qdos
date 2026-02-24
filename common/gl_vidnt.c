@@ -388,7 +388,7 @@ int VID_SetMode (int modenum, unsigned char *palette)
 	temp = scr_disabled_for_loading;
 	scr_disabled_for_loading = true;
 
-	CDAudio_Pause ();
+	S_MusicPause (); /* FS */
 
 	if (vid_modenum == NO_MODE)
 		original_mode = windowed_default;
@@ -504,13 +504,14 @@ void CheckTextureExtensions (void)
 	char		*tmp;
 	qboolean	texture_ext;
 	HINSTANCE	hInstGL;
+	size_t textureextstringlen = strlen(TEXTURE_EXT_STRING);
 
 	texture_ext = FALSE;
 	/* check for texture extension */
 	tmp = (unsigned char *)glGetString(GL_EXTENSIONS);
 	while (*tmp)
 	{
-		if (strncmp((const char*)tmp, TEXTURE_EXT_STRING, strlen(TEXTURE_EXT_STRING)) == 0)
+		if (strncmp((const char*)tmp, TEXTURE_EXT_STRING, textureextstringlen) == 0)
 			texture_ext = TRUE;
 		tmp++;
 	}
