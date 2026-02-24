@@ -1595,6 +1595,10 @@ void	VID_Init (unsigned char *palette)
 
 	VID_InitFullDIB (global_hInstance);
 
+	/* FS: needs init'd. */
+	width = 640;
+	height = 480;
+
 	if (COM_CheckParm("-window"))
 	{
 		hdc = GetDC (NULL);
@@ -1790,6 +1794,9 @@ void	VID_Init (unsigned char *palette)
 
 		if ((i = COM_CheckParm("-conheight")) != 0)
 			vid.conheight = atoi(com_argv[i+1]);
+		else
+			vid.conheight = height; /* FS */
+
 		if (vid.conheight < 200)
 			vid.conheight = 200;
 	}
