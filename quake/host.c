@@ -638,8 +638,8 @@ void _Host_ServerFrame (void)
 	SV_RunClients ();
 
 // move things around and think
-// always pause in single player if in console or menus
-	if (!sv.paused && (svs.maxclients > 1 || key_dest == key_game) )
+// always pause in single player if in menus
+	if (!sv.paused && (svs.maxclients > 1 || key_dest == key_game || key_dest == key_console) ) /* FS: Don't pause in console... */
 		SV_Physics ();
 }
 
@@ -690,8 +690,8 @@ void Host_ServerFrame (void)
 	SV_RunClients ();
 
 // move things around and think
-// always pause in single player if in console or menus
-	if (!sv.paused && (svs.maxclients > 1 || key_dest == key_game) )
+// always pause in single player if in menus
+	if (!sv.paused && (svs.maxclients > 1 || key_dest == key_game || key_dest == key_console) ) /* FS: Don't pause in console... */
 		SV_Physics ();
 
 // send all messages to the clients
