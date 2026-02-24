@@ -1065,12 +1065,14 @@ R_Clear
 */
 void R_Clear (void)
 {
+	GLbitfield clearbits = 0;	/* Knightmare added */
+
 	if (r_mirroralpha->value != 1.0)
 	{
 		if (gl_clear->intValue)
-			glClear_fp (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			clearbits |= (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		else
-			glClear_fp (GL_DEPTH_BUFFER_BIT);
+			clearbits |= GL_DEPTH_BUFFER_BIT;
 		gldepthmin = 0;
 		gldepthmax = 0.5;
 		glDepthFunc_fp (GL_LEQUAL);
@@ -1080,7 +1082,7 @@ void R_Clear (void)
 		static int trickframe;
 
 		if (gl_clear->intValue)
-			glClear_fp (GL_COLOR_BUFFER_BIT);
+			clearbits |= GL_COLOR_BUFFER_BIT;
 
 		trickframe++;
 		if (trickframe & 1)
@@ -1099,15 +1101,18 @@ void R_Clear (void)
 	else
 	{
 		if (gl_clear->intValue)
-			glClear_fp (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			clearbits |= (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		else
-			glClear_fp (GL_DEPTH_BUFFER_BIT);
+			clearbits |= GL_DEPTH_BUFFER_BIT;
 		gldepthmin = 0;
 		gldepthmax = 1;
 		glDepthFunc_fp (GL_LEQUAL);
 	}
 
 	glDepthRange_fp (gldepthmin, gldepthmax);
+
+	if (clearbits)
+		glClear_fp(clearbits);
 }
 
 #ifdef QUAKE1 //!!! FIXME, Zoid, mirror is disabled for now

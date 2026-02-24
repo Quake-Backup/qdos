@@ -896,6 +896,11 @@ void Sbar_Draw (void)
 	if (scr_con_current == vid.height)
 		return;		// console is full screen
 
+#ifdef GLQUAKE
+	if (gl_clear->intValue)
+		sb_updates = 0; /* FS: Not clever enough to draw only when necessary with gl_clear. */
+#endif
+
 	if (sb_updates >= vid.numpages)
 		return;
 

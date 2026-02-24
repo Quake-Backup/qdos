@@ -21,6 +21,3 @@
 * Asynchronous rendering support.
 
 * Dedicated server is broken.  Listen probably is too, but I never tested it.
-
-* Status bar tries to draw as little as possible so gl_clear 1 makes it
-  disappear unless there is a frame update.

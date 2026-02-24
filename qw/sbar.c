@@ -769,6 +769,11 @@ void Sbar_Draw (void)
 	qboolean headsup;
 	char st[512];
 
+#ifdef GLQUAKE
+	if (gl_clear->intValue)
+		sb_updates = 0; /* FS: Not clever enough to draw only when necessary with gl_clear. */
+#endif
+
 	headsup = !(cl_sbar->value || scr_viewsize->value<100);
 	if ((sb_updates >= vid.numpages) && !headsup)
 		return;
