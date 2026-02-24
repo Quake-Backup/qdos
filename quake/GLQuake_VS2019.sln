@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winquake", "GLQuake_VS2019.
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug ASAN|x64 = Debug ASAN|x64
+		Debug ASAN|x86 = Debug ASAN|x86
 		GL Debug ASAN|x64 = GL Debug ASAN|x64
 		GL Debug ASAN|x86 = GL Debug ASAN|x86
 		GL Debug|x64 = GL Debug|x64
@@ -15,6 +17,10 @@ Global
 		GL Release|x86 = GL Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{432562CA-3A05-4925-9EC1-7A62B5EA82D2}.Debug ASAN|x64.ActiveCfg = Debug ASAN|x64
+		{432562CA-3A05-4925-9EC1-7A62B5EA82D2}.Debug ASAN|x64.Build.0 = Debug ASAN|x64
+		{432562CA-3A05-4925-9EC1-7A62B5EA82D2}.Debug ASAN|x86.ActiveCfg = Debug ASAN|Win32
+		{432562CA-3A05-4925-9EC1-7A62B5EA82D2}.Debug ASAN|x86.Build.0 = Debug ASAN|Win32
 		{432562CA-3A05-4925-9EC1-7A62B5EA82D2}.GL Debug ASAN|x64.ActiveCfg = GL Debug ASAN|x64
 		{432562CA-3A05-4925-9EC1-7A62B5EA82D2}.GL Debug ASAN|x64.Build.0 = GL Debug ASAN|x64
 		{432562CA-3A05-4925-9EC1-7A62B5EA82D2}.GL Debug ASAN|x86.ActiveCfg = GL Debug ASAN|Win32

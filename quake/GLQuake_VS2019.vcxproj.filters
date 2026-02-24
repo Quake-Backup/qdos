@@ -22,6 +22,9 @@
       <UniqueIdentifier>{2d2fb2c0-45f4-4ac2-b0b8-5752b1e46f61}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
+    <Filter Include="Source Files\Software">
+      <UniqueIdentifier>{bf11bb7e-6e0c-46f2-96f1-e79f1e55b426}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\cd_win.c">
@@ -133,9 +136,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\snd_strm.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\snd_wavstream.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\snd_win.c">
@@ -296,6 +296,93 @@
     </ClCompile>
     <ClCompile Include="net_dos.c">
       <Filter>Source Files\DOS</Filter>
+    </ClCompile>
+    <ClCompile Include="model.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="r_main.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="r_misc.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="screen.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_edge.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_fill.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_init.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_modech.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_part.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_polyse.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_scan.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_sky.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_sprite.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_surf.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_vars.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\d_zpoint.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\draw.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_aclip.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_alias.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_bsp.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_draw.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_edge.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_efrag.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_light.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_sky.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_sprite.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_surf.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_vars.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\vid_win.c">
+      <Filter>Source Files\Software</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -485,15 +572,6 @@
     <Library Include="..\common\win32\libvorbis.lib" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="gl_model.h">
-      <Filter>Source Files\GL</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\common\gl_warp_sin.h">
-      <Filter>Source Files\GL</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\common\glquake.h">
-      <Filter>Source Files\GL</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\common\fx_gamma.h">
       <Filter>Source Files\DOS</Filter>
     </CustomBuild>
@@ -508,6 +586,15 @@
     </CustomBuild>
     <CustomBuild Include="..\common\vregset.h">
       <Filter>Source Files\DOS</Filter>
+    </CustomBuild>
+    <CustomBuild Include="gl_model.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\gl_warp_sin.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\glquake.h">
+      <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
