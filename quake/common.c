@@ -1433,7 +1433,7 @@ void COM_Init (void)
 	}
 #endif // QUAKE1
 
-	registered = Cvar_Get("registered","0", CVAR_NOSET);
+	registered = Cvar_Get("registered","0", CVAR_NOSET|CVAR_PROTECTED);
 	Cvar_Set_Description("registered", "Special internal CVAR for setting Registered game.");
 #ifdef QUAKE1
 	cmdline = Cvar_Get("cmdline","", 0);

@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	CVAR_NOSET		8	// don't allow change from console at all,
 							// but can be set from the command line
 #define	CVAR_LATCH		16	// save changes until server restart
+#define CVAR_PROTECTED		32	// once set cannot be changed at all, even from forcecvar and resetcvar cmds
 
 typedef struct cvar_s
 {
@@ -40,38 +41,44 @@ typedef struct cvar_s
 	char		*defaultString; /* FS: Added */
 	char		*description; /* FS: Added */
 	int			defaultFlags; /* FS: Added */
+	void		(*commandCallbackFn)(struct cvar_s *var); /* FS */
+	void		(*setCallbackFn)(struct cvar_s *var); /* FS */
 	struct cvar_s *next;
 } cvar_t;
 
 extern cvar_t	*cvar_vars;
 
-cvar_t	*Cvar_Get (char *var_name, char *value, int flags);
+cvar_t	*Cvar_Get (const char *var_name, const char *value, int flags);
 // creates the variable if it doesn't exist, or returns the existing one
 // if it exists, the value will not be changed, but flags will be ORed in
 // that allows variables to be unarchived without needing bitflags
 
-cvar_t	*Cvar_Set (char *var_name, char *value);
+cvar_t	*Cvar_Set (const char *var_name, const char *value);
 // will create the variable if it doesn't exist
 
-cvar_t	*Cvar_ForceSet (char *var_name, char *value);
+cvar_t	*Cvar_ForceSet (const char *var_name, const char *value);
 // will set the variable even if NOSET or LATCH
 
-cvar_t	*Cvar_ForceSetValue (char *var_name, float value);
+cvar_t	*Cvar_ForceSetValue (const char *var_name, float value);
 
-cvar_t	*Cvar_FullSet (char *var_name, char *value, int flags);
+cvar_t	*Cvar_FullSet (const char *var_name, const char *value, int flags);
 
-void	Cvar_SetValue (char *var_name, float value);
+void	Cvar_SetValue (const char *var_name, float value);
 // expands value to a string and calls Cvar_Set
 
-float	Cvar_VariableValue (char *var_name);
+float	Cvar_VariableValue (const char *var_name);
 // returns 0 if not defined or non numeric
 
-char	*Cvar_VariableString (char *var_name);
+int		Cvar_VariableValueInt (const char *var_name); /* FS */
+
+char	*Cvar_VariableString (const char *var_name);
 // returns an empty string if not defined
 
-char	*Cvar_CompleteVariable (char *partial);
+char	*Cvar_CompleteVariable (const char *partial);
 // attempts to match a partial variable name for command line completion
 // returns NULL if nothing fits
+
+void	Cvar_ResetVariable (const char *var_name); /* FS */
 
 void	Cvar_GetLatchedVars (void);
 // any CVAR_LATCHED variables that have been set will now take effect
@@ -90,5 +97,8 @@ void	Cvar_Init (void);
 cvar_t	*Cvar_FindVar (const char *var_name); /* FS: Added */
 
 void	Cvar_Set_Description (const char *var_name, const char *description); /* FS: Added */
+
+void	Cvar_CommandCallbackFn (const char *var_name, void (*commandCallbackFn)(cvar_t *self)); /* FS */
+void	Cvar_SetCallbackFn (const char *var_name, void (*setCallbackFn)(cvar_t *self)); /* FS */
 
 #endif // __CVAR_H

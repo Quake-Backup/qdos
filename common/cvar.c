@@ -17,6 +17,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
+/*
+CVAR additions with / * FS * / comments are Copyright 2026 Frank Sapone
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 // cvar.c -- dynamic variable tracking
 
 #ifdef QUAKE1
@@ -32,14 +45,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 cvar_t	*cvar_vars;
 cvar_t	*developer;
 
-void Cvar_ParseDeveloperFlags (void); /* FS: Special stuff for showing all the dev flags */
+void Cvar_ParseDeveloperFlags (void); /* FS */
+qboolean Cvar_Never_Reset_Cmds (const char *var_name); /* FS */
 
 /*
 ============
 Cvar_InfoValidate
 ============
 */
-static qboolean Cvar_InfoValidate (char *s)
+static qboolean Cvar_InfoValidate (const char *s)
 {
 	if (strchr (s, '\\'))
 		return false;
@@ -47,7 +61,119 @@ static qboolean Cvar_InfoValidate (char *s)
 		return false;
 	if (strchr (s, ';'))
 		return false;
+	if (strchr(s, 'ÿ')) /* FS: Don't allow this crap in infostrings. */
+		return false;
+
 	return true;
+}
+
+static cvar_t *Cvar_IsNoset (const char *var_name) /* FS: Make sure this isn't a NOSET CVAR! */
+{
+	cvar_t *var;
+
+	for (var = cvar_vars; var; var = var->next)
+	{
+		if (var->name)
+		{
+			if (!strcmp (var_name, var->name))
+			{
+				if (var->flags & CVAR_NOSET)
+				{
+					return var;
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
+static cvar_t *Cvar_IsProtected (const char *var_name) /* FS: Make sure this isn't a PROTECTED CVAR! */
+{
+	cvar_t *var;
+
+	for (var = cvar_vars; var; var = var->next)
+	{
+		if (var->name)
+		{
+			if (!strcmp (var_name, var->name))
+			{
+				if (var->flags & CVAR_PROTECTED)
+				{
+					return var;
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
+void Cvar_Toggle_f (void) /* FS */
+{
+	if (Cmd_Argc() == 2 && Cmd_Argv(1))
+	{
+		const char *cvar_name = Cmd_Argv(1);
+		int cur_value;
+
+		if (cvar_name == NULL || cvar_name[0] == '\0' || Cvar_FindVar(cvar_name) == NULL)
+		{
+			Com_Printf("%s not found!\n", Cmd_Argv(1));
+			return;
+		}
+
+		if (Cvar_IsNoset(cvar_name) || Cvar_IsProtected(cvar_name))
+		{
+			Com_Printf("%s is write protected.\n", cvar_name);
+			return;
+		}
+
+		//get the value of the cvar.
+		cur_value = Cvar_VariableValueInt(cvar_name);
+
+		//set it to the opposite value.
+		if (cur_value != 0)
+			Cvar_ForceSet(cvar_name, "0");
+		else
+			Cvar_ForceSet(cvar_name, "1");
+
+		Com_Printf("%s set to %d\n", cvar_name, Cvar_VariableValueInt(cvar_name));
+	}
+	else
+	{
+		Com_Printf("USAGE: togglecvar <console variable>\n");
+		return;
+	}
+}
+
+void Cvar_Force_f (void) /* FS */
+{
+	if (Cmd_Argc() == 3 && Cmd_Argv(1))
+	{
+		const char *cvar_name = Cmd_Argv(1);
+		const char *cvar_value = Cmd_Argv(2);
+		cvar_t *var;
+
+		if (cvar_name == NULL || cvar_name[0] == '\0' || Cvar_FindVar(cvar_name) == NULL)
+		{
+			Com_Printf("%s not found!\n", Cmd_Argv(1));
+			return;
+		}
+
+		if (Cvar_Never_Reset_Cmds(cvar_name))
+		{
+			Com_Printf("Error: %s cannot be changed from console!\n", cvar_name);
+			return;
+		}
+
+		Cvar_ForceSet(cvar_name, cvar_value);
+
+		var = Cvar_Get(cvar_name, cvar_value, 0); /* FS: May have changed from a callback that's enforcing something. */
+		Com_Printf("%s set to %s\n", cvar_name, var ? var->string : cvar_value);
+	}
+	else
+	{
+		Com_Printf("USAGE: forcecvar <console variable> <value>\n");
+		return;
+	}
 }
 
 static int cmpr_cvars (const void *a, const void *b)
@@ -185,9 +311,15 @@ cvar_t *Cvar_FindVar (const char *var_name)
 	cvar_t	*var;
 	
 	for (var=cvar_vars ; var ; var=var->next)
-		if (!Q_strcmp ((char *)var_name, var->name))
-			return var;
-
+	{
+		if ( var->name )
+		{
+			if (!strcmp (var_name, var->name))
+			{
+				return var;
+			}
+		}
+	}
 	return NULL;
 }
 
@@ -196,7 +328,7 @@ cvar_t *Cvar_FindVar (const char *var_name)
 Cvar_VariableValue
 ============
 */
-float	Cvar_VariableValue (char *var_name)
+float	Cvar_VariableValue (const char *var_name)
 {
 	cvar_t	*var;
 	
@@ -206,13 +338,27 @@ float	Cvar_VariableValue (char *var_name)
 	return atof (var->string);
 }
 
+/*
+============
+Cvar_VariableValueInt
+============
+*/
+int Cvar_VariableValueInt (const char *var_name) /* FS */
+{
+	cvar_t	*var;
+
+	var = Cvar_FindVar (var_name);
+	if (!var)
+		return 0;
+	return var->intValue;
+}
 
 /*
 ============
 Cvar_VariableString
 ============
 */
-char *Cvar_VariableString (char *var_name)
+char *Cvar_VariableString (const char *var_name)
 {
 	cvar_t *var;
 	
@@ -222,13 +368,12 @@ char *Cvar_VariableString (char *var_name)
 	return var->string;
 }
 
-
 /*
 ============
 Cvar_CompleteVariable
 ============
 */
-char *Cvar_CompleteVariable (char *partial)
+char *Cvar_CompleteVariable (const char *partial)
 {
 	cvar_t		*cvar;
 	int			len;
@@ -251,6 +396,22 @@ char *Cvar_CompleteVariable (char *partial)
 	return NULL;
 }
 
+/*
+============
+Cvar_ResetVariable
+============
+*/
+void Cvar_ResetVariable (const char *var_name) /* FS */
+{
+	cvar_t *var;
+
+	if (!var_name)
+		return;
+
+	var = Cvar_FindVar (var_name);
+	if (var)
+		Cvar_ForceSet(var->name, var->defaultString);
+}
 
 /*
 ============
@@ -260,7 +421,7 @@ If the variable already exists, the value will not be set
 The flags will be or'ed in if the variable exists.
 ============
 */
-cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
+cvar_t *Cvar_Get (const char *var_name, const char *var_value, int flags)
 {
 	cvar_t	*var;
 
@@ -315,16 +476,21 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 	var->latched_string = NULL;
 	var->modified = true;
 	var->value = atof (var->string);
-	var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
+	var->intValue = atoi(var->string); /* FS */
 	var->defaultString = strdup(var_value); /* FS: Find out what it was initially */
 	var->defaultFlags = flags; /* FS: Default flags for resetcvar */
-	var->description = NULL; /* FS: Init it first, d'oh */
+	var->description = NULL; /* FS */
+	var->commandCallbackFn = NULL; /* FS */
+	var->setCallbackFn = NULL; /* FS */
 
 	// link the variable in
 	var->next = cvar_vars;
 	cvar_vars = var;
-
 	var->flags = flags;
+
+
+	if (var->setCallbackFn)
+		var->setCallbackFn(var);
 
 	return var;
 }
@@ -334,7 +500,7 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 Cvar_Set2
 ============
 */
-cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
+cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 {
 	cvar_t	*var;
 	
@@ -388,7 +554,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 			{
 				var->string = strdup(value);
 				var->value = atof (var->string);
-				var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
+				var->intValue = atoi(var->string); /* FS */
 			}
 			return var;
 		}
@@ -431,7 +597,10 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 
 	var->string = strdup(value);
 	var->value = atof (var->string);
-	var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
+	var->intValue = atoi(var->string); /* FS */
+
+	if (var->setCallbackFn)
+		var->setCallbackFn(var); /* FS */
 
 #ifdef QUAKE1
 	if (var->flags & CVAR_SERVERINFO)
@@ -449,12 +618,12 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 Cvar_ForceSet
 ============
 */
-cvar_t *Cvar_ForceSet (char *var_name, char *value)
+cvar_t *Cvar_ForceSet (const char *var_name, const char *value)
 {
 	return Cvar_Set2 (var_name, value, true);
 }
 
-cvar_t *Cvar_ForceSetValue (char *var_name, float value)
+cvar_t *Cvar_ForceSetValue (const char *var_name, float value)
 {
 	char	val[32];
 
@@ -471,7 +640,7 @@ cvar_t *Cvar_ForceSetValue (char *var_name, float value)
 Cvar_Set
 ============
 */
-cvar_t *Cvar_Set (char *var_name, char *value)
+cvar_t *Cvar_Set (const char *var_name, const char *value)
 {
 	return Cvar_Set2 (var_name, value, false);
 }
@@ -481,7 +650,7 @@ cvar_t *Cvar_Set (char *var_name, char *value)
 Cvar_FullSet
 ============
 */
-cvar_t *Cvar_FullSet (char *var_name, char *value, int flags)
+cvar_t *Cvar_FullSet (const char *var_name, const char *value, int flags)
 {
 	cvar_t	*var;
 
@@ -497,7 +666,7 @@ cvar_t *Cvar_FullSet (char *var_name, char *value, int flags)
 
 	var->string = strdup(value);
 	var->value = atof (var->string);
-	var->intValue = atoi(var->string); /* FS: So we don't need to cast shit all the time */
+	var->intValue = atoi(var->string); /* FS */
 	var->flags = flags;
 
 	return var;
@@ -508,7 +677,7 @@ cvar_t *Cvar_FullSet (char *var_name, char *value, int flags)
 Cvar_SetValue
 ============
 */
-void Cvar_SetValue (char *var_name, float value)
+void Cvar_SetValue (const char *var_name, float value)
 {
 	char	val[32];
 
@@ -569,6 +738,15 @@ qboolean	Cvar_Command (void)
 	}
 
 // perform a variable print or set
+	if (v->commandCallbackFn) /* FS: If we got a special callback (like for showing developer flags, etc.) then we do that instead. */
+	{
+		if (Cmd_Argv(1)[0] != '\0')
+			Cvar_Set(v->name, Cmd_Argv(1));
+
+		v->commandCallbackFn(v);
+		return true;
+	}
+
 	if (Cmd_Argc() == 1)
 	{
 		if ( (v->flags & CVAR_LATCH) && v->latched_string)
@@ -652,20 +830,6 @@ void Cvar_WriteVariables (const char *path)
 	fclose (f);
 }
 
-void Cvar_Init (void) /* FS: from fitzquake */
-{
-#ifdef QUAKE1
-	developer = Cvar_Get("developer","0", 0);
-	Cvar_Set_Description("developer", "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Server msgs - 256\n  * Progs msgs - 512\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Save/Restore msgs - 32768\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n");
-#else
-	developer = Cvar_Get("developer","0", 0);
-	Cvar_Set_Description("developer", "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n");
-#endif
-
-	Cmd_AddCommand ("set", Cvar_Set_f);
-	Cmd_AddCommand ("cvarlist", Cvar_List_f);
-}
-
 void Cvar_Set_Description (const char *var_name, const char *description) /* FS: Added */
 {
 	cvar_t	*var;
@@ -738,4 +902,159 @@ void Cvar_ParseDeveloperFlags (void) /* FS: Special stuff for showing all the de
 		if (developer->description && con_show_description->intValue)
 			Com_Printf("Description: %s\n", developer->description);
 	}
+}
+
+void Cvar_CommandCallbackFn (const char *var_name, void (*commandCallbackFn)(cvar_t *self)) /* FS */
+{
+	cvar_t *var;
+	var = Cvar_FindVar (var_name);
+	if (!var)
+	{
+		Com_DPrintf(DEVELOPER_MSG_STANDARD, "Error: Can't set command callback fn for %s!\n", var_name);
+		return;
+	}
+
+	var->commandCallbackFn = commandCallbackFn;
+}
+
+void Cvar_SetCallbackFn (const char *var_name, void (*setCallbackFn)(cvar_t *self)) /* FS */
+{
+	cvar_t *var;
+	var = Cvar_FindVar (var_name);
+	if (!var)
+	{
+		Com_DPrintf(DEVELOPER_MSG_STANDARD, "Error: Can't set 'set' callback fn for %s!\n", var_name);
+		return;
+	}
+
+	var->setCallbackFn = setCallbackFn;
+}
+
+void Cvar_Reset_f (void) /* FS */
+{
+	int args;
+	cvar_t *var;
+	const char *var_name;
+
+	args = Cmd_Argc();
+
+	if (args != 2)
+	{
+		Com_Printf("usage: resetcvar <variable>.  Resets CVARs to their default values\n");
+		return;
+	}
+
+	var_name = Cmd_Argv(1);
+
+	if (Cvar_Never_Reset_Cmds(var_name))
+	{
+		Com_Printf("Error: you can not reset this value: %s!\n", var_name);
+		return;
+	}
+
+	var = Cvar_FindVar(var_name);
+
+	if (!var)
+	{
+		Com_Printf("Error: %s is not a valid CVAR!\n", var_name);
+		return;
+	}
+
+	Com_Printf("Resetting %s to default value of %s, Flags Value: %d\n", var_name, var->defaultString, var->defaultFlags);
+	var->flags = var->defaultFlags;
+	Cvar_ForceSet(var_name, var->defaultString);
+}
+
+qboolean Cvar_Never_Reset_Cmds (const char *var_name) /* FS */
+{
+#ifdef QUAKE1
+#if 0
+	char *tokenPtr = NULL;
+	char seperators[] = " ";
+	char *bannedCmdsToken = NULL;
+	char bannedCmdsCopy[1024];
+	extern	cvar_t	*sv_rcon_banned_commands;
+#endif
+#endif
+
+	if (Cvar_IsProtected(var_name))
+		return true;
+
+#ifdef QUAKE1
+#if 0
+	Q_strlcpy(bannedCmdsCopy, sv_rcon_banned_commands->string, sizeof(bannedCmdsCopy));
+	bannedCmdsToken = strtok_r(bannedCmdsCopy, seperators, &tokenPtr);
+
+	while (bannedCmdsToken != NULL)
+	{
+		if (!strcmp(var_name, bannedCmdsToken) && dedicated->intValue)
+			return true;
+		bannedCmdsToken = strtok_r(NULL, seperators, &tokenPtr);
+	}
+#endif
+#endif
+
+	return false;
+}
+
+void Cvar_Shutdown (void) /* FS */
+{
+	cvar_t *var, *next;
+
+	for (var = cvar_vars; var; var = next)
+	{
+		next = var->next;
+
+		if (var->description)
+		{
+			free(var->description);
+			var->description = NULL;
+		}
+
+		if (var->defaultString)
+		{
+			free(var->defaultString);
+			var->defaultString = NULL;
+		}
+
+		if (var->string)
+		{
+			free(var->string);
+			var->string = NULL;
+		}
+
+		if (var->name)
+		{
+			free(var->name);
+			var->name = NULL;
+		}
+
+		free(var);
+		var = NULL;
+	}
+
+	cvar_vars = NULL;
+}
+
+/*
+============
+Cvar_Init
+Reads in all archived cvars
+============
+*/
+void Cvar_Init (void) /* FS: from fitzquake */
+{
+#ifdef QUAKE1
+	developer = Cvar_Get("developer","0", 0);
+	Cvar_Set_Description("developer", "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Server msgs - 256\n  * Progs msgs - 512\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Save/Restore msgs - 32768\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n");
+#else
+	developer = Cvar_Get("developer","0", 0);
+	Cvar_Set_Description("developer", "Enable the use of developer messages. \nAvailable flags:\n  * All flags except verbose msgs - 1\n  * Standard msgs - 2\n  * Sound msgs - 4\n  * Network msgs - 8\n  * File IO msgs - 16\n  * Graphics renderer msgs - 32\n  * CD Player msgs - 64\n  * Memory management msgs - 128\n  * Physics msgs - 2048\n  * Entity msgs - 16384\n  * Extremely verbose msgs - 65536\n  * Extremely verbose gamespy msgs - 131072\n");
+#endif
+
+	Cmd_AddCommand("set", Cvar_Set_f);
+	Cmd_AddCommand("cvarlist", Cvar_List_f);
+	Cmd_AddCommand("togglecvar", Cvar_Toggle_f); /* FS */
+	Cmd_AddCommand("forcecvar", Cvar_Force_f); /* FS */
+	Cmd_AddCommand("resetcvar", Cvar_Reset_f); /* FS */
 }

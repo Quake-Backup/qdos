@@ -1822,7 +1822,7 @@ void Host_Init (quakeparms_t *parms)
 	// the settings of the config files
 	Cbuf_AddEarlyCommands (false);
 	Cbuf_Execute ();
-	dedicated = Cvar_Get("dedicated", "0", CVAR_NOSET);
+	dedicated = Cvar_Get("dedicated", "0", CVAR_NOSET|CVAR_PROTECTED);
 
 	COM_Init ();
 
