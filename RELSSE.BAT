@@ -1,0 +1,39 @@
+@echo off
+SET SEVENZIPPATH=E:\Program Files\7-zip
+
+cd /D %QDOSDEVBASE%\Quake
+del /q qdos.exe
+del /q qdosfx.exe
+
+make -f makefile clean
+make -f makefile GLQUAKE=1 clean
+make -f makefile USE_SSE=1 -j4
+UPX -9 %QDOSDEVBASE%\QUAKE\QDOS.EXE
+
+make -f makefile clean
+make -f makefile GLQUAKE=1 clean
+make -f makefile USE_SSE=1 GLQUAKE=1 -j4
+UPX -9 %QDOSDEVBASE%\QUAKE\QDOSFX.EXE
+
+cd /D %QDOSDEVBASE%\QW
+del /q qw.exe
+del /q qwdosfx.exe
+
+make -f makefile clean
+make -f makefile GLQUAKE=1 clean
+make -f makefile USE_SSE=1 -j4
+UPX -9 E:\PROJ\QDOS\QW\QW.EXE
+
+make -f makefile clean
+make -f makefile GLQUAKE=1 clean
+make -f makefile USE_SSE=1 GLQUAKE=1 -j4
+UPX -9 E:\PROJ\QDOS\QW\QWDOSFX.EXE
+
+del /q "%QDOSDEVBASE%\QDOS_SSE_LATEST.7Z"
+
+"%SEVENZIPPATH%\7z.exe" a -mx9 -mmt "%QDOSDEVBASE%\QDOS_SSE_LATEST.7Z" %QDOSDEVBASE%\QUAKE\QDOS.EXE
+"%SEVENZIPPATH%\7z.exe" a -mx9 -mmt "%QDOSDEVBASE%\QDOS_SSE_LATEST.7Z" %QDOSDEVBASE%\QUAKE\QDOSFX.EXE
+"%SEVENZIPPATH%\7z.exe" a -mx9 -mmt "%QDOSDEVBASE%\QDOS_SSE_LATEST.7Z" %QDOSDEVBASE%\QW\QW.EXE
+"%SEVENZIPPATH%\7z.exe" a -mx9 -mmt "%QDOSDEVBASE%\QDOS_SSE_LATEST.7Z" %QDOSDEVBASE%\QW\QWDOSFX.EXE
+
+cd /D %QDOSDEVBASE%\

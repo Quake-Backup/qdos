@@ -32,11 +32,6 @@ wqwdos.exe
 glquake2.exe
 glqw2.exe
 gspydos.exe
-relwqwexe.bat
-relqwexe.bat
-relwqdexe.bat
-relqdexe.bat
-release.bat
 # glide3x and mesa leftovers that are generated during compile
 fxgasm.h
 fxbldno.h
