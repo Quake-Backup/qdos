@@ -1943,9 +1943,6 @@ CL_PlayBackgroundTrack
 */
 void CL_PlayBackgroundTrack (int track)
 {
-#define BGMUSIC_WAV (1<<0)
-#define BGMUSIC_OGG (1<<1)
-
 	char	name[MAX_QPATH], *p;
 	int	have_extmusic;
 	int	fakeHandle;
@@ -1965,12 +1962,28 @@ void CL_PlayBackgroundTrack (int track)
 	Com_sprintf (name, sizeof(name), "music/track%02i.", track);
 
 	p = name + strlen(name);
+
 	Q_strlcpy (p, "wav", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
 	{
 		Sys_FileClose(fakeHandle);
 		have_extmusic |= BGMUSIC_WAV;
 	}
+
+	Q_strlcpy (p, "flac", sizeof(name));
+	if (COM_OpenFile(name, &fakeHandle) != -1)
+	{
+		Sys_FileClose(fakeHandle);
+		have_extmusic |= BGMUSIC_FLAC;
+	}
+
+	Q_strlcpy (p, "mp3", sizeof(name));
+	if (COM_OpenFile(name, &fakeHandle) != -1)
+	{
+		Sys_FileClose(fakeHandle);
+		have_extmusic |= BGMUSIC_MP3;
+	}
+
 #ifdef OGG_SUPPORT
 	Q_strlcpy (p, "ogg", sizeof(name));
 	if (COM_OpenFile(name, &fakeHandle) != -1)
@@ -1981,17 +1994,30 @@ void CL_PlayBackgroundTrack (int track)
 #endif
 
 	/* play whatever is found */
-	if ((have_extmusic&BGMUSIC_WAV) && (cl_wav_music->intValue || !(have_extmusic&BGMUSIC_OGG))) {
+	if (have_extmusic & BGMUSIC_WAV) {
+		CDAudio_Stop();
 		Q_strlcpy (p, "wav", sizeof(name));
+		S_StartStreamBackgroundTrack(name);
+	}
+	else if (have_extmusic & BGMUSIC_FLAC) {
+		CDAudio_Stop();
+		Q_strlcpy (p, "flac", sizeof(name));
+		S_StartStreamBackgroundTrack(name);
+	}
+	else if (have_extmusic & BGMUSIC_MP3) {
+		CDAudio_Stop();
+		Q_strlcpy (p, "mp3", sizeof(name));
 		S_StartStreamBackgroundTrack(name);
 	}
 #ifdef OGG_SUPPORT
 	else if (have_extmusic&BGMUSIC_OGG) {
+		CDAudio_Stop();
 		Q_strlcpy (p, "ogg", sizeof(name));
 		S_StartOGGBackgroundTrack(name, name);
 	}
 #endif
-	else {
+	else
+	{
 		CDAudio_Play((byte)track, true);
 	}
 }

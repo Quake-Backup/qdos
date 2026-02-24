@@ -399,8 +399,6 @@ extern cvar_t	*cl_solid_players;
 extern cvar_t	*show_time;
 extern cvar_t	*show_uptime;
 extern cvar_t	*show_ping;
-extern cvar_t	*cl_ogg_music;
-extern cvar_t	*cl_wav_music;
 extern cvar_t	*cl_autorepeat_allkeys;
 extern cvar_t	*cl_unbindall_protection;
 extern cvar_t	*console_old_complete;

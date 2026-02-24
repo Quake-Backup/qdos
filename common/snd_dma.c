@@ -81,7 +81,6 @@ cvar_t	*s_nosound;
 cvar_t	*s_volume;
 cvar_t	*s_precache;
 cvar_t	*s_loadas8bit;
-cvar_t	*s_bgmvolume;
 cvar_t	*s_ambient_level;
 cvar_t	*s_ambient_fade;
 cvar_t	*snd_noextraupdate;
@@ -160,7 +159,6 @@ void S_Init (void)
 	s_volume = Cvar_Get("s_volume", "0.7", CVAR_ARCHIVE);
 	s_precache = Cvar_Get("s_precache", "1", 0);
 	s_loadas8bit = Cvar_Get("s_loadas8bit", "0", 0);
-	s_bgmvolume = Cvar_Get("s_bgmvolume", "1", CVAR_ARCHIVE);
 	s_ambient_level = Cvar_Get("s_ambient_level", "0.3", 0);
 	s_ambient_fade = Cvar_Get("s_ambient_fade", "100", 0);
 	snd_noextraupdate = Cvar_Get("snd_noextraupdate", "0", 0);
@@ -189,6 +187,7 @@ void S_Init (void)
 #ifdef OGG_SUPPORT
 	Cmd_AddCommand("ogg_restart", S_OGG_Restart); /* Knightmare added */
 #endif
+	Cmd_AddCommand("stream_restart", S_StreamRestart); /* FS */
 
 	if (host_parms.memsize < 0x800000)
 	{
@@ -200,11 +199,6 @@ void S_Init (void)
 		Cvar_Set("s_volume", "0");
 	else if (s_volume->value > 1.0f)
 		Cvar_Set("s_volume", "1.0");
-
-	if (s_bgmvolume->value < 0.0f)
-		Cvar_Set("s_bgmvolume", "0");
-	else if (s_bgmvolume->value > 1.0f)
-		Cvar_Set("s_bgmvolume", "1.0");
 
 	if (s_musicvolume->value < 0.0f)
 		Cvar_Set("s_musicvolume", "0");
@@ -303,6 +297,7 @@ void S_Shutdown(void)
 #ifdef OGG_SUPPORT
 		Cmd_RemoveCommand("ogg_restart"); /* Knightmare added */
 #endif
+		Cmd_RemoveCommand("stream_restart"); /* FS */
 	}
 
 #ifdef OGG_SUPPORT
@@ -783,15 +778,6 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	else if (s_volume->value > 1.0f)
 	{
 		Cvar_ForceSet("s_volume", "1.0");
-	}
-
-	if (s_bgmvolume->value < 0.0f)
-	{
-		Cvar_ForceSet("s_bgmvolume", "0.0");
-	}
-	else if (s_bgmvolume->value > 1.0f)
-	{
-		Cvar_ForceSet("s_bgmvolume", "1.0");
 	}
 
 	if (s_musicvolume->value < 0.0f)

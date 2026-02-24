@@ -30,18 +30,26 @@ static qboolean bMixed = false;
 
 void S_StreamInit (void)
 {
-	if (snd_initialized)
-	{
-		Cmd_AddCommand("stream", S_Stream_f);
-	}
+	if (!snd_initialized)
+		return;
+
+	Cmd_AddCommand("stream", S_Stream_f);
 }
 
 void S_StreamShutdown (void)
 {
-	if (snd_initialized)
-	{
-		Cmd_RemoveCommand("stream");
-	}
+	if (!snd_initialized)
+		return;
+
+	S_StopBackgroundTrack ();
+
+	Cmd_RemoveCommand("stream");
+}
+
+void S_StreamRestart (void)
+{
+	S_StreamShutdown();
+	S_StreamInit();
 }
 
 void S_StreamUpdate (void)
@@ -575,7 +583,7 @@ void S_Stream_f (void)
 	command = Cmd_Argv (1);
 
 	if (Q_strcasecmp(command, "play") == 0) {
-		Com_sprintf(name, sizeof(name), "music/%s.wav", Cmd_Argv(2));
+		Com_sprintf(name, sizeof(name), "music/%s", Cmd_Argv(2));
 		S_StartStreamBackgroundTrack(name);
 		return;
 	}

@@ -28,6 +28,7 @@ void S_Destroy_Stream (stream_t *stream);
 void S_StreamUpdate (void);
 void S_StreamInit (void);
 void S_StreamShutdown (void);
+void S_StreamRestart (void);
 void S_StartStreamBackgroundTrack (const char *name);
 void S_StopStreamBackgroundTrack (void);
 void S_PauseStreamBackgroundTrack (void);

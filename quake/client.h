@@ -300,8 +300,6 @@ extern cvar_t	*_windowed_mouse;
 extern cvar_t	*show_fps;
 extern cvar_t	*show_time;
 extern cvar_t	*show_uptime;
-extern cvar_t	*cl_ogg_music;
-extern cvar_t	*cl_wav_music;
 extern cvar_t	*cl_autorepeat_allkeys;
 extern cvar_t	*cl_demos; /* FS: Disable startup demos */
 extern cvar_t	*cl_unbindall_protection;

@@ -46,8 +46,6 @@ cvar_t	*m_side;
 
 /* FS: New stuff */
 cvar_t	*console_old_complete;
-cvar_t	*cl_ogg_music;
-cvar_t	*cl_wav_music;
 cvar_t	*cl_autorepeat_allkeys;
 cvar_t	*cl_sleep;
 
@@ -838,10 +836,6 @@ void CL_Init (void)
 	/* FS: New stuff */
 	console_old_complete = Cvar_Get("console_old_complete", "0", CVAR_ARCHIVE);
 	Cvar_Set_Description("console_old_complete", "Use the legacy style console tab completion.");
-	cl_ogg_music = Cvar_Get("cl_ogg_music", "1", CVAR_ARCHIVE);
-	Cvar_Set_Description("cl_ogg_music", "Play OGG tracks in the format of id1/music/trackXX.ogg if they exist.");
-	cl_wav_music = Cvar_Get("cl_wav_music", "1", CVAR_ARCHIVE);
-	Cvar_Set_Description("cl_wav_music", "Play WAV tracks in the format of id1/music/trackXX.wav if they exist.");
 	cl_autorepeat_allkeys = Cvar_Get("cl_autorepeat_allkeys", "0", CVAR_ARCHIVE);
 	Cvar_Set_Description("cl_autorepeat_allkeys", "Allow to autorepeat any key, not just Backspace, Pause, PgUp, and PgDn keys.");
 	cl_sleep = Cvar_Get("cl_sleep", "0", CVAR_ARCHIVE);

@@ -36,6 +36,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SND_BUFFER_SIZE	16384 /* FS: Was 4096 */
 #define	PAINTBUFFER_SIZE	2048 /* FS: Was 512 */
 
+#define BGMUSIC_WAV (1<<0)
+#define BGMUSIC_FLAC (1<<1)
+#define BGMUSIC_MP3 (1<<2)
+#define BGMUSIC_OGG (1<<3)
+
 // !!! if this is changed, it much be changed in asm_i386.h too !!!
 typedef struct
 {
@@ -188,7 +193,6 @@ extern dma_t dma;
 extern vec_t sound_nominal_clip_dist;
 
 extern cvar_t	*s_loadas8bit;
-extern cvar_t	*s_bgmvolume;
 extern cvar_t	*s_volume;
 extern cvar_t	*s_mixahead;
 extern cvar_t	*s_khz; /* FS: Added */

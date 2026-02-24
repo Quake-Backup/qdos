@@ -153,8 +153,6 @@ cvar_t	*host_speeds;        // set for running times
 cvar_t	*console_old_complete;
 cvar_t	*con_show_description;
 cvar_t	*con_show_dev_flags;
-cvar_t	*cl_ogg_music;
-cvar_t	*cl_wav_music;
 cvar_t	*cl_autorepeat_allkeys;
 cvar_t	*net_broadcast_chat; /* FS: EZQ Chat */
 cvar_t	*cl_sleep;
@@ -1377,10 +1375,6 @@ void CL_Init (void)
 	con_show_description->description = "Show descriptions for CVARs.";
 	con_show_dev_flags = Cvar_Get("con_show_dev_flags", "1", CVAR_ARCHIVE);
 	con_show_dev_flags->description = "Show developer flag options.";
-	cl_ogg_music = Cvar_Get("cl_ogg_music", "1", CVAR_ARCHIVE);
-	cl_ogg_music->description = "Play OGG tracks in the format of id1/music/trackXX.ogg if they exist.";
-	cl_wav_music = Cvar_Get("cl_wav_music", "1", CVAR_ARCHIVE);
-	cl_wav_music->description = "Play WAV tracks in the format of id1/music/trackXX.wav if they exist.";
 	cl_autorepeat_allkeys = Cvar_Get("cl_autorepeat_allkeys", "0", CVAR_ARCHIVE);
 	cl_autorepeat_allkeys->description = "Allow to autorepeat any key, not just Backspace, Pause, PgUp, and PgDn keys.";
 	console_old_complete = Cvar_Get("console_old_complete", "0", CVAR_ARCHIVE);

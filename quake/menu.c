@@ -1316,12 +1316,12 @@ void M_AdjustSliders (int dir)
 		Cvar_SetValue ("sensitivity", sensitivity->value);
 		break;
 	case 6: // music volume
-		s_bgmvolume->value += dir * 0.1;
-		if (s_bgmvolume->value < 0)
-			s_bgmvolume->value = 0;
-		if (s_bgmvolume->value > 1)
-			s_bgmvolume->value = 1;
-		Cvar_SetValue ("s_bgmvolume", s_bgmvolume->value);
+		s_musicvolume->value += dir * 0.1;
+		if (s_musicvolume->value < 0)
+			s_musicvolume->value = 0;
+		if (s_musicvolume->value > 1)
+			s_musicvolume->value = 1;
+		Cvar_SetValue ("s_musicvolume", s_musicvolume->value);
 		break;
 	case 7: // sfx volume
 		s_volume->value += dir * 0.1;
@@ -1406,8 +1406,8 @@ void M_Options_Draw (void)
 	r = (sensitivity->value)/50; /* FS: Was 11 */
 	M_DrawSlider (220, 72, r);
 
-	M_Print (16, 80, "       CD Music Volume");
-	r = s_bgmvolume->value;
+	M_Print (16, 80, "          Music Volume");
+	r = s_musicvolume->value;
 	M_DrawSlider (220, 80, r);
 
 	M_Print (16, 88, "          Sound Volume");

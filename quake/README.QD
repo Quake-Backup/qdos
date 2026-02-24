@@ -19,13 +19,13 @@ Table of Contents
 1 - Introduction
 ---------------------------------------------------------
 
-Why code for DOS in 2015 you ask?  Pretty much the same reason anybody
-   is coding Quake ports these days... for fun and to learn some programming.
-   This is my first serious project as far as programming goes and I have
-   learned a lot.  As each day goes by, QDOS and QWDOS grow more and more in
-   their complexity with new features and bug fixes.  I also love knowing
-   all that is sitting between you and Quake is a packet driver, a mouse
-   driver and pure DOS. =)
+Why code for DOS in <s>2012, 2015</s> 2026 you ask?  Pretty much the same
+   reason anybody is coding Quake ports these days... for fun and to
+   learn some programming.  This is my first serious project as far as
+   programming goes and I have learned a lot.  As each day goes by,
+   QDOS and QWDOS grow more and more in their complexity with new
+   features and bug fixes.  I also love knowing all that is sitting
+   between you and Quake is a packet driver, a mouse driver and pure DOS. =)
 
 2 - What's New
 ---------------------------------------------------------
@@ -66,8 +66,7 @@ QDOS has many features, I can't remember each one that me or others have added
   id1/music/trackXX format.
 * -cddir for specifiy a cd drive path for pak files.  Also for keeping
   WAV/OGG music in a separate drive.
-* 3DFX Voodoo rendering with fxMesa 6.4.2!  Check voodoo directory for 
-  your glide3x.dxe.
+* 3DFX Voodoo rendering!
 
 New CVARs and CMDs:
 
@@ -100,18 +99,23 @@ New CVARs and CMDs:
 ---------------------------------------------------------
 
 Because QDOS has supports for extended limits and other new features, the
-system requirements are slightly higher compared to original Quake.
+system requirements are higher compared to original Quake.
 
 If you're going to simply play on QUAKE.SHMACK.NET or stock single player
-the requirements are the same as original Quake.
+the requirements are the same as original Quake.  The game will use a
+swap file if you're running low on resources, but will load levels
+incredibly slow if this ends up happening.  You can check your memory
+usage at anytime with /memstats.  Please note that the RAM available
+reported by this command will never go up.  This is by design in 
+DJGPP.
 
 However, to take advantage of the Fitzquake protocol and extended limits it
 is required to have at least 64MB of RAM.  Some mods may require more.
 I'd highly recommend allocating at least 96MB if your system can
 support this.  A Pentium 2 processor is also highly recommended.
 
-To play at extreme SVGA resolutions with acceptable (i.e. >= 40FPS) framerates a
-P3 ~800MHZ processor or higher is recommended.
+To play at extreme SVGA resolutions with acceptable (i.e. >= 40FPS) framerates
+a P3 ~800MHZ processor or higher is recommended.
 
 Online play over TCP/IP will require a NIC with a Packet Driver and a
 properly configured WATTCP.CFG in your root /QUAKE directory.  IPX, 
@@ -121,15 +125,12 @@ MPATH because Windows9x does not play nice with the new changes.  Do not
 send bug reports on any bugs that only occur on Windows 9x.  They will be
 ignored!
 
-NOTE: QDOS tries to allocate 32MB by default so you may need to use -MEM 16 if
-you're on an older machine and trying to play stock Quake.
-
 To summarize:
 
 *Stock Quake Play:
 
-  - FPU Processor
-  - 16MB RAM
+  - Pentium 1 Processor
+  - 64MB RAM
   - VGA Videocard
   - MS-DOS v6.00
   - Keyboard, Mouse, or Joystick
@@ -138,8 +139,8 @@ To summarize:
 *Extended Limits:
 
   - Pentium 2 (P3 ~800MHZ processor for serious SVGA)
-  - 64MB preferred, 96MB strongly recommended.
-  - VESA 2.0 videocard.
+  - 128MB preferred, 256MB strongly recommended.
+  - VESA 2.0 videocard or 3DFX Voodoo 3+.
   - MS-DOS v7.00 (Windows 98 with a properly configured MSDOS.SYS and
     CONFIG.SYS)
 

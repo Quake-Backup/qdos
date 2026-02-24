@@ -192,7 +192,7 @@ void S_StreamBackgroundTrack (void)
 	int		read, maxRead, total, dummy;
 	float	scale;
 
-	if (!s_bgTrack.file || !s_musicvolume->value || !s_mastervolume->value || !cl_ogg_music->intValue)
+	if (!s_bgTrack.file || !s_musicvolume->value || !s_mastervolume->value)
 		return;
 
 	if (s_rawend < paintedtime)
@@ -385,6 +385,8 @@ void S_OGG_Shutdown (void)
 
 	if (!ogg_started)
 		return;
+
+	Cmd_RemoveCommand("ogg");
 
 	S_StopBackgroundTrack ();
 
