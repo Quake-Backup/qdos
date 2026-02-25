@@ -3513,12 +3513,13 @@ void M_ConfigureNetSubsystem(void)
 
 /* FS: Extended options unique to QDOS */
 #define Y_SPACE 8
-#define EXTENDED_OPTIONS 12
+#define EXTENDED_OPTIONS 13
 
 int extended_cursor;
 
 extern cvar_t *r_waterwarp;
 extern cvar_t *m_filter;
+extern cvar_t *sv_autosave;
 
 int M_Extended_Get_Vsync(void);
 void M_Extended_Set_Vsync(int dir);
@@ -3542,7 +3543,7 @@ void M_Extended_Draw (void)
 	p = Draw_CachePic ("gfx/p_option.lmp");
 	M_DrawPic ( (320-p->width)/2, 4, p);
 
-	M_Print (16, y,  "      Content Blending");
+	M_Print (16, y, "      Content Blending");
 	M_DrawCheckbox (220, y, v_contentblend->intValue);
 
 	M_Print (16, y = y + Y_SPACE, "            Full Pitch");
@@ -3551,10 +3552,10 @@ void M_Extended_Draw (void)
 	M_Print (16, y = y + Y_SPACE, "         Startup Demos");
 	M_DrawCheckbox (220, y, cl_demos->intValue);
 
-	M_Print (16, y = y + Y_SPACE,  "     Unbindall Protect");
+	M_Print (16, y = y + Y_SPACE, "     Unbindall Protect");
 	M_DrawCheckbox (220, y, cl_unbindall_protection->intValue);
 
-	M_Print (16, y = y + Y_SPACE,  "           Show Uptime");
+	M_Print (16, y = y + Y_SPACE, "           Show Uptime");
 	if (show_uptime->intValue < 1 )
 		M_Print (220, y, "off");
 	else if (show_uptime->intValue == 1)
@@ -3562,7 +3563,7 @@ void M_Extended_Draw (void)
 	else if (show_uptime->intValue >= 2)
 		M_Print (220, y, "Total");
 
-	M_Print (16, y = y + Y_SPACE,  "             Show Time");
+	M_Print (16, y = y + Y_SPACE, "             Show Time");
 	if (show_time->intValue < 1 )
 		M_Print (220, y, "off");
 	else if (show_time->intValue == 1)
@@ -3570,13 +3571,13 @@ void M_Extended_Draw (void)
 	else if (show_time->intValue >= 2)
 		M_Print (220, y, "AM/PM");
 
-	M_Print (16, y = y + Y_SPACE,  "        Show Framerate");
+	M_Print (16, y = y + Y_SPACE, "        Show Framerate");
 	M_DrawCheckbox (220, y, show_fps->intValue);
 
-	M_Print (16, y = y + Y_SPACE,  "        Mouse Freelook");
+	M_Print (16, y = y + Y_SPACE, "        Mouse Freelook");
 	M_DrawCheckbox (220, y, in_freelook->intValue);
 
-	M_Print (16, y = y + Y_SPACE,  "       Water View-warp");
+	M_Print (16, y = y + Y_SPACE, "       Water View-warp");
 	M_DrawCheckbox (220, y, r_waterwarp->intValue);
 
 	M_Print (16, y = y + Y_SPACE, "       Field of Vision");
@@ -3598,14 +3599,17 @@ void M_Extended_Draw (void)
 	}
 	M_Print (220, y, s_khz->string);
 
-	M_Print (16, y = y + Y_SPACE,  "               V-Sync");
+	M_Print (16, y = y + Y_SPACE, "                V-Sync");
 #ifdef GLQUAKE
 	M_Print (220, y, "DISABLED");
 #else
 	M_DrawCheckbox (220, y, M_Extended_Get_Vsync());
 #endif
-	M_Print (16, y = y + Y_SPACE,  "      Mouse Filtering");
+	M_Print (16, y = y + Y_SPACE, "       Mouse Filtering");
 	M_DrawCheckbox (220, y, m_filter->intValue);
+
+	M_Print (16, y = y + Y_SPACE,  "             Auto-Save");
+	M_DrawCheckbox (220, y, sv_autosave->intValue);
 
 	M_DrawCharacter (200, 32 + extended_cursor*8, 12+((int)(realtime*4)&1));
 }
@@ -3632,7 +3636,7 @@ void M_AdjustSliders_Extended (int dir)
 			Cvar_SetValue ("show_uptime", 0);
 		else if (show_uptime->value <= 0)
 			Cvar_SetValue ("show_uptime", 1);
-		else if (show_uptime->value == 1)
+		else
 			Cvar_SetValue ("show_uptime", 2);
 		break;
 	case 5:
@@ -3640,7 +3644,7 @@ void M_AdjustSliders_Extended (int dir)
 			Cvar_SetValue ("show_time", 0);
 		else if (show_time->value <= 0)
 			Cvar_SetValue ("show_time", 1);
-		else if (show_time->value == 1)
+		else
 			Cvar_SetValue ("show_time", 2);
 		break;
 	case 6:
@@ -3668,6 +3672,9 @@ void M_AdjustSliders_Extended (int dir)
 		break;
 	case 12:
 		Cvar_SetValue ("m_filter", !m_filter->intValue);
+		break;
+	case 13:
+		Cvar_SetValue ("sv_autosave", !sv_autosave->intValue);
 		break;
 	default:
 		break;
@@ -3728,7 +3735,7 @@ void M_Extended_Key(int k)
 				Cvar_SetValue ("show_uptime", 0);
 			else if (show_uptime->intValue <= 0)
 				Cvar_SetValue ("show_uptime", 1);
-			else if (show_uptime->intValue == 1)
+			else
 				Cvar_SetValue ("show_uptime", 2);
 			break;
 		case 5:
@@ -3736,7 +3743,7 @@ void M_Extended_Key(int k)
 				Cvar_SetValue ("show_time", 0);
 			else if (show_time->intValue <= 0)
 				Cvar_SetValue ("show_time", 1);
-			else if (show_time->intValue == 1)
+			else
 				Cvar_SetValue ("show_time", 2);
 			break;
 		case 6:
