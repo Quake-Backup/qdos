@@ -313,108 +313,6 @@ void GL_EnableMultitexture(void)
 	}
 }
 
-#if 0
-/*
-================
-R_DrawSequentialPoly
-
-Systems that have fast state and texture changes can
-just do everything as it passes with no need to sort
-================
-*/
-void R_DrawSequentialPoly (msurface_t *s)
-{
-	glpoly_t	*p;
-	float		*v;
-	int			i;
-	texture_t	*t;
-
-	//
-	// normal lightmaped poly
-	//
-#ifdef QUAKE1
-	if (! (s->flags & (SURF_DRAWSKY|SURF_DRAWTURB|SURF_UNDERWATER) ) )
-#else
-	if (0)
-#endif
-	{
-		p = s->polys;
-
-		t = R_TextureAnimation (s->texinfo->texture);
-		GL_Bind (t->gl_texturenum);
-		glBegin_fp (GL_POLYGON);
-		v = p->verts[0];
-		for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE)
-		{
-			glTexCoord2f_fp (v[3], v[4]);
-			glVertex3fv_fp (v);
-		}
-		glEnd_fp ();
-
-		GL_Bind (lightmap_textures + s->lightmaptexturenum);
-		glEnable_fp (GL_BLEND);
-		glBegin_fp (GL_POLYGON);
-		v = p->verts[0];
-		for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE)
-		{
-			glTexCoord2f_fp (v[5], v[6]);
-			glVertex3fv_fp (v);
-		}
-		glEnd_fp ();
-
-		glDisable_fp (GL_BLEND);
-
-		return;
-	}
-
-	//
-	// subdivided water surface warp
-	//
-	if (s->flags & SURF_DRAWTURB)
-	{
-		GL_Bind (s->texinfo->texture->gl_texturenum);
-		EmitWaterPolys (s);
-		return;
-	}
-
-	//
-	// subdivided sky warp
-	//
-	if (s->flags & SURF_DRAWSKY)
-	{
-		GL_Bind (solidskytexture);
-		speedscale = realtime*8;
-		speedscale -= (int)speedscale;
-
-		EmitSkyPolys (s);
-
-		glEnable_fp (GL_BLEND);
-		glBlendFunc_fp (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		GL_Bind (alphaskytexture);
-		speedscale = realtime*16;
-		speedscale -= (int)speedscale;
-		EmitSkyPolys (s);
-		if (gl_lightmap_format == GL_LUMINANCE)
-			glBlendFunc_fp (GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-
-		glDisable_fp (GL_BLEND);
-	}
-
-	//
-	// underwater warped with lightmap
-	//
-	p = s->polys;
-
-	t = R_TextureAnimation (s->texinfo->texture);
-	GL_Bind (t->gl_texturenum);
-	DrawGLWaterPoly (p);
-
-	GL_Bind (lightmap_textures + s->lightmaptexturenum);
-	glEnable_fp (GL_BLEND);
-	DrawGLWaterPolyLightmap (p);
-	glDisable_fp (GL_BLEND);
-}
-#else
 /*
 ================
 R_DrawSequentialPoly
@@ -524,15 +422,21 @@ void R_DrawSequentialPoly (msurface_t *s)
 	{
 		GL_DisableMultitexture();
 		GL_Bind (solidskytexture);
-		speedscale = realtime*8;
-		speedscale -= (int)speedscale & ~127;
+		if (!cl.paused) /* FS */
+		{
+			speedscale = realtime*8;
+			speedscale -= (int)speedscale & ~127;
+		}
 
 		EmitSkyPolys (s);
 
 		glEnable_fp (GL_BLEND);
 		GL_Bind (alphaskytexture);
-		speedscale = realtime*16;
-		speedscale -= (int)speedscale & ~127;
+		if (!cl.paused) /* FS */
+		{
+			speedscale = realtime*16;
+			speedscale -= (int)speedscale & ~127;
+		}
 		EmitSkyPolys (s);
 
 		glDisable_fp (GL_BLEND);
@@ -594,8 +498,6 @@ void R_DrawSequentialPoly (msurface_t *s)
 		glDisable_fp (GL_BLEND);
 	}
 }
-#endif
-
 
 /*
 ================
