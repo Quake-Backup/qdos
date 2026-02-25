@@ -70,6 +70,11 @@ void    VID_UnlockBuffer (void);
 #define id386   0
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+#undef id386
+#define id386 0
+#endif
+
 #if id386
 //broken!!!
 #define UNALIGNED_OK    1       // set to 0 if unaligned accesses are not supported
