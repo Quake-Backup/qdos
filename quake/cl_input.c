@@ -321,7 +321,7 @@ void CL_BaseMove (usercmd_t *cmd)
 	cmd->upmove += cl_upspeed->value * CL_KeyState (&in_up);
 	cmd->upmove -= cl_upspeed->value * CL_KeyState (&in_down);
 
-	if ( in_jump.down ) /* FS: Noclip up with +jump or swim up with +jump */
+	if ( in_jump.state & 1 ) /* FS: Noclip up with +jump or swim up with +jump */
 	{
 		cmd->upmove += cl_upspeed->value * CL_KeyState (&in_jump);
 	}
