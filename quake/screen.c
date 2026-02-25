@@ -486,15 +486,15 @@ void SCR_DrawTime (void) /* FS: show_time */
 	const char *timefmt = NULL;
 	char		st[80];
 
-	if (!show_time->value)
+	if (!show_time->intValue)
 		return;
 
 	utc = time (NULL);
 	local = localtime (&utc);
 
-	if (show_time->value == 1)
+	if (show_time->intValue == 1)
 		timefmt = "%H:%M:%S %p";
-	else if (show_time->value > 1)
+	else
 		timefmt = "%I:%M:%S %p";
 
 	strftime (st, sizeof (st), timefmt, local);
