@@ -1228,7 +1228,7 @@ qboolean VID_SetWindowedMode (int modenum)
 			Cvar_SetValue ("vid_window_y", 0.0);
 		}
 
-		windowed_mode_set;
+		windowed_mode_set = true;
 	}
 
 	VID_CheckModedescFixup (modenum);
