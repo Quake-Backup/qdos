@@ -419,6 +419,11 @@ hSTREAM *S_Open_Stream(const char *path)
 		ptr->datarate = mp3->sampleRate;
 		ptr->drmp3 = mp3;
 	}
+	else if (!stricmp(COM_FileExtension(path), "ogg"))
+	{
+		Com_Printf("Use the 'ogg play' command for OGG files\n");
+		return NULL;
+	}
 	else
 	{
 		Com_Printf("S_Open_Stream: unsupported format '%s'\n", COM_FileExtension(path));
