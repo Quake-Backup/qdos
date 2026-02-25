@@ -384,6 +384,9 @@
     <ClCompile Include="..\common\vid_win.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\snd_ogg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="quake.ico">
