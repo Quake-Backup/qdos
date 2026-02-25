@@ -268,7 +268,7 @@ void Cmd_Exec_f (void)
 		Cvar_SetValue("cl_unbindall_protection", 0); /* FS: disable the warning if it's default.cfg */
 	}
 
-	if(quakerc_init)
+	if (quakerc_init)
 	{
 		if (!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
 		{

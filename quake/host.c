@@ -894,6 +894,8 @@ Host_Init
 */
 void Host_Init (quakeparms_t *parms)
 {
+	int temp;
+
 	if (standard_quake)
 		minimum_memory = MINIMUM_MEMORY;
 	else
@@ -989,15 +991,19 @@ void Host_Init (quakeparms_t *parms)
 		}
 	}
 
+	temp = Cvar_VariableValueInt("cl_unbindall_protection");
+
 	quakerc_init = true;
 	Cbuf_InsertText ("exec quake.rc\n"); /* FS: Yes, qdos.cfg is now executed twice.  Default.cfg runs unbindall to purge, then config.cfg is loaded next */
 	Cbuf_AddText ("cl_warncmd 1\n"); /* FS: From QW */
 	Cbuf_Execute();
 	quakerc_init = false;
 
+	Cvar_SetValue("cl_unbindall_protection", temp);
+
 	host_initialized = true;
 
-	Sys_Printf ("========Quake Initialized=========\n");  
+	Sys_Printf ("========Quake Initialized=========\n");
 }
 
 
