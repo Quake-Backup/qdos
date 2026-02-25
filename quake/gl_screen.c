@@ -543,7 +543,7 @@ void SCR_DrawTime (void) /* FS: show_time */
 	local = localtime (&utc);
 
 	if (show_time->intValue == 1)
-		timefmt = "%H:%M:%S %p";
+		timefmt = "%H:%M:%S";
 	else
 		timefmt = "%I:%M:%S %p";
 

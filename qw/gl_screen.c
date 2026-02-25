@@ -553,8 +553,8 @@ void SCR_DrawTime (void) /* FS: show_time */
 	local = localtime (&utc);
 
 	if (show_time->value == 1)
-		timefmt = "%H:%M:%S %p";
-	else if (show_time->value > 1)
+		timefmt = "%H:%M:%S";
+	else
 		timefmt = "%I:%M:%S %p";
 
 	strftime (st, sizeof (st), timefmt, local);
