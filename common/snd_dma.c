@@ -83,7 +83,6 @@ cvar_t	*s_precache;
 cvar_t	*s_loadas8bit;
 cvar_t	*s_ambient_level;
 cvar_t	*s_ambient_fade;
-cvar_t	*snd_noextraupdate;
 cvar_t	*snd_show;
 cvar_t	*s_mixahead;
 cvar_t	*s_primary;
@@ -161,7 +160,6 @@ void S_Init (void)
 	s_loadas8bit = Cvar_Get("s_loadas8bit", "0", 0);
 	s_ambient_level = Cvar_Get("s_ambient_level", "0.3", 0);
 	s_ambient_fade = Cvar_Get("s_ambient_fade", "100", 0);
-	snd_noextraupdate = Cvar_Get("snd_noextraupdate", "0", 0);
 	snd_show = Cvar_Get("snd_show", "0", 0);
 	s_mixahead = Cvar_Get("s_mixahead", "0.2", CVAR_ARCHIVE);
 	s_primary = Cvar_Get ("s_primary", "0", CVAR_ARCHIVE);	// win32 specific

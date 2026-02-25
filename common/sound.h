@@ -69,29 +69,6 @@ typedef struct sfx_s
 	sfxcache_t		*cache;
 } sfx_t;
 
-// Knightmare - added from Q2E
-typedef struct {
-	char				introName[MAX_QPATH];
-	char				loopName[MAX_QPATH];
-	char				ambientName[MAX_QPATH];
-	qboolean			looping;
-	qboolean			ambient_looping;
-	FILE				*file;
-	int					start;
-	int					rate;
-	int					width;
-	int					channels;
-	unsigned			format;
-	void				*vorbisFile;
-} bgTrack_t;
-
-// generic status for any background music stream format
-typedef enum {
-	BGM_PLAY,
-	BGM_PAUSE,
-	BGM_STOP
-} bgm_status_t;
-
 typedef struct
 {
 	int				channels;

@@ -49,10 +49,6 @@ static bgm_status_t	trk_status;		// Status indicator
 #define MAX_OGGLIST 512
 static char		**ogg_filelist;		// List of Ogg Vorbis files
 static int		ogg_numfiles;		// Number of Ogg Vorbis files
-static int		ogg_loopcounter;
-
-static cvar_t	*ogg_loopcount;
-static cvar_t	*ogg_ambient_track;
 
 static void S_OGG_LoadFileList (void);
 static void S_OGG_ParseCmd (void);
@@ -230,31 +226,9 @@ void S_StreamBackgroundTrack (void)
 			if (!read)
 			{	// End of file
 				if (!s_bgTrack.looping)
-				{	// Close the intro track
+				{
 					S_CloseBackgroundTrack(&s_bgTrack);
-
-					// Open the loop track
-					if (!S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack)) {
-						S_StopBackgroundTrack();
-						return;
-					}
-					s_bgTrack.looping = true;
-				}
-				else
-				{	// check if it's time to switch to the ambient track
-					if ( (ogg_loopcount->intValue > 0) && (++ogg_loopcounter >= ogg_loopcount->intValue))
-					{	// Close the loop track
-						S_CloseBackgroundTrack(&s_bgTrack);
-
-						if (!S_OpenBackgroundTrack(s_bgTrack.ambientName, &s_bgTrack)) {
-							if (!S_OpenBackgroundTrack(s_bgTrack.loopName, &s_bgTrack)) {
-								S_StopBackgroundTrack();
-								return;
-							}
-						}
-						else
-							s_bgTrack.ambient_looping = true;
-					}
+					return;
 				}
 
 				// Restart the track, skipping over the header
@@ -288,30 +262,29 @@ void S_OGGUpdateBackgroundTrack (void)
 S_StartBackgroundTrack
 =================
 */
-void S_StartOGGBackgroundTrack (const char *introTrack, const char *loopTrack)
+void S_StartOGGBackgroundTrack (const char *name)
 {
 	if (!ogg_started) // was sound_started
+		return;
+
+	if (!name)
 		return;
 
 	// Stop any playing tracks
 	S_StopBackgroundTrack();
 
 	// Start it up
-	Q_strlcpy(s_bgTrack.introName, introTrack, sizeof(s_bgTrack.introName));
-	Q_strlcpy(s_bgTrack.loopName, loopTrack, sizeof(s_bgTrack.loopName));
-	Q_strlcpy(s_bgTrack.ambientName, va("music/%s.ogg", ogg_ambient_track->string), sizeof(s_bgTrack.ambientName));
+	Q_strlcpy(s_bgTrack.name, name, sizeof(s_bgTrack.name));
 
-	// set a loop counter so that this track will change to the ambient track later
-	ogg_loopcounter = 0;
-
-	// Open the intro track
-	if (!S_OpenBackgroundTrack(s_bgTrack.introName, &s_bgTrack))
+	// Open the track
+	if (!S_OpenBackgroundTrack(s_bgTrack.name, &s_bgTrack))
 	{
 		S_StopBackgroundTrack();
 		return;
 	}
 
 	trk_status = BGM_PLAY;
+	s_bgTrack.looping = true;
 
 	S_StreamBackgroundTrack();
 }
@@ -348,10 +321,6 @@ void S_OGG_Init (void)
 {
 	if (ogg_started)
 		return;
-
-	// Cvars
-	ogg_loopcount = Cvar_Get("ogg_loopcount", "5", CVAR_ARCHIVE);
-	ogg_ambient_track = Cvar_Get("ogg_ambient_track", "11", CVAR_ARCHIVE);
 
 	// Console commands
 	Cmd_AddCommand("ogg", S_OGG_ParseCmd);
@@ -487,7 +456,7 @@ static void S_OGG_PlayCmd (void)
 		return;
 	}
 	Com_sprintf(name, sizeof(name), "music/%s.ogg", Cmd_Argv(2) );
-	S_StartOGGBackgroundTrack (name, name);
+	S_StartOGGBackgroundTrack (name);
 }
 
 /*
@@ -500,12 +469,7 @@ static void S_OGG_StatusCmd (void)
 {
 	const char	*trackName;
 
-	if (s_bgTrack.ambient_looping)
-		trackName = s_bgTrack.ambientName;
-	else if (s_bgTrack.looping)
-		trackName = s_bgTrack.loopName;
-	else
-		trackName = s_bgTrack.introName;
+	trackName = s_bgTrack.name;
 
 	switch (trk_status) {
 	case BGM_PLAY:

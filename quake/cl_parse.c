@@ -1407,7 +1407,7 @@ void CL_PlayBackgroundTrack (int track)
 	else if (have_extmusic&BGMUSIC_OGG) {
 		CDAudio_Stop();
 		Q_strlcpy (p, "ogg", sizeof(name));
-		S_StartOGGBackgroundTrack(name, name);
+		S_StartOGGBackgroundTrack(name);
 	}
 #endif
 	else

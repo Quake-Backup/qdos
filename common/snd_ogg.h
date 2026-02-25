@@ -23,9 +23,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __SND_OGG_H
 #define __SND_OGG_H
 
-// snd_stream.c
+
+// Knightmare - added from Q2E
+typedef struct {
+	char				name[MAX_OSPATH];
+	qboolean			looping;
+	FILE				*file;
+	int					start;
+	int					rate;
+	int					width;
+	int					channels;
+	unsigned			format;
+	void				*vorbisFile;
+} bgTrack_t;
+
+// generic status for any background music stream format
+typedef enum {
+	BGM_PLAY,
+	BGM_PAUSE,
+	BGM_STOP
+} bgm_status_t;
+
+// snd_ogg.c
 void S_OGGUpdateBackgroundTrack (void);
-void S_StartOGGBackgroundTrack (const char *introTrack, const char *loopTrack);
+void S_StartOGGBackgroundTrack (const char *name);
 void S_StopOGGBackgroundTrack (void);
 void S_OGG_Init (void);
 void S_OGG_Shutdown (void);

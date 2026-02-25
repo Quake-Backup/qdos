@@ -1,9 +1,39 @@
 /*
+Copyright 2026 Frank Sapone
 
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+/*
+S_StreamRawSamples function is GPL code re-adapated from Q2E OGG streaming S_RawSamples function.
+----------------------------------------------------------------------
+Copyright (C) 1997-2001 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 // snd_strm.c
-
 
 #include "quakedef.h"
 
@@ -17,16 +47,11 @@
 #define DR_FLAC_NO_CRC
 #include "dr_flac.h"
 
-static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, int width, int channels, const strm_int16_t *data, qboolean music);
-
 stream_t stream_channels[MAX_STREAMS];
+static qboolean bMixed = false;
 
 void S_Stream_f (void);
-
-/* 
-
-*/
-static qboolean bMixed = false;
+static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, int width, int channels, const strm_int16_t *data, qboolean music);
 
 void S_StreamInit (void)
 {
@@ -65,7 +90,7 @@ void S_StreamUpdate (void)
 	drwav	*wav_info;
 	drflac	*flac_info;
 
-	/* FS: Save this stuff so we can mix in additional MP3 channels. */
+	/* FS: Save this stuff so we can mix in additional channels. */
 	int prev_rawend = s_rawend;
 	int prev_paintedtime = paintedtime;
 	int after_rawend = s_rawend;
@@ -82,7 +107,8 @@ void S_StreamUpdate (void)
 		if (!stream->active || !stream->handle)
 			continue;
 
-		wav_info = (drwav *)stream->handle->drwav;
+		/* FS: FIXME: load these handles in S_Open_Stream and check the type. */
+		wav_info = stream->handle->drwav;
 		if (wav_info)
 		{
 			sampleRate = wav_info->sampleRate;
@@ -92,7 +118,7 @@ void S_StreamUpdate (void)
 		}
 		else
 		{
-			flac_info = (drflac *)stream->handle->drflac;
+			flac_info = stream->handle->drflac;
 			if (flac_info)
 			{
 				sampleRate = flac_info->sampleRate;
@@ -102,7 +128,7 @@ void S_StreamUpdate (void)
 			}
 			else
 			{
-				mp3_info = (drmp3 *)stream->handle->drmp3;
+				mp3_info = stream->handle->drmp3;
 				if (!mp3_info || !mp3_info->pData)
 					continue;
 
@@ -174,6 +200,7 @@ void S_StreamUpdate (void)
 	paintedtime = after_paintedtime;
 }
 
+/* FS: re-adapated from Q2E OGG streaming S_RawSamples function. */
 static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, int width, int channels, const strm_int16_t *data, qboolean music)
 {
 	int i;
@@ -369,7 +396,7 @@ hSTREAM *S_Open_Stream(const char *path)
 		drwav *wav;
 		drwav_uint64 pcmFrameCount = 0;
 
-		wav = (drwav *)calloc(1, sizeof(drwav));
+		wav = calloc(1, sizeof(drwav));
 		if (!drwav_init_file(wav, path, NULL))
 		{
 			drwav_uninit(wav);
@@ -377,7 +404,7 @@ hSTREAM *S_Open_Stream(const char *path)
 			// Failed to open file
 		}
 
-		ptr = (hSTREAM *)Z_Malloc(sizeof(hSTREAM));
+		ptr = Z_Malloc(sizeof(hSTREAM));
 		drwav_get_length_in_pcm_frames(wav, &pcmFrameCount);
 		ptr->totallen = pcmFrameCount;
 		ptr->datarate = wav->sampleRate;
@@ -395,7 +422,7 @@ hSTREAM *S_Open_Stream(const char *path)
 			// Failed to open file
 		}
 
-		ptr = (hSTREAM *)Z_Malloc(sizeof(hSTREAM));
+		ptr = Z_Malloc(sizeof(hSTREAM));
 		ptr->datarate = flac->sampleRate;
 		ptr->drflac = flac;
 	}
@@ -405,7 +432,7 @@ hSTREAM *S_Open_Stream(const char *path)
 		drmp3_uint64 mp3FrameCount = 0;
 		drmp3_uint64 pcmFrameCount = 0;
 
-		mp3 = (drmp3 *)calloc(1, sizeof(drmp3));
+		mp3 = calloc(1, sizeof(drmp3));
 		if (!drmp3_init_file(mp3, path, NULL))
 		{
 			drmp3_uninit(mp3);
@@ -413,7 +440,7 @@ hSTREAM *S_Open_Stream(const char *path)
 			// Failed to open file
 		}
 
-		ptr = (hSTREAM *)Z_Malloc(sizeof(hSTREAM));
+		ptr = Z_Malloc(sizeof(hSTREAM));
 		drmp3_get_mp3_and_pcm_frame_count(mp3, &mp3FrameCount, &pcmFrameCount);
 		ptr->totallen = pcmFrameCount;
 		ptr->datarate = mp3->sampleRate;
@@ -445,21 +472,21 @@ void S_Destroy_Stream (stream_t *stream)
 	{
 		if (stream->handle->drmp3)
 		{
-			drmp3_uninit((drmp3 *)stream->handle->drmp3);
+			drmp3_uninit(stream->handle->drmp3);
 			free(stream->handle->drmp3);
 		}
 		stream->handle->drmp3 = NULL;
 
 		if (stream->handle->drwav)
 		{
-			drwav_uninit((drwav *)stream->handle->drwav);
+			drwav_uninit(stream->handle->drwav);
 			free(stream->handle->drwav);
 		}
 		stream->handle->drwav = NULL;
 
 		if (stream->handle->drflac)
 		{
-			drflac_close((drflac *)stream->handle->drflac);
+			drflac_close(stream->handle->drflac);
 		}
 		stream->handle->drflac = NULL;
 
