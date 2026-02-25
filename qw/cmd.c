@@ -838,7 +838,7 @@ int Cmd_CheckParm (char *parm)
 void Cmd_ChatInfo (int val)
 {
 #ifdef QUAKEWORLD
-	if (net_broadcast_chat->intValue && chat->intValue != val)
+	if (net_broadcast_chat->intValue)
 	{
 		switch (val)
 		{
@@ -855,6 +855,12 @@ void Cmd_ChatInfo (int val)
 				Cvar_ForceSetValue("chat", EZQ_CHAT_OFF);
 				break;
 		}
+	}
+	else
+	{
+		afk = 0;
+		Cbuf_AddText("setinfo chat \"\"\n");
+		Cvar_ForceSetValue("chat", EZQ_CHAT_OFF);
 	}
 #endif
 }

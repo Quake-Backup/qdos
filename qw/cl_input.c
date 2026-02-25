@@ -345,7 +345,7 @@ void CL_FinishMove (usercmd_t *cmd)
 
 	if ( in_attack.state & 3 )
 	{
-		if (afk == 2 || chat->intValue > 1) /* FS: Some servers won't let you fire if you're in AFK mode... */
+		if (afk >= EZQ_CHAT_TYPING || chat->intValue >= EZQ_CHAT_TYPING) /* FS: Some servers won't let you fire if you're in AFK mode... */
 		{
 			Cmd_ChatInfo(EZQ_CHAT_OFF);
 		}
