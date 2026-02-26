@@ -689,7 +689,7 @@ typedef struct _TargaHeader {
 SCR_ScreenShot_f
 ================== 
 */  
-void SCR_ScreenShot_f (void) 
+void SCR_ScreenShot_f (void)
 {
 	byte		*buffer;
 	char		pcxname[80]; 

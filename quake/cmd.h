@@ -143,7 +143,6 @@ void	Cmd_Print (char *text);
 // used by command functions to send output to either the graphics console or
 // passed as a print message to the client
 
-char *CopyString (char *in);
 void Cbuf_AddEarlyCommands (qboolean clear);
 
 void Cmd_RemoveAutoComplete (void); /* FS */

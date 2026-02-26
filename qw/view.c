@@ -150,7 +150,6 @@ float V_CalcBob (void)
 
 //=============================================================================
 
-
 void V_StartPitchDrift (void)
 {
 #if 1
@@ -345,7 +344,7 @@ void V_ParseDamage (void)
 	if (cl.cshifts[CSHIFT_DAMAGE].percent > 150)
 		cl.cshifts[CSHIFT_DAMAGE].percent = 150;
 
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_DAMAGE].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_DAMAGE].destcolor[1] = 0;
@@ -397,7 +396,7 @@ V_cshift_f
 */
 void V_cshift_f (void)
 {
-	if(!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cshift_empty.destcolor[0] = 0;
 		cshift_empty.destcolor[1] = 0;
@@ -423,7 +422,7 @@ When you run over an item, the server sends this command
 */
 void V_BonusFlash_f (void)
 {
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_BONUS].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_BONUS].destcolor[1] = 0;
@@ -448,9 +447,13 @@ Underwater, lava, etc each has a color shift
 */
 void V_SetContentsColor (int contents)
 {
-	if (!v_contentblend->value) /* FS: Fucking hate palette blends */
+	if (!v_contentblend->intValue) /* FS: Fucking hate palette blends */
 	{
 		cl.cshifts[CSHIFT_CONTENTS] = cshift_empty;
+		cl.cshifts[CSHIFT_CONTENTS].destcolor[0] = 0;
+		cl.cshifts[CSHIFT_CONTENTS].destcolor[1] = 0;
+		cl.cshifts[CSHIFT_CONTENTS].destcolor[2] = 0;
+		cl.cshifts[CSHIFT_CONTENTS].percent = 0;
 		return;
 	}
 
@@ -537,7 +540,7 @@ void V_CalcBlend (void)
 
 	for (j=0 ; j<NUM_CSHIFTS ; j++)	
 	{
-		if (!gl_cshiftpercent->value)
+		if (!gl_cshiftpercent->intValue)
 			continue;
 
 		a2 = ((cl.cshifts[j].percent * gl_cshiftpercent->value) / 100.0) / 255.0;
