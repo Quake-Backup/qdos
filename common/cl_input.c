@@ -24,8 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
-
+#ifdef QUAKEWORLD
 cvar_t	*cl_nodelta;
+#endif
 cvar_t  *in_freelook; /* FS: mlook */
 /*
 ===============================================================================
@@ -122,7 +123,7 @@ void IN_KLookUp (void) {KeyUp(&in_klook);}
 void IN_MLookDown (void) {KeyDown(&in_mlook);}
 void IN_MLookUp (void) {
 KeyUp(&in_mlook);
-if ( (!(in_mlook.state&1) &&  lookspring->value) || (!in_freelook->value && lookspring->value))
+if ( (!(in_mlook.state&1) &&  lookspring->intValue) || (!in_freelook->intValue && lookspring->intValue))
 	V_StartPitchDrift();
 }
 void IN_UpDown(void) {KeyDown(&in_up);}
@@ -220,6 +221,23 @@ float CL_KeyState (kbutton_t *key)
 
 //==========================================================================
 
+#ifdef QUAKE1
+cvar_t	*cl_upspeed;
+cvar_t	*cl_forwardspeed;
+cvar_t	*cl_backspeed;
+cvar_t	*cl_sidespeed;
+
+cvar_t	*cl_movespeedkey;
+
+cvar_t	*cl_yawspeed;
+cvar_t	*cl_pitchspeed;
+
+cvar_t	*cl_anglespeedkey;
+
+cvar_t	*pq_fullpitch; /* FS: ProQuake Shit */
+cvar_t	*cl_fullpitch; /* FS: ProQuake Shit */
+#endif
+
 /*
 ================
 CL_AdjustAngles
@@ -258,17 +276,38 @@ void CL_AdjustAngles (void)
 
 	if (up || down)
 		V_StopPitchDrift ();
-		
-        if (cl.viewangles[PITCH] > 100) //80)
-                cl.viewangles[PITCH] = 100; // 80;
-        if (cl.viewangles[PITCH] < -100) //-70)
-                cl.viewangles[PITCH] = -100; // -70;
 
-        if (cl.viewangles[ROLL] > 100) //50)
-                cl.viewangles[ROLL] = 100; //50;
-        if (cl.viewangles[ROLL] < -100) //-50)
-                cl.viewangles[ROLL] = -100; //-50;
-		
+#ifdef QUAKE1
+	if (pq_fullpitch->intValue) /* FS: ProQuake Shit */
+	{
+		if (cl.viewangles[PITCH] > 90)
+			cl.viewangles[PITCH] = 90;
+		if (cl.viewangles[PITCH] < -90)
+			cl.viewangles[PITCH] = -90;
+	}
+	else
+	{
+		if (cl.viewangles[PITCH] > 80)
+			cl.viewangles[PITCH] = 80;
+		if (cl.viewangles[PITCH] < -70)
+			cl.viewangles[PITCH] = -70;
+	}
+
+	if (cl.viewangles[ROLL] > 50)
+		cl.viewangles[ROLL] = 50;
+	if (cl.viewangles[ROLL] < -50)
+		cl.viewangles[ROLL] = -50;
+#else
+    if (cl.viewangles[PITCH] > 100)
+            cl.viewangles[PITCH] = 100;
+    if (cl.viewangles[PITCH] < -100)
+            cl.viewangles[PITCH] = -100;
+
+    if (cl.viewangles[ROLL] > 100)
+            cl.viewangles[ROLL] = 100;
+    if (cl.viewangles[ROLL] < -100)
+            cl.viewangles[ROLL] = -100;
+#endif
 }
 
 /*
@@ -279,12 +318,20 @@ Send the intended movement message to the server
 ================
 */
 void CL_BaseMove (usercmd_t *cmd)
-{	
+{
+#ifdef QUAKE1
+	if (cls.signon != SIGNONS)
+		return;
+#endif
+
 	CL_AdjustAngles ();
 	
 	memset (cmd, 0, sizeof(*cmd));
-	
+
+#ifdef QUAKEWORLD
 	VectorCopy (cl.viewangles, cmd->angles);
+#endif
+
 	if (in_strafe.state & 1)
 	{
 		cmd->sidemove += cl_sidespeed->value * CL_KeyState (&in_right);
@@ -296,6 +343,13 @@ void CL_BaseMove (usercmd_t *cmd)
 
 	cmd->upmove += cl_upspeed->value * CL_KeyState (&in_up);
 	cmd->upmove -= cl_upspeed->value * CL_KeyState (&in_down);
+
+#ifdef QUAKE1
+	if ( in_jump.state & 1 ) /* FS: Noclip up with +jump or swim up with +jump */
+	{
+		cmd->upmove += cl_upspeed->value * CL_KeyState (&in_jump);
+	}
+#endif
 
 	if (! (in_klook.state & 1) )
 	{	
@@ -311,10 +365,86 @@ void CL_BaseMove (usercmd_t *cmd)
 		cmd->forwardmove *= cl_movespeedkey->value;
 		cmd->sidemove *= cl_movespeedkey->value;
 		cmd->upmove *= cl_movespeedkey->value;
-	}	
+	}
 }
 
-int MakeChar (int i)
+#ifdef QUAKE1
+/*
+==============
+CL_SendMove
+==============
+*/
+void CL_SendMove (usercmd_t *cmd)
+{
+	int		i;
+	int		bits;
+	sizebuf_t	buf;
+	byte	data[128];
+	
+	buf.maxsize = 128;
+	buf.cursize = 0;
+	buf.data = data;
+	
+	cl.cmd = *cmd;
+
+//
+// send the movement message
+//
+	MSG_WriteByte (&buf, clc_move);
+
+	MSG_WriteFloat (&buf, cl.mtime[0]);	// so server can get ping times
+
+	for (i=0 ; i<3 ; i++)
+		//johnfitz -- 16-bit angles for PROTOCOL_FITZQUAKE
+		if (cl.protocol == PROTOCOL_NETQUAKE)
+			MSG_WriteAngle (&buf, cl.viewangles[i]);
+		else
+			MSG_WriteAngle16 (&buf, cl.viewangles[i]);
+		//johnfitz
+
+	MSG_WriteShort (&buf, cmd->forwardmove);
+	MSG_WriteShort (&buf, cmd->sidemove);
+	MSG_WriteShort (&buf, cmd->upmove);
+
+//
+// send button bits
+//
+	bits = 0;
+	
+	if ( in_attack.state & 3 )
+		bits |= 1;
+	in_attack.state &= ~2;
+	
+	if (in_jump.state & 3)
+		bits |= 2;
+	in_jump.state &= ~2;
+	
+	MSG_WriteByte (&buf, bits);
+
+	MSG_WriteByte (&buf, in_impulse);
+	in_impulse = 0;
+
+//
+// deliver the message
+//
+	if (cls.demoplayback)
+		return;
+
+//
+// allways dump the first two message, because it may contain leftover inputs
+// from the last level
+//
+	if (++cl.movemessages <= 2)
+		return;
+	
+	if (NET_SendUnreliableMessage (cls.netcon, &buf) == -1)
+	{
+		Com_Printf ("CL_SendMove: lost server connection\n");
+		CL_Disconnect ();
+	}
+}
+#else
+static QINLINE int MakeChar (int i)
 {
 	i &= ~3;
 	if (i < -127*4)
@@ -519,6 +649,7 @@ void CL_SendClientCommand(qboolean reliable, char *format, ...) /* FS: From JQua
 		MSG_WriteString (&cls.cmdmsg, string);
 	}
 }
+#endif
 
 /*
 ============
@@ -563,7 +694,9 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("+mlook", IN_MLookDown);
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
+#ifdef QUAKEWORLD
 	cl_nodelta = Cvar_Get("cl_nodelta","0", 0);
+#endif
 	in_freelook = Cvar_Get("in_freelook","1.0", CVAR_ARCHIVE); /* FS: mlook */
 	Cvar_Set_Description("in_freelook", "Enables Mouselook.");
 }

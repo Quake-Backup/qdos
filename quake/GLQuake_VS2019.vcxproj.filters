@@ -36,9 +36,6 @@
     <ClCompile Include="cl_demo.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cl_input.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cl_main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -386,6 +383,9 @@
     </ClCompile>
     <ClCompile Include="..\common\gl_model.c">
       <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\cl_input.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
