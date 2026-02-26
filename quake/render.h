@@ -48,6 +48,7 @@ typedef struct efrag_s
 
 typedef struct entity_s
 {
+#ifdef QUAKE1
 	qboolean				forcelink;		// model changed
 
 	int						update_type;
@@ -55,19 +56,33 @@ typedef struct entity_s
 	entity_state_t			baseline;		// to fill in defaults in updates
 
 	double					msgtime;		// time of last update
-	vec3_t					msg_origins[2];	// last two updates (0 is newest)	
+	vec3_t					msg_origins[2];	// last two updates (0 is newest)
+#endif
+#ifdef QUAKEWORLD
+	int						keynum;			// for matching entities in different frames
+#endif
 	vec3_t					origin;
+#ifdef QUAKE1
 	vec3_t					msg_angles[2];	// last two updates (0 is newest)
+#endif
 	vec3_t					angles;	
 	struct model_s			*model;			// NULL = no model
-	struct efrag_s			*efrag;			// linked list of efrags
+	struct efrag_s			*efrag;			// linked list of efrags (FIXME)
 	int						frame;
 	float					syncbase;		// for client-side animations
 	byte					*colormap;
+#ifdef QUAKE1
 	int						effects;		// light, particals, etc
+#endif
 	int						skinnum;		// for Alias models
+
+#ifdef QUAKEWORLD
+	struct player_info_s	*scoreboard;	// identify player
+#endif
+
 	int						visframe;		// last frame this entity was
-											//  found in an active leaf
+											// found in an active leaf
+											// only used for static objects
 											
 	int						dlightframe;	// dynamic lighting
 	int						dlightbits;
@@ -78,6 +93,7 @@ typedef struct entity_s
 											//  that splits bmodel, or NULL if
 											//  not split
 
+#ifdef QUAKE1
 	byte					alpha;			//johnfitz -- alpha
 	byte					lerpflags;		//johnfitz -- lerping
 	float					lerpstart;		//johnfitz -- animation lerping
@@ -91,6 +107,7 @@ typedef struct entity_s
 	vec3_t					currentorigin;	//johnfitz -- transform lerping
 	vec3_t					previousangles;	//johnfitz -- transform lerping
 	vec3_t					currentangles;	//johnfitz -- transform lerping
+#endif
 } entity_t;
 
 // !!! if this is changed, it must be changed in asm_draw.h too !!!
@@ -136,6 +153,7 @@ extern vec3_t	r_origin, vpn, vright, vup;
 
 extern	struct texture_s	*r_notexture_mip;
 
+extern	entity_t	r_worldentity;
 
 void R_Init (void);
 void R_Shutdown (void);
@@ -169,7 +187,6 @@ void R_ShutdownParticles (void);
 void R_ClearParticles (void);
 void R_DrawParticles (void);
 void R_DrawWaterSurfaces (void);
-
 
 //
 // surface cache related
