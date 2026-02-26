@@ -449,7 +449,7 @@ void M_Main_Key (int key)
 	case K_ESCAPE:
 		key_dest = key_game;
 		m_state = m_none;
-		if (!cl_demos->value || nostartupdemos) /* FS: Maybe you disabled startup demos via menu? */
+		if (!cl_demos->intValue || nostartupdemos) /* FS: Maybe you disabled startup demos via menu? */
 		{
 			cls.demonum = -1;
 			break;
@@ -4150,7 +4150,7 @@ static void SearchGamespyGames (void)
 
 	m_num_gamespy_servers = 0;
 
-	for (i=0 ; i< MAX_GAMESPY_MENU_SERVERS ; i++)
+	for (i = 0 ; i < MAX_GAMESPY_MENU_SERVERS; i++)
 	{
 		Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 	}
@@ -4308,3 +4308,4 @@ static void JoinGamespyServer_Redraw (int scale)
 	}
 }
 #endif
+
