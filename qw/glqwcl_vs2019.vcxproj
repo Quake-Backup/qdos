@@ -247,9 +247,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\common\d_fill.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\common\d_init.c">
@@ -300,6 +298,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\common\gl_model.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\common\gl_refrag.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -347,6 +349,10 @@
     <ClCompile Include="..\common\in_win.c" />
     <ClCompile Include="..\common\keys.c" />
     <ClCompile Include="..\common\mathlib.c" />
+    <ClCompile Include="..\common\model.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\common\nonintel.c" />
     <ClCompile Include="..\common\q_shwin.c" />
     <ClCompile Include="..\common\r_aclip.c">
@@ -423,10 +429,6 @@
     <ClCompile Include="cl_pred.c" />
     <ClCompile Include="cmd.c" />
     <ClCompile Include="common.c" />
-    <ClCompile Include="gl_model.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="gl_ngraph.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -437,10 +439,6 @@
     </ClCompile>
     <ClCompile Include="md4.c" />
     <ClCompile Include="menu.c" />
-    <ClCompile Include="model.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="net_chan.c" />
     <ClCompile Include="net_udp.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -848,10 +846,6 @@ del $(OutDir)%(Filename).spp
     <ClInclude Include="cl_http.h" />
     <ClInclude Include="cmd.h" />
     <ClInclude Include="common.h" />
-    <CustomBuild Include="gl_model.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </CustomBuild>
     <ClInclude Include="menu.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="net.h" />

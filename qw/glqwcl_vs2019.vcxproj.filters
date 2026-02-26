@@ -195,9 +195,6 @@
     <ClCompile Include="..\common\gl_mesh.c">
       <Filter>Source Files\GL</Filter>
     </ClCompile>
-    <ClCompile Include="gl_model.c">
-      <Filter>Source Files\GL</Filter>
-    </ClCompile>
     <ClCompile Include="gl_ngraph.c">
       <Filter>Source Files\GL</Filter>
     </ClCompile>
@@ -267,9 +264,6 @@
     <ClCompile Include="..\common\draw.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
-    <ClCompile Include="model.c">
-      <Filter>Source Files\Software</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\r_aclip.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
@@ -317,6 +311,12 @@
     </ClCompile>
     <ClCompile Include="..\common\q_shwin.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\model.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_model.c">
+      <Filter>Source Files\GL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -494,15 +494,6 @@
     <CustomBuild Include="..\common\sys_wina.s">
       <Filter>Source Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="gl_model.h">
-      <Filter>Source Files\GL</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\common\gl_warp_sin.h">
-      <Filter>Source Files\GL</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\common\glquake.h">
-      <Filter>Source Files\GL</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\common\d_draw.s">
       <Filter>Source Files\Software\ASM</Filter>
     </CustomBuild>
@@ -544,6 +535,12 @@
     </CustomBuild>
     <CustomBuild Include="..\common\surf8.s">
       <Filter>Source Files\Software\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\gl_warp_sin.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\common\glquake.h">
+      <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

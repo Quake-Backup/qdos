@@ -80,8 +80,6 @@ typedef struct texture_s
 {
 	char		name[16];
 	unsigned	width, height;
-	int			gl_texturenum;
-	struct msurface_s	*texturechain;	// for gl_texsort drawing
 	int			anim_total;				// total tenths in sequence ( 0 = no)
 	int			anim_min, anim_max;		// time for this frame min <=time< max
 	struct texture_s *anim_next;		// in the animation sequence
@@ -97,12 +95,15 @@ typedef struct texture_s
 #define SURF_DRAWTILED		0x20
 #define SURF_DRAWBACKGROUND	0x40
 #define SURF_UNDERWATER		0x80
-#define SURF_DONTWARP		0x100
+
+/* FS: From QuakeSpasm */
+#define SURF_NOTEXTURE		0x100 //johnfitz
+#define SURF_DRAWFENCE		0x200
 
 // !!! if this is changed, it must be changed in asm_draw.h too !!!
 typedef struct
 {
-	unsigned short	v[2];
+	unsigned int	v[2]; /* was unsigned short -- changed for BSP2 support */
 	unsigned int	cachededgeoffset;
 } medge_t;
 
@@ -114,20 +115,12 @@ typedef struct
 	int			flags;
 } mtexinfo_t;
 
-#define	VERTEXSIZE	7
-
-typedef struct glpoly_s
-{
-	struct	glpoly_s	*next;
-	struct	glpoly_s	*chain;
-	int		numverts;
-	int		flags;			// for SURF_UNDERWATER
-	float	verts[4][VERTEXSIZE];	// variable sized (xyz s1t1 s2t2)
-} glpoly_t;
-
 typedef struct msurface_s
 {
 	int			visframe;		// should be drawn when node is crossed
+
+	int			dlightframe;
+	int			dlightbits;
 
 	mplane_t	*plane;
 	int			flags;
@@ -135,24 +128,16 @@ typedef struct msurface_s
 	int			firstedge;	// look up in model->surfedges[], negative numbers
 	int			numedges;	// are backwards edges
 	
+// surface generation data
+	struct surfcache_s	*cachespots[MIPLEVELS];
+
 	short		texturemins[2];
 	short		extents[2];
-
-	int			light_s, light_t;	// gl lightmap coordinates
-
-	glpoly_t	*polys;				// multiple if warped
-	struct	msurface_s	*texturechain;
 
 	mtexinfo_t	*texinfo;
 	
 // lighting info
-	int			dlightframe;
-	int			dlightbits;
-
-	int			lightmaptexturenum;
 	byte		styles[MAXLIGHTMAPS];
-	int			cached_light[MAXLIGHTMAPS];	// values currently used in lightmap
-	qboolean	cached_dlight;				// true if dynamic light in cache
 	byte		*samples;		// [numstyles*surfsize]
 } msurface_t;
 
@@ -161,8 +146,12 @@ typedef struct mnode_s
 // common with leaf
 	int			contents;		// 0, to differentiate from leafs
 	int			visframe;		// node needs to be traversed if current
-	
+
+#ifdef QUAKE1
 	float		minmaxs[6];		// for bounding box culling
+#else
+	short		minmaxs[6];		// for bounding box culling
+#endif
 
 	struct mnode_s	*parent;
 
@@ -170,8 +159,9 @@ typedef struct mnode_s
 	mplane_t	*plane;
 	struct mnode_s	*children[2];	
 
-	unsigned short		firstsurface;
-	unsigned short		numsurfaces;
+	/* these two were unsigned short -- changed for BSP2 support */
+	unsigned int		firstsurface;
+	unsigned int		numsurfaces;
 } mnode_t;
 
 
@@ -182,13 +172,18 @@ typedef struct mleaf_s
 	int			contents;		// wil be a negative contents number
 	int			visframe;		// node needs to be traversed if current
 
+
+#ifdef QUAKE1
 	float		minmaxs[6];		// for bounding box culling
+#else
+	short		minmaxs[6];		// for bounding box culling
+#endif
 
 	struct mnode_s	*parent;
 
 // leaf specific
 	byte		*compressed_vis;
-	efrag_t		*efrags;
+	struct efrag_s	*efrags;
 
 	msurface_t	**firstmarksurface;
 	int			nummarksurfaces;
@@ -196,10 +191,18 @@ typedef struct mleaf_s
 	byte		ambient_sound_level[NUM_AMBIENTS];
 } mleaf_t;
 
+//johnfitz -- for clipnodes>32k
+typedef struct mclipnode_s
+{
+	int			planenum;
+	int			children[2]; // negative numbers are contents
+} mclipnode_t;
+//johnfitz
+
 // !!! if this is changed, it must be changed in asm_i386.h too !!!
 typedef struct
 {
-	dclipnode_t	*clipnodes;
+	mclipnode_t	*clipnodes; //johnfitz -- was dclipnode_t
 	mplane_t	*planes;
 	int			firstclipnode;
 	int			lastclipnode;
@@ -221,8 +224,9 @@ typedef struct mspriteframe_s
 {
 	int		width;
 	int		height;
+	void	*pcachespot;			// remove?
 	float	up, down, left, right;
-	int		gl_texturenum;
+	byte	pixels[4];
 } mspriteframe_t;
 
 typedef struct
@@ -261,14 +265,19 @@ Alias models are position independent, so the cache manager can move them.
 
 typedef struct
 {
-	int					firstpose;
-	int					numposes;
-	float				interval;
+	aliasframetype_t	type;
 	trivertx_t			bboxmin;
 	trivertx_t			bboxmax;
 	int					frame;
 	char				name[16];
 } maliasframedesc_t;
+
+typedef struct
+{
+	aliasskintype_t		type;
+	void				*pcachespot;
+	int					skin;
+} maliasskindesc_t;
 
 typedef struct
 {
@@ -284,46 +293,26 @@ typedef struct
 	maliasgroupframedesc_t	frames[1];
 } maliasgroup_t;
 
+typedef struct
+{
+	int					numskins;
+	int					intervals;
+	maliasskindesc_t	skindescs[1];
+} maliasskingroup_t;
+
 // !!! if this is changed, it must be changed in asm_draw.h too !!!
 typedef struct mtriangle_s {
 	int					facesfront;
 	int					vertindex[3];
 } mtriangle_t;
 
-
-#define	MAX_SKINS	32
 typedef struct {
-	int			ident;
-	int			version;
-	vec3_t		scale;
-	vec3_t		scale_origin;
-	float		boundingradius;
-	vec3_t		eyeposition;
-	int			numskins;
-	int			skinwidth;
-	int			skinheight;
-	int			numverts;
-	int			numtris;
-	int			numframes;
-	synctype_t	synctype;
-	int			flags;
-	float		size;
-
-	int					numposes;
-	int					poseverts;
-	int					posedata;	// numposes*poseverts trivert_t
-	int					commands;	// gl command list with embedded s/t
-	int					gl_texturenum[MAX_SKINS][4];
-	maliasframedesc_t	frames[1];	// variable sized
+	int					model;
+	int					stverts;
+	int					skindesc;
+	int					triangles;
+	maliasframedesc_t	frames[1];
 } aliashdr_t;
-
-#define	MAXALIASVERTS	2000
-#define	MAXALIASFRAMES	256
-#define	MAXALIASTRIS	2048
-extern	aliashdr_t	*pheader;
-extern	stvert_t	stverts[MAXALIASVERTS];
-extern	mtriangle_t	triangles[MAXALIASTRIS];
-extern	trivertx_t	*poseverts[MAXALIASFRAMES];
 
 //===================================================================
 
@@ -342,6 +331,9 @@ typedef enum {mod_brush, mod_sprite, mod_alias} modtype_t;
 #define	EF_TRACER2	64			// orange split trail + rotate
 #define	EF_TRACER3	128			// purple trail
 
+#define FG_QUAKEOLD	1 /* FS: From Engoo/leillol */
+#define BSPVERSION91 28 /* FS: From Engoo/leillol */
+
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
@@ -353,15 +345,19 @@ typedef struct model_s
 	synctype_t	synctype;
 	
 	int			flags;
-
+	int			fromgame; /* FS: From Engoo/leillol */
+	int			bspversion; /* FS: From QuakeSpasm */
 //
-// volume occupied by the model graphics
+// volume occupied by the model
 //		
-	vec3_t		mins, maxs;
 	float		radius;
+	vec3_t		mins, maxs;
+	vec3_t		ymins, ymaxs; //johnfitz -- bounds for entities with nonzero yaw
+	vec3_t		rmins, rmaxs; //johnfitz -- bounds for entities with nonzero pitch or roll
+	//johnfitz -- removed float radius;
 
 //
-// solid volume for clipping 
+// solid volume for clipping (sent from server)
 //
 	qboolean	clipbox;
 	vec3_t		clipmins, clipmaxs;
@@ -399,7 +395,7 @@ typedef struct model_s
 	int			*surfedges;
 
 	int			numclipnodes;
-	dclipnode_t	*clipnodes;
+	mclipnode_t	*clipnodes; //johnfitz -- was dclipnode_t
 
 	int			nummarksurfaces;
 	msurface_t	**marksurfaces;
@@ -413,8 +409,8 @@ typedef struct model_s
 	byte		*lightdata;
 	char		*entities;
 
-	unsigned	checksum;
-	unsigned	checksum2;
+	unsigned	checksum;		// for world models only
+	unsigned	checksum2;		// for world models only
 
 //
 // additional model data

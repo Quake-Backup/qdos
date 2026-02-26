@@ -192,9 +192,6 @@
     <ClCompile Include="..\common\gl_mesh.c">
       <Filter>Source Files\GL</Filter>
     </ClCompile>
-    <ClCompile Include="gl_model.c">
-      <Filter>Source Files\GL</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\gl_refrag.c">
       <Filter>Source Files\GL</Filter>
     </ClCompile>
@@ -297,9 +294,6 @@
     <ClCompile Include="net_dos.c">
       <Filter>Source Files\DOS</Filter>
     </ClCompile>
-    <ClCompile Include="model.c">
-      <Filter>Source Files\Software</Filter>
-    </ClCompile>
     <ClCompile Include="r_main.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
@@ -386,6 +380,12 @@
     </ClCompile>
     <ClCompile Include="..\common\snd_ogg.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\model.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_model.c">
+      <Filter>Source Files\GL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
