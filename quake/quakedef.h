@@ -284,6 +284,12 @@ typedef struct
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
+#ifdef _WIN32
+#define QINLINE __inline
+#else
+#define QINLINE inline
+#endif
+
 /* FS: Added */
 #define bound(a,b,c) ((a) >= (c) ? (a) : \
 					(b) < (a) ? (a) : (b) > (c) ? (c) : (b))
