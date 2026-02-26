@@ -1437,7 +1437,7 @@ void COM_Init (void)
 	}
 #endif // QUAKE1
 
-	registered = Cvar_Get("registered","0", CVAR_NOSET|CVAR_PROTECTED);
+	registered = Cvar_Get("registered", "0", CVAR_NOSET|CVAR_PROTECTED);
 	Cvar_Set_Description("registered", "Special internal CVAR for setting Registered game.");
 #ifdef QUAKE1
 	cmdline = Cvar_Get("cmdline","", 0);
@@ -2356,7 +2356,7 @@ Searches the string for the given
 key and returns the associated value, or an empty string.
 ===============
 */
-char *Info_ValueForKey (char *s, char *key)
+char *Info_ValueForKey (char *s, const char *key)
 {
 	char	pkey[512];
 	static	char value[4][512];	// use two buffers so compares
@@ -2398,7 +2398,7 @@ char *Info_ValueForKey (char *s, char *key)
 	}
 }
 
-void Info_RemoveKey (char *s, char *key)
+void Info_RemoveKey (char *s, const char *key)
 {
 	char	*start;
 	char	pkey[512];
@@ -2496,7 +2496,7 @@ void Info_RemovePrefixedKeys (char *start, char prefix)
 
 }
 
-void Info_SetValueForStarKey (char *s, char *key, const char *value, size_t maxsize)
+void Info_SetValueForStarKey (char *s, const char *key, const char *value, size_t maxsize)
 {
 	char	new[1024], *v;
 	int		c;
@@ -2578,7 +2578,7 @@ void Info_SetValueForStarKey (char *s, char *key, const char *value, size_t maxs
 	*s = 0;
 }
 
-void Info_SetValueForKey (char *s, char *key, char *value, size_t maxsize)
+void Info_SetValueForKey (char *s, const char *key, const char *value, size_t maxsize)
 {
 	if (key[0] == '*')
 	{

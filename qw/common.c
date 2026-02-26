@@ -1892,11 +1892,18 @@ pack_t *COM_LoadPackFile (char *packfile)
 	fseek (packhandle, header.dirofs, SEEK_SET);
 	fread (&info, 1, header.dirlen, packhandle);
 
-// crc the directory to check for modifications
+	// crc the directory to check for modifications
+#ifdef QUAKE1
+	CRC_Init (&crc);
+	for (i = 0; i < header.dirlen ; i++)
+		CRC_ProcessByte (&crc, ((byte *)info)[i]);
+	if (crc != PAK0_CRC_V106 && crc != PAK0_CRC_V101 && crc != PAK0_CRC_V100)
+		com_modified = true;
+#else
 	crc = CRC_Block((byte *)info, header.dirlen);
 	if (crc != PAK0_CRC)
 		com_modified = true;
-
+#endif // QUAKE1
 	// parse the directory
 	for (i = 0; i < numpackfiles ; i++)
 	{
