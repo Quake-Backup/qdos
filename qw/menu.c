@@ -1736,8 +1736,7 @@ void M_Extended_Set_Sound_KHz (int dir, int khz)
 	}
 }
 
-#ifdef GAMESPY
-/* FS: Gamespy stuff */
+#ifdef GAMESPY /* FS: Gamespy stuff */
 #define	NO_SERVER_STRING	"<no server>"
 #define MAX_GAMESPY_MENU_SERVERS MAX_SERVERS /* FS: Maximum number of servers to show in the browser */
 static char gamespy_server_names[MAX_GAMESPY_MENU_SERVERS][80]; /* FS: GameSpy Browser */
@@ -1965,7 +1964,7 @@ static void SearchGamespyGames (void)
 
 	m_num_gamespy_servers = 0;
 
-	for (i=0 ; i<=MAX_GAMESPY_MENU_SERVERS ; i++)
+	for (i = 0 ; i < MAX_GAMESPY_MENU_SERVERS; i++)
 	{
 		Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 	}
@@ -2052,7 +2051,7 @@ void M_Gamespy_Draw(void)
 
 	if(gamespyInit)
 	{
-		for (i = 0; i <= MAX_GAMESPY_MENU_SERVERS; i++)
+		for (i = 0; i < MAX_GAMESPY_MENU_SERVERS; i++)
 		{
 			Q_strlcpy (gamespy_server_names[i], NO_SERVER_STRING, sizeof(gamespy_server_names[i]));
 			memset (&gamespy_connect_string, 0, sizeof(gamespy_connect_string));
@@ -2121,7 +2120,6 @@ static void JoinGamespyServer_Redraw (int scale)
 		M_PrintWhite(40, 40 + i*8, "<Next Page>");
 		breakPoint = 0;
 	}
-
 }
 #endif
 
