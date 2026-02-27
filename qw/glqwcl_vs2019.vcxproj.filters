@@ -123,9 +123,6 @@
     <ClCompile Include="..\common\snd_strm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\snd_wavstream.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\snd_win.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -381,9 +378,6 @@
     <ClInclude Include="cmd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\console.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -481,6 +475,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\zone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -215,6 +215,7 @@ int Q_strcasecmp (const char *s1, const char *s2);
 int Q_strncasecmp (const char *s1, const char *s2, size_t n);
 size_t Q_strlcpy (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 size_t Q_strlcat (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
+qboolean Q_StrIsNullOrEmpty (const char *str); /* FS */
 
 //============================================================================
 

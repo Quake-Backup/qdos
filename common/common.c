@@ -282,6 +282,29 @@ int Q_tolower (int c) /* FS: Added */
 	return(c);
 }
 
+qboolean Q_StrIsNullOrEmpty (const char *str) /* FS */
+{
+	size_t len, i, badchars;
+
+	if (!str || str[0] == '\0')
+		return true;
+
+	len = Q_strlen(str);
+	if (!len)
+		return true;
+
+	for (i = 0, badchars = 0; i <= len; i++)
+	{
+		if (str[i] == ' ')
+			badchars++;
+	}
+
+	if (badchars == len)
+		return true;
+
+	return false;
+}
+
 /*
 ============================================================================
 

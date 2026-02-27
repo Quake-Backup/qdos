@@ -405,7 +405,6 @@
     <ClCompile Include="..\common\snd_mem.c" />
     <ClCompile Include="..\common\snd_mix.c" />
     <ClCompile Include="..\common\snd_strm.c" />
-    <ClCompile Include="..\common\snd_wavstream.c" />
     <ClCompile Include="..\common\snd_win.c" />
     <ClCompile Include="..\common\sys_dos.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -801,6 +800,7 @@ del $(OutDir)%(Filename).spp
     <ClInclude Include="..\common\adivtab.h" />
     <ClInclude Include="..\common\anorms.h" />
     <ClInclude Include="..\common\cdaudio.h" />
+    <ClInclude Include="..\common\common.h" />
     <ClInclude Include="..\common\console.h" />
     <ClInclude Include="..\common\crc.h" />
     <ClInclude Include="..\common\cvar.h" />
@@ -845,7 +845,6 @@ del $(OutDir)%(Filename).spp
     <ClInclude Include="client.h" />
     <ClInclude Include="cl_http.h" />
     <ClInclude Include="cmd.h" />
-    <ClInclude Include="common.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="net.h" />
