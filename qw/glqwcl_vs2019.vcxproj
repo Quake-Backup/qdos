@@ -389,6 +389,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\common\r_main.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\common\r_misc.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
@@ -456,10 +460,6 @@
     <ClCompile Include="net_wins.c" />
     <ClCompile Include="pmove.c" />
     <ClCompile Include="pmovetst.c" />
-    <ClCompile Include="r_main.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="r_part.c" />
     <ClCompile Include="sbar.c" />
     <ClCompile Include="skin.c" />

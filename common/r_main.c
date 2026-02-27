@@ -90,9 +90,11 @@ int		r_polycount;
 int		r_drawnpolycount;
 int		r_wholepolycount;
 
+#ifdef QUAKE1
 #define		VIEWMODNAME_LENGTH	256
 char		viewmodname[VIEWMODNAME_LENGTH+1];
 int			modcount;
+#endif
 
 int			*pfrustum_indexes[4];
 int			r_frustum_indexes[4*6];
@@ -116,6 +118,9 @@ void R_MarkLeaves (void);
 cvar_t	*r_draworder;
 cvar_t	*r_speeds;
 cvar_t	*r_timegraph;
+#ifdef QUAKEWORLD
+cvar_t  *r_netgraph;
+#endif
 cvar_t	*r_zgraph;
 cvar_t	*r_graphheight;
 cvar_t	*r_clearcolor;
@@ -141,6 +146,9 @@ cvar_t	*r_gunfov; /* FS */
 void CreatePassages (void);
 void SetVisibilityByPassages (void);
 
+#ifdef QUAKEWORLD
+void R_NetGraph (void);
+#endif
 void R_ZGraph (void);
 
 /* FS: Dynamic allocation stuff */
@@ -194,6 +202,9 @@ void R_Init (void)
 	r_draworder = Cvar_Get("r_draworder","0", 0);
 	r_speeds = Cvar_Get("r_speeds","0", 0);
 	r_timegraph = Cvar_Get("r_timegraph","0", 0);
+#ifdef QUAKEWORLD
+	r_netgraph = Cvar_Get("r_netgraph", "0", 0);
+#endif
 	r_zgraph = Cvar_Get("r_zgraph","0", 0);
 	r_graphheight = Cvar_Get("r_graphheight","10", 0);
 	r_clearcolor = Cvar_Get("r_clearcolor","2", 0);
@@ -331,40 +342,78 @@ R_SetVrect
 void R_SetVrect (vrect_t *pvrectin, vrect_t *pvrect, int lineadj)
 {
 	int		h;
-	float	size;
+	int		sbarVal = 0;
+	float   size;
+	qboolean full = false;
 
-	size = scr_viewsize->value > 100 ? 100 : scr_viewsize->value;
+#ifdef QUAKEWORLD
+	sbarVal = cl_sbar->intValue;
+#endif
+
+	if (scr_viewsize->value >= 100.0)
+	{
+		size = 100.0;
+#ifdef QUAKEWORLD
+		full = true;
+#endif
+	}
+	else
+	{
+		size = scr_viewsize->value;
+	}
+
 	if (cl.intermission)
 	{
-		size = 100;
+#ifdef QUAKEWORLD
+		full = true;
+#endif
+		size = 100.0;
 		lineadj = 0;
 	}
-	size /= 100;
+	size /= 100.0;
 
-	h = pvrectin->height - lineadj;
-	pvrect->width = pvrectin->width * size;
+	if (!sbarVal && full)
+		h = pvrectin->height;
+	else
+		h = pvrectin->height - lineadj;
+
+	if (full)
+		pvrect->width = pvrectin->width;
+	else
+		pvrect->width = pvrectin->width * size;
 	if (pvrect->width < 96)
 	{
 		size = 96.0 / pvrectin->width;
-		pvrect->width = 96;	// min for icons
+		pvrect->width = 96;     // min for icons
 	}
 	pvrect->width &= ~7;
 	pvrect->height = pvrectin->height * size;
-	if (pvrect->height > pvrectin->height - lineadj)
-		pvrect->height = pvrectin->height - lineadj;
+	if (sbarVal || !full)
+	{
+		if (pvrect->height > pvrectin->height - lineadj)
+			pvrect->height = pvrectin->height - lineadj;
+	}
+	else
+	{
+		if (pvrect->height > pvrectin->height)
+			pvrect->height = pvrectin->height;
+	}
 
 	pvrect->height &= ~1;
 
 	pvrect->x = (pvrectin->width - pvrect->width)/2;
-	pvrect->y = (h - pvrect->height)/2;
+	if (full)
+		pvrect->y = 0;
+	else
+		pvrect->y = (h - pvrect->height)/2;
 
+#ifdef QUAKE1
+	if (lcd_x->value)
 	{
-		if (lcd_x->value)
-		{
-			pvrect->y >>= 1;
-			pvrect->height >>= 1;
-		}
+		pvrect->y >>= 1;
+		pvrect->height >>= 1;
 	}
+#endif
 }
 
 
@@ -552,10 +601,14 @@ void R_DrawEntitiesOnList (void)
 
 	for (i=0 ; i<cl_numvisedicts ; i++)
 	{
+#ifdef QUAKE1
 		currententity = cl_visedicts[i];
 
 		if (currententity == &cl_entities[cl.viewentity])
 			continue;	// don't draw the player
+#else
+		currententity = &cl_visedicts[i];
+#endif
 
 		switch (currententity->model->type)
 		{
@@ -629,10 +682,18 @@ void R_DrawViewModel (void)
 	float oldAliasxscale = aliasxscale;
 	float oldAliasyscale = aliasyscale;
 
+#ifdef QUAKE1
 	if (!r_drawviewmodel->value)
+#else
+	if (!r_drawviewmodel->value || !Cam_DrawViewModel())
+#endif
 		return;
 
+#ifdef QUAKE1
 	if (cl.items & IT_INVISIBILITY)
+#else
+	if (cl.stats[STAT_ITEMS] & IT_INVISIBILITY)
+#endif
 		return;
 
 	if (cl.stats[STAT_HEALTH] <= 0)
@@ -779,7 +840,11 @@ void R_DrawBEntitiesOnList (void)
 
 	for (i=0 ; i<cl_numvisedicts ; i++)
 	{
+#ifdef QUAKE1
 		currententity = cl_visedicts[i];
+#else
+		currententity = &cl_visedicts[i];
+#endif
 
 		switch (currententity->model->type)
 		{
@@ -1037,6 +1102,11 @@ void R_RenderView (void)
 
 	if (r_timegraph->value)
 		R_TimeGraph ();
+
+#ifdef QUAKEWORLD
+	if (r_netgraph->value)
+		R_NetGraph ();
+#endif
 
 	if (r_zgraph->value)
 		R_ZGraph ();

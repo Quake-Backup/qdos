@@ -285,9 +285,6 @@
     <ClCompile Include="net_dos.c">
       <Filter>Source Files\DOS</Filter>
     </ClCompile>
-    <ClCompile Include="r_main.c">
-      <Filter>Source Files\Software</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\d_edge.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
@@ -385,6 +382,9 @@
       <Filter>Source Files\Software</Filter>
     </ClCompile>
     <ClCompile Include="..\common\r_misc.c">
+      <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_main.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
   </ItemGroup>
