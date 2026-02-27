@@ -35,8 +35,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma warning( disable : 4244 4127 4201 4214 4514 4305 4115 4018)
 #endif
 
-#define GAMENAME        "id1"
-
 #include <math.h>
 #include <string.h>
 #include <stdarg.h>
@@ -303,7 +301,6 @@ typedef struct
 typedef struct
 {
 	char	*basedir;
-	char	*cachedir; // for development over ISDN lines
 	int		argc;
 	char	**argv;
 	void	*membase;

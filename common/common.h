@@ -208,11 +208,11 @@ void MSG_ReadDeltaUsercmd (struct usercmd_s *from, struct usercmd_s *cmd);
 
 //============================================================================
 
-int Q_strlen (const char *str);
+size_t Q_strlen (const char *str);
 int Q_strcmp (const char *s1, const char *s2);
-int Q_strncmp (const char *s1, const char *s2, int count);
+int Q_strncmp (const char *s1, const char *s2, size_t count);
 int Q_strcasecmp (const char *s1, const char *s2);
-int Q_strncasecmp (const char *s1, const char *s2, int n);
+int Q_strncasecmp (const char *s1, const char *s2, size_t n);
 size_t Q_strlcpy (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 size_t Q_strlcat (char *dst, const char *src, size_t siz); /* FS: From OpenBSD */
 
@@ -253,9 +253,7 @@ struct cache_user_s;
 extern	char	com_gamedir[MAX_OSPATH];
 
 void COM_WriteFile (const char *filename, void *data, int len);
-int COM_OpenFile (const char *filename, int *hndl);
 int COM_FOpenFile (const char *filename, FILE **file);
-void COM_CloseFile (int h);
 
 void COM_FreeFile (void *buffer);
 byte *COM_LoadFile (const char *path);

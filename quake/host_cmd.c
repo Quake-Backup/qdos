@@ -81,7 +81,7 @@ typedef struct
 typedef struct pack_s
 {
 	char    filename[MAX_OSPATH];
-	int             handle;
+	FILE            *handle;
 	int             numfiles;
 	packfile_t      *files;
 } pack_t;
@@ -110,7 +110,7 @@ void KillGameDir(searchpath_t *search)
 			Z_Free(search);
 			return; //once you hit the dir, youve already freed the paks
 		}
-		Sys_FileClose (search->pack->handle); //johnfitz
+		fclose (search->pack->handle); //johnfitz
 		search_killer = search->next;
 		Z_Free(search->pack->files);
 		Z_Free(search->pack);
@@ -183,7 +183,7 @@ void Host_Game_f (void)
 
 		Q_strlcpy (com_gamedir, pakfile, sizeof(com_gamedir));
 
-		if (stricmp(Cmd_Argv(1), GAMENAME)) //game is not id1
+		if (stricmp(Cmd_Argv(1), "id1")) //game is not id1
 		{
 			search = Z_Malloc(sizeof(searchpath_t));
 			Q_strlcpy (search->filename, pakfile, sizeof(search->filename));
@@ -270,7 +270,7 @@ void ExtraMaps_Init (void) //TODO: move win32 specific stuff to sys_win.c
 	int             i;
 
 	//we don't want to list the maps in id1 pakfiles, becuase these are not "add-on" levels
-	Com_sprintf (ignorepakdir, sizeof(ignorepakdir), "/%s/", GAMENAME);
+	Com_sprintf (ignorepakdir, sizeof(ignorepakdir), "/id1/");
 
 	for (search = com_searchpaths ; search ; search = search->next)
 	{
@@ -773,6 +773,7 @@ command from the console.  Active clients are kicked off.
 */
 void Host_Map_f (void)
 {
+	FILE	*f;
 	int		i;
 	char	name[MAX_QPATH];
 	char	level[MAX_QPATH]; /* FS: Check for the map before we spawn the server */
@@ -783,7 +784,7 @@ void Host_Map_f (void)
 	/* FS: Check for bad map names before we start to spawn the server */
 	Com_sprintf (level, sizeof(level), "maps/%s.bsp", Cmd_Argv(1));
 
-	if (COM_OpenFile (level, &i) == -1)
+	if (COM_FOpenFile (level, &f) == -1)
 	{
 		Com_Printf ("cannot find map %s", level);
 		return;
@@ -838,7 +839,7 @@ Goes to a new map, taking all clients along
 void Host_Changelevel_f (void)
 {
 	char	level[MAX_QPATH];
-	int		i; //johnfitz
+	FILE	*f; //johnfitz
 
 	if (Cmd_Argc() != 2)
 	{
@@ -853,9 +854,15 @@ void Host_Changelevel_f (void)
 
 	//johnfitz -- check for client having map before anything else
 	Com_sprintf (level, sizeof(level), "maps/%s.bsp", Cmd_Argv(1));
-	if (COM_OpenFile (level, &i) == -1)
+	if (COM_FOpenFile (level, &f) == -1)
+	{
 		Host_Error ("cannot find map %s", level);
-	else	COM_CloseFile (i);
+		return;
+	}
+	else
+	{
+		fclose(f);
+	}
 	//johnfitz
 
 	SV_SaveSpawnparms ();
@@ -863,7 +870,10 @@ void Host_Changelevel_f (void)
 	SV_SpawnServer (level, false);
 	// also issue an error if spawn failed -- O.S.
 	if (!sv.active)
+	{
 		Host_Error ("cannot run map %s", level);
+		return;
+	}
 }
 
 /*

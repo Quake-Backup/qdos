@@ -216,8 +216,8 @@ static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, i
 
 	if (music)
 	{
-		intVolumeL = (int)((stream->volume * s_musicvolume->value) * 256);
-		intVolumeR = (int)((stream->volume * s_musicvolume->value) * 256);
+		intVolumeL = (int)((stream->volume * (s_musicvolume->value * s_mastervolume->value)) * 256);
+		intVolumeR = (int)((stream->volume * (s_musicvolume->value * s_mastervolume->value)) * 256);
 	}
 	else
 	{
@@ -228,8 +228,8 @@ static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, i
 		}
 		else
 		{
-			intVolumeL = (int)((stream->volume * s_volume->value) * 256);
-			intVolumeR = (int)((stream->volume * s_volume->value) * 256);
+			intVolumeL = (int)((stream->volume * (s_musicvolume->value * s_mastervolume->value)) * 256);
+			intVolumeR = (int)((stream->volume * (s_musicvolume->value * s_mastervolume->value)) * 256);
 		}
 	}
 

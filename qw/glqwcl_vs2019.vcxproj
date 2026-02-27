@@ -230,6 +230,7 @@
     <ClCompile Include="..\common\cl_input.c" />
     <ClCompile Include="..\common\cl_tent.c" />
     <ClCompile Include="..\common\cmd_auto.c" />
+    <ClCompile Include="..\common\common.c" />
     <ClCompile Include="..\common\console.c" />
     <ClCompile Include="..\common\crc.c" />
     <ClCompile Include="..\common\cvar.c" />
@@ -428,7 +429,6 @@
     <ClCompile Include="cl_parse.c" />
     <ClCompile Include="cl_pred.c" />
     <ClCompile Include="cmd.c" />
-    <ClCompile Include="common.c" />
     <ClCompile Include="gl_ngraph.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

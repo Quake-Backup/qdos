@@ -51,9 +51,6 @@
     <ClCompile Include="..\common\cmd_auto.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="common.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="conproc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -385,6 +382,9 @@
       <Filter>Source Files\GL</Filter>
     </ClCompile>
     <ClCompile Include="..\common\cl_input.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\common.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

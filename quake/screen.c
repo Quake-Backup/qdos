@@ -327,7 +327,7 @@ void SCR_Init (void)
 {
 	scr_viewsize = Cvar_Get("viewsize","100", CVAR_ARCHIVE);
 	scr_fov = Cvar_Get("fov","90", CVAR_ARCHIVE); // 10 - 170
-	scr_conspeed = Cvar_Get("scr_conspeed","1000", 0); /* FS: Was 300 */
+	scr_conspeed = Cvar_Get("scr_conspeed","1000", CVAR_ARCHIVE); /* FS: Was 300 */
 	scr_centertime = Cvar_Get("scr_centertime","2", 0);
 	scr_showram = Cvar_Get("showram","1", 0);
 	scr_showturtle = Cvar_Get("showturtle","0", 0);
