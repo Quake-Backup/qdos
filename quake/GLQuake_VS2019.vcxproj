@@ -960,6 +960,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug ASAN|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\common\r_part.c" />
     <ClCompile Include="..\common\r_screen.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug ASAN|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug|Win32'">true</ExcludedFromBuild>
@@ -1208,7 +1209,6 @@
     <ClCompile Include="pr_cmds.c" />
     <ClCompile Include="pr_edict.c" />
     <ClCompile Include="pr_exec.c" />
-    <ClCompile Include="r_part.c" />
     <ClCompile Include="sbar.c" />
     <ClCompile Include="sv_main.c" />
     <ClCompile Include="sv_move.c" />

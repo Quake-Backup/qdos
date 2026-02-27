@@ -102,9 +102,6 @@
     <ClCompile Include="pmovetst.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="r_part.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sbar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -314,6 +311,9 @@
     </ClCompile>
     <ClCompile Include="..\common\r_main.c">
       <Filter>Source Files\Software</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_part.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
