@@ -654,7 +654,7 @@ void R_RenderWorld (void)
 
 	pbtofpolys = btofpolys;
 
-	currententity = WORLDENT;
+	currententity = &r_worldentity;
 	VectorCopy (r_origin, modelorg);
 	clmodel = currententity->model;
 	r_pcurrentvertbase = clmodel->vertexes;

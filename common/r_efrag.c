@@ -207,7 +207,7 @@ void R_AddEfrags (entity_t *ent)
 	if (!ent->model)
 		return;
 
-	if (ent == WORLDENT)
+	if (ent == &r_worldentity)
 		return;		// never add the world
 
 	r_addent = ent;
@@ -258,7 +258,7 @@ void R_StoreEfrags (efrag_t **ppefrag)
 			if ((pent->visframe != r_framecount) &&
 				(cl_numvisedicts < MAX_VISEDICTS))
 			{
-				cl_visedicts[cl_numvisedicts++] = PENT;
+				cl_visedicts[cl_numvisedicts++] = PENT_EFRAGS;
 
 			// mark that we've recorded this entity for this frame
 				pent->visframe = r_framecount;
