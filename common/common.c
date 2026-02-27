@@ -1734,6 +1734,52 @@ int COM_FOpenFile (const char *filename, FILE **file)
 	return -1;
 }
 
+#define	MAX_READ	0x10000		// read in blocks of 64k
+
+/*
+=================
+FS_Read
+
+Properly handles partial reads
+=================
+*/
+void FS_Read (void *buffer, int len, FILE *f)
+{
+	int		block, remaining;
+	int		read;
+	byte	*buf;
+	int		tries;
+
+	buf = (byte *)buffer;
+
+	// read in chunks for progress bar
+	remaining = len;
+	tries = 0;
+	while (remaining)
+	{
+		block = remaining;
+		if (block > MAX_READ)
+			block = MAX_READ;
+		read = fread (buf, 1, block, f);
+		if (read == 0)
+		{
+			// we might have been trying to read from a CD
+			if (!tries)
+			{
+				tries = 1;
+				CDAudio_Stop();
+			}
+			else
+				Sys_Error ("FS_Read: 0 bytes read");
+		}
+
+		// do some progress bar thing here...
+
+		remaining -= read;
+		buf += read;
+	}
+}
+
 /*
 ============
 COM_LoadFile
@@ -1757,18 +1803,18 @@ byte *COM_LoadFile (const char *path)
 	if (!h)
 		return NULL;
 
-	buf = Z_Malloc (len+1);
+	buf = Z_Malloc (len);
 	if (!buf)
 	{
 		Sys_Error ("COM_LoadFile: not enough space for %s", path);
 		return NULL;
 	}
 		
-	((byte *)buf)[len] = 0;
+	//((byte *)buf)[len] = 0;
 #ifndef SERVERONLY
 	Draw_BeginDisc ();
 #endif
-	fread (buf, 1, len, h);
+	FS_Read (buf, len, h);
 	fclose (h);
 #ifndef SERVERONLY
 	Draw_EndDisc ();
