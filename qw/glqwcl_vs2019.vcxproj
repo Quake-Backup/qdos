@@ -389,6 +389,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\common\r_screen.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\common\r_sky.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
@@ -458,10 +462,6 @@
     </ClCompile>
     <ClCompile Include="r_part.c" />
     <ClCompile Include="sbar.c" />
-    <ClCompile Include="screen.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL QW|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="skin.c" />
     <ClCompile Include="vid_dos.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

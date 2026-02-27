@@ -54,6 +54,7 @@ cvar_t	*vid_windowed_mode;
 cvar_t	*block_switch;
 cvar_t	*vid_window_x;
 cvar_t	*vid_window_y;
+cvar_t	*vid_fullscreen;
 
 int	d_con_indirect = 0;
 
@@ -106,6 +107,7 @@ void    VID_Init (unsigned char *palette)
 	block_switch = Cvar_Get("block_switch","0", CVAR_ARCHIVE);
 	vid_window_x = Cvar_Get("vid_window_x", "0", CVAR_ARCHIVE);
 	vid_window_y = Cvar_Get("vid_window_y", "0", CVAR_ARCHIVE);
+	vid_fullscreen = Cvar_Get("vid_fullscreen", "1", CVAR_ARCHIVE|CVAR_NOSET|CVAR_PROTECTED);
 
 	Cmd_AddCommand ("vid_testmode", VID_TestMode_f);
 	Cmd_AddCommand ("vid_nummodes", VID_NumModes_f);

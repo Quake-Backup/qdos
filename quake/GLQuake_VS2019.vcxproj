@@ -950,6 +950,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug ASAN|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\common\r_screen.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug ASAN|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\common\r_sky.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug ASAN|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug|Win32'">true</ExcludedFromBuild>
@@ -1203,10 +1208,6 @@
     </ClCompile>
     <ClCompile Include="r_part.c" />
     <ClCompile Include="sbar.c" />
-    <ClCompile Include="screen.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug ASAN|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GL Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="sv_main.c" />
     <ClCompile Include="sv_move.c" />
     <ClCompile Include="sv_phys.c" />

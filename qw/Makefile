@@ -179,12 +179,12 @@ REFSOFT = d_copy.o \
 	r_light.o  \
 	r_main.o   \
 	r_misc.o   \
+	r_screen.o \
 	r_sky.o    \
 	r_sprite.o \
 	r_surf.o   \
 	r_vars.o   \
 	r_varsa.o  \
-	screen.o   \
 	surf16.o   \
 	surf8.o    \
 	vid_dos.o  \

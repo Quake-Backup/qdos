@@ -291,9 +291,6 @@
     <ClCompile Include="r_misc.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
-    <ClCompile Include="screen.c">
-      <Filter>Source Files\Software</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\d_edge.c">
       <Filter>Source Files\Software</Filter>
     </ClCompile>
@@ -386,6 +383,9 @@
     </ClCompile>
     <ClCompile Include="..\common\gl_screen.c">
       <Filter>Source Files\GL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\r_screen.c">
+      <Filter>Source Files\Software</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

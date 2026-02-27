@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "r_local.h"
 #include <time.h>
+
 // only the refresh window will be updated unless these variables are flagged 
 int			scr_copytop;
 int			scr_copyeverything;
@@ -30,6 +31,9 @@ float		scr_con_current;
 float		scr_conlines;		// lines of console to display
 
 float		oldscreensize, oldfov;
+#ifdef QUAKEWORLD
+float		oldsbar;
+#endif
 
 cvar_t		*scr_viewsize;
 cvar_t		*scr_fov;
@@ -39,11 +43,17 @@ cvar_t		*scr_showram;
 cvar_t		*scr_showturtle;
 cvar_t		*scr_showpause;
 cvar_t		*scr_printspeed;
+#ifdef QUAKEWORLD
+cvar_t		*scr_allowsnap;
+#endif
 
 /* FS: New stuff */
 cvar_t		*show_fps; /* FS: show_fps from Qrack */
 cvar_t		*show_time;
 cvar_t		*show_uptime;
+#ifdef QUAKEWORLD
+cvar_t		*show_ping;
+#endif
 
 qboolean	scr_initialized;		// ready to draw
 
@@ -55,6 +65,8 @@ int			scr_fullupdate;
 
 int			clearconsole;
 int			clearnotify;
+
+int			sb_lines;
 
 viddef_t	vid;				// global video state
 
@@ -69,6 +81,10 @@ qboolean	scr_skipupdate;
 qboolean	block_drawing;
 
 void SCR_ScreenShot_f (void);
+#ifdef QUAKEWORLD
+void SCR_RSShot_f (void);
+void SCR_DrawPing (void); /* FS: Added */
+#endif
 
 /*
 ===============================================================================
@@ -127,7 +143,7 @@ void SCR_EraseCenterString (void)
 		y = 48;
 
 	scr_copytop = 1;
-	Draw_TileClear (0, y,vid.width, 8*scr_erase_lines);
+	Draw_TileClear (0, y, vid.width, min(8*scr_erase_lines, vid.height - y - 1));
 }
 
 void SCR_DrawCenterString (void)
@@ -333,25 +349,34 @@ void SCR_Init (void)
 	scr_showturtle = Cvar_Get("showturtle","0", 0);
 	scr_showpause = Cvar_Get("showpause","1", 0);
 	scr_printspeed = Cvar_Get("scr_printspeed","8", 0);
+#ifdef QUAKEWORLD
+	scr_allowsnap = Cvar_Get("scr_allowsnap", "0", 0);
+#endif
 
 	/* FS: New stuff */
 	show_fps = Cvar_Get("show_fps","0", CVAR_ARCHIVE); /* FS: show_fps from Qrack */
-	show_fps->description = "Show framerate measured in Frames Per Second.";
+	Cvar_Set_Description("show_fps", "Show framerate measured in Frames Per Second.");
 	show_time = Cvar_Get("show_time","0", CVAR_ARCHIVE);
-	show_time->description = "Show current time in the HUD.  1 for military.  2 for AM/PM.";
+	Cvar_Set_Description("show_time", "Show current time in the HUD.  1 for military.  2 for AM/PM.");
 	show_uptime = Cvar_Get("show_uptime","0", CVAR_ARCHIVE);
-	show_uptime->description = "Show uptime.";
+	Cvar_Set_Description("show_uptime", "Show uptime.");
+#ifdef QUAKEWORLD
+	show_ping = Cvar_Get("show_ping", "0", CVAR_ARCHIVE);
+#endif
 
 //
 // register our commands
 //
 	Cmd_AddCommand ("screenshot",SCR_ScreenShot_f);
+#ifdef QUAKEWORLD
+	Cmd_AddCommand ("snap", SCR_RSShot_f);
+#endif
 	Cmd_AddCommand ("sizeup",SCR_SizeUp_f);
 	Cmd_AddCommand ("sizedown",SCR_SizeDown_f);
 
-	scr_ram = Draw_PicFromWad ("ram");
-	scr_net = Draw_PicFromWad ("net");
-	scr_turtle = Draw_PicFromWad ("turtle");
+	scr_ram = W_GetLumpName ("ram");
+	scr_net = W_GetLumpName ("net");
+	scr_turtle = W_GetLumpName ("turtle");
 
 	scr_initialized = true;
 }
@@ -406,8 +431,13 @@ SCR_DrawNet
 */
 void SCR_DrawNet (void)
 {
+#ifdef QUAKE1
 	if (realtime - cl.last_received_message < 0.3)
+#else
+	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged < UPDATE_BACKUP-1)
+#endif
 		return;
+
 	if (cls.demoplayback)
 		return;
 
@@ -443,7 +473,12 @@ void SCR_DrawFPS (void)
 
 	Com_sprintf(str, sizeof(str), "%3.1f FPS", lastfps);
 
-	x = vid.width - strlen(str) * 8 - 16;
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(str) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(str) * 8 - 16;
 	y = vid.height - sb_lines - 8;
 	Draw_String (x, y, str);
 }
@@ -473,7 +508,13 @@ void SCR_DrawUptime (void) /* FS: Connection time */
 	units = seconds - 10*tens;
 
 	Com_sprintf (str, sizeof(str), "%3i:%i%i", minutes, tens, units);
-	x = vid.width - strlen(str) * 8 - 16;
+
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(str) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(str) * 8 - 16;
 	y = vid.height - sb_lines - 24;
 	Draw_String(x, y, str);
 }
@@ -499,11 +540,55 @@ void SCR_DrawTime (void) /* FS: show_time */
 
 	strftime (st, sizeof (st), timefmt, local);
 
-	x = vid.width - strlen(st) * 8 - 16;
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(st) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(st) * 8 - 16;
 	y = vid.height - sb_lines - 16;
 	Draw_String(x, y, st);
 }
 
+#ifdef QUAKEWORLD
+/* FS: This is old, probably stupid code... I'm assuming I could just check my last message received to Sys_DoubleTime */
+void SCR_DrawPing (void)
+{
+	player_info_t	*player;
+	int x, y, ping = 999;
+	char st[6];
+
+	if (!show_ping->value || cls.state != ca_active)
+		return;
+
+	if (realtime - cl.last_ping_request > 2)
+	{
+		cl.last_ping_request = realtime;
+		MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
+		SZ_Print (&cls.netchan.message, "pings");
+	}
+
+	player = &cl.players[cl.playernum];
+	if(!player)
+		ping = 999;
+	else
+		ping = player->ping;
+
+	if (ping < 0 || ping > 999)
+		ping = 999;
+
+	Com_sprintf(st, sizeof(st), "%i", ping);
+
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(st) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(st) * 8 - 16;
+	y = vid.height - sb_lines - 32;
+	Draw_String(x, y, st);
+}
+#endif
 
 /*
 ==============
@@ -525,8 +610,6 @@ void SCR_DrawPause (void)
 		(vid.height - 48 - pic->height)/2, pic);
 }
 
-
-
 /*
 ==============
 SCR_DrawLoading
@@ -545,7 +628,6 @@ void SCR_DrawLoading (void)
 }
 
 
-
 //=============================================================================
 
 
@@ -557,12 +639,16 @@ SCR_SetUpToDrawConsole
 void SCR_SetUpToDrawConsole (void)
 {
 	Con_CheckResize ();
-	
+
+#ifdef QUAKE1
 	if (scr_drawloading)
 		return;		// never a console with loading plaque
-		
+
 	// decide on the height of the console
 	if (!cl.worldmodel || cls.signon != SIGNONS || cls.state != ca_active)
+#else
+	if (cls.state != ca_active)
+#endif
 	{
 		scr_conlines = vid.height;		// full screen
 		scr_con_current = scr_conlines;
@@ -633,24 +719,6 @@ void SCR_DrawConsole (void)
  
 ============================================================================== 
 */ 
- 
-
-typedef struct
-{
-    char	manufacturer;
-    char	version;
-    char	encoding;
-    char	bits_per_pixel;
-    unsigned short	xmin,ymin,xmax,ymax;
-    unsigned short	hres,vres;
-    unsigned char	palette[48];
-    char	reserved;
-    char	color_planes;
-    unsigned short	bytes_per_line;
-    unsigned short	palette_type;
-    char	filler[58];
-    unsigned char	data;			// unbounded
-} pcx_t;
 
 /* 
 ============== 
@@ -658,7 +726,7 @@ WritePCXfile
 ============== 
 */ 
 void WritePCXfile (char *filename, byte *data, int width, int height,
-	int rowbytes, byte *palette) 
+	int rowbytes, byte *palette, qboolean upload) 
 {
 	int		i, j, length;
 	pcx_t	*pcx;
@@ -713,10 +781,15 @@ void WritePCXfile (char *filename, byte *data, int width, int height,
 		
 // write output file 
 	length = pack - (byte *)pcx;
-	COM_WriteFile (filename, pcx, length);
+#ifdef QUAKEWORLD
+	if (upload)
+		CL_StartUpload((void *)pcx, length);
+	else
+#endif
+		COM_WriteFile (filename, pcx, length);
 
 	Z_Free(pcx);
-} 
+}
  
 
 
@@ -757,7 +830,7 @@ void SCR_ScreenShot_f (void)
 									//  buffer
 
 	WritePCXfile (pcxname, vid.buffer, vid.width, vid.height, vid.rowbytes,
-				  host_basepal);
+				  host_basepal, false);
 
 	D_DisableBackBufferAccess ();	// for adapters that can't stay mapped in
 									//  for linear writes all the time
@@ -765,9 +838,194 @@ void SCR_ScreenShot_f (void)
 	Com_Printf ("Wrote %s\n", pcxname);
 } 
 
+#ifdef QUAKEWORLD
+/*
+Find closest color in the palette for named color
+*/
+int MipColor(int r, int g, int b)
+{
+	int i;
+	float dist;
+	int best = 0; /* FS: Compiler Warning */
+	float bestdist;
+	int r1, g1, b1;
+	static int lr = -1, lg = -1, lb = -1;
+	static int lastbest;
+
+	if (r == lr && g == lg && b == lb)
+		return lastbest;
+
+	bestdist = 256*256*3;
+
+	for (i = 0; i < 256; i++) {
+		r1 = host_basepal[i*3] - r;
+		g1 = host_basepal[i*3+1] - g;
+		b1 = host_basepal[i*3+2] - b;
+		dist = r1*r1 + g1*g1 + b1*b1;
+		if (dist < bestdist) {
+			bestdist = dist;
+			best = i;
+		}
+	}
+	lr = r; lg = g; lb = b;
+	lastbest = best;
+	return best;
+}
+
+// in draw.c
+extern byte		*draw_chars;				// 8*8 graphic characters
+
+void SCR_DrawCharToSnap (int num, byte *dest, int width)
+{
+	int		row, col;
+	byte	*source;
+	int		drawline;
+	int		x;
+
+	row = num>>4;
+	col = num&15;
+	source = draw_chars + (row<<10) + (col<<3);
+
+	drawline = 8;
+
+	while (drawline--)
+	{
+		for (x=0 ; x<8 ; x++)
+			if (source[x])
+				dest[x] = source[x];
+			else
+				dest[x] = 98;
+		source += 128;
+		dest += width;
+	}
+
+}
+
+void SCR_DrawStringToSnap (const char *s, byte *buf, int x, int y, int width)
+{
+	byte *dest;
+	const unsigned char *p;
+
+	dest = buf + ((y * width) + x);
+
+	p = (const unsigned char *)s;
+	while (*p) {
+		SCR_DrawCharToSnap(*p++, dest, width);
+		dest += 8;
+	}
+}
+
+
+/* 
+================== 
+SCR_RSShot_f
+================== 
+*/  
+void SCR_RSShot_f (void) 
+{ 
+	int     x,y;//i, x, y;
+	unsigned char		*src, *dest;
+	char		pcxname[80]; 
+	//char		checkname[MAX_OSPATH];
+	unsigned char	*newbuf;//, *srcbuf;
+	//int srcrowbytes;
+	int w, h;
+	int dx, dy, dex, dey, nx;
+	int r, b, g;
+	int count;
+	float fracw, frach;
+	char st[80];
+	time_t now;
+
+	if (CL_IsUploading())
+		return; // already one pending
+
+	if (cls.state < ca_onserver)
+		return; // gotta be connected
+
+	if (!scr_allowsnap->value) {
+		MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
+		SZ_Print (&cls.netchan.message, "snap\n");
+		Com_Printf("Refusing remote screen shot request.\n");
+		return;
+	}
+
+	Com_Printf("Remote screen shot requested.\n");
+
+// 
+// save the pcx file 
+// 
+	D_EnableBackBufferAccess ();	// enable direct drawing of console to back
+									//  buffer
+
+	w = (vid.width < RSSHOT_WIDTH) ? vid.width : RSSHOT_WIDTH;
+	h = (vid.height < RSSHOT_HEIGHT) ? vid.height : RSSHOT_HEIGHT;
+
+	fracw = (float)vid.width / (float)w;
+	frach = (float)vid.height / (float)h;
+
+	newbuf = malloc(w*h);
+
+	for (y = 0; y < h; y++) {
+		dest = newbuf + (w * y);
+
+		for (x = 0; x < w; x++) {
+			r = g = b = 0;
+
+			dx = x * fracw;
+			dex = (x + 1) * fracw;
+			if (dex == dx) dex++; // at least one
+			dy = y * frach;
+			dey = (y + 1) * frach;
+			if (dey == dy) dey++; // at least one
+
+			count = 0;
+			for (/* */; dy < dey; dy++) {
+				src = vid.buffer + (vid.rowbytes * dy) + dx;
+				for (nx = dx; nx < dex; nx++) {
+					r += host_basepal[*src * 3];
+					g += host_basepal[*src * 3+1];
+					b += host_basepal[*src * 3+2];
+					src++;
+					count++;
+				}
+			}
+			r /= count;
+			g /= count;
+			b /= count;
+			*dest++ = MipColor(r, g, b);
+		}
+	}
+
+	time(&now);
+	Q_strlcpy(st, ctime(&now), sizeof(st));
+	st[strlen(st) - 1] = 0;
+	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, 0, w);
+
+	strncpy(st, cls.servername, sizeof(st));
+	st[sizeof(st) - 1] = 0;
+	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, 10, w);
+
+	strncpy(st, name->string, sizeof(st));
+	st[sizeof(st) - 1] = 0;
+	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, 20, w);
+
+	WritePCXfile (pcxname, newbuf, w, h, w, host_basepal, true);
+
+	free(newbuf);
+
+	D_DisableBackBufferAccess ();	// for adapters that can't stay mapped in
+									//  for linear writes all the time
+
+//	Com_Printf ("Wrote %s\n", pcxname);
+	Com_Printf ("Sending shot to server...\n");
+} 
+#endif
+
 
 //=============================================================================
 
+#ifdef QUAKE1
 
 /*
 ===============
@@ -812,6 +1070,8 @@ void SCR_EndLoadingPlaque (void)
 	scr_fullupdate = 0;
 	Con_ClearNotify ();
 }
+
+#endif
 
 //=============================================================================
 
@@ -925,28 +1185,46 @@ needs almost the entire 256k of stack space!
 void SCR_UpdateScreen (void)
 {
 	static float	oldscr_viewsize;
+#ifdef QUAKE1
 	static float	oldlcd_x;
+#endif
 	vrect_t		vrect;
 
 	if (scr_skipupdate || block_drawing)
 		return;
 
-	scr_copytop = 0;
-	scr_copyeverything = 0;
+	if (dedicated->intValue)
+		return;				// stdout only
 
 	if (scr_disabled_for_loading)
 	{
+#ifdef QUAKE1
 		if (realtime - scr_disabled_time > 60)
 		{
 			scr_disabled_for_loading = false;
 			Com_Printf ("load failed.\n");
 		}
 		else
+#endif
 			return;
 	}
 
-	if (dedicated->intValue)
-		return;				// stdout only
+#ifdef QUAKEWORLD
+	if (cl_downloadrate_hack->intValue && cls.download && cls.downloadpercent % 5 != 1) /* FS: HACK, don't update as often during downloading. */
+		return;
+
+#ifdef _WIN32
+	{	// don't suck up any cpu if minimized
+		extern int Minimized;
+
+		if (Minimized)
+			return;
+	}
+#endif
+#endif
+
+	scr_copytop = 0;
+	scr_copyeverything = 0;
 
 	if (!scr_initialized || !con_initialized)
 		return;				// not initialized yet
@@ -965,22 +1243,32 @@ void SCR_UpdateScreen (void)
 		oldfov = scr_fov->value;
 		vid.recalc_refdef = true;
 	}
-	
+
+#ifdef QUAKE1
 	if (oldlcd_x != lcd_x->value)
 	{
 		oldlcd_x = lcd_x->value;
 		vid.recalc_refdef = true;
 	}
-	
+#endif
+
 	if (oldscreensize != scr_viewsize->value)
 	{
 		oldscreensize = scr_viewsize->value;
 		vid.recalc_refdef = true;
 	}
-	
+
+#ifdef QUAKEWORLD
+	if (oldsbar != cl_sbar->value)
+	{
+		oldsbar = cl_sbar->value;
+		vid.recalc_refdef = true;
+	}
+#endif
+
 	if (vid.recalc_refdef)
 	{
-	// something changed, so reorder the screen
+		// something changed, so reorder the screen
 		SCR_CalcRefdef ();
 	}
 
@@ -1018,11 +1306,13 @@ void SCR_UpdateScreen (void)
 		SCR_DrawNotifyString ();
 		scr_copyeverything = true;
 	}
+#ifdef QUAKE1
 	else if (scr_drawloading)
 	{
 		SCR_DrawLoading ();
 		Sbar_Draw ();
 	}
+#endif
 	else if (cl.intermission == 1 && key_dest == key_game)
 	{
 		Sbar_IntermissionOverlay ();
@@ -1030,10 +1320,12 @@ void SCR_UpdateScreen (void)
 	else if (cl.intermission == 2 && key_dest == key_game)
 	{
 		Sbar_FinaleOverlay ();
+#ifdef QUAKE1
 		SCR_CheckDrawCenterString ();
 	}
 	else if (cl.intermission == 3 && key_dest == key_game)
 	{
+#endif
 		SCR_CheckDrawCenterString ();
 	}
 	else
@@ -1048,6 +1340,9 @@ void SCR_UpdateScreen (void)
 			SCR_DrawUptime (); /* FS: show uptime */
 			SCR_DrawTime (); /* FS: show time */
 			SCR_DrawFPS (); /* FS: Show FPS */
+#ifdef QUAKEWORLD
+			SCR_DrawPing (); /* FS: show ping */
+#endif
 		}
 		Sbar_Draw ();
 		SCR_DrawConsole ();
