@@ -107,6 +107,8 @@ glvert_t glv;
 
 cvar_t		*gl_ztrick;
 cvar_t		*gl_conscale; /* FS */
+cvar_t		*vid_fullscreen;
+cvar_t		*r_mode_desktop; /* FS */
 
 HWND WINAPI InitializeWindow (HINSTANCE hInstance, int nCmdShow);
 LONG CDAudio_MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -282,7 +284,7 @@ qboolean VID_SetFullDIBMode (int modenum)
 	int				lastmodestate, width, height;
 	RECT			rect;
 
-	if (!leavecurrentmode)
+	if (!leavecurrentmode && vid_fullscreen->intValue != 2)
 	{
 		gdevmode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 		gdevmode.dmBitsPerPel = modelist[modenum].bpp;
@@ -297,8 +299,24 @@ qboolean VID_SetFullDIBMode (int modenum)
 			gdevmode.dmFields |= DM_DISPLAYFREQUENCY;
 			Com_SafePrintf ("...using gl_displayrefresh of %d\n", gl_displayrefresh->intValue );
 		}
+
 		if (ChangeDisplaySettings (&gdevmode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
 			Sys_Error ("Couldn't set fullscreen DIB mode");
+	}
+
+	width = modelist[modenum].width;
+	height = modelist[modenum].height;
+	if (r_mode_desktop->intValue)
+	{
+		int widthTest = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+		int heightTest = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+		/* FS: If the API call fails just fall through. */
+		if ((widthTest > 0) && (heightTest > 0))
+		{
+			width = widthTest;
+			height = heightTest;
+		}
 	}
 
 	lastmodestate = modestate;
@@ -306,14 +324,21 @@ qboolean VID_SetFullDIBMode (int modenum)
 
 	WindowRect.top = WindowRect.left = 0;
 
-	WindowRect.right = modelist[modenum].width;
-	WindowRect.bottom = modelist[modenum].height;
+	WindowRect.right = width;
+	WindowRect.bottom = height;
 
-	DIBWidth = modelist[modenum].width;
-	DIBHeight = modelist[modenum].height;
+	DIBWidth = width;
+	DIBHeight = height;
 
-	WindowStyle = WS_POPUP;
-	ExWindowStyle = 0;
+	WindowStyle = WS_POPUP | WS_VISIBLE;
+	if (vid_fullscreen->intValue == 1)
+	{
+		ExWindowStyle = WS_EX_TOPMOST;
+	}
+	else
+	{
+		ExWindowStyle = 0;
+	}
 
 	rect = WindowRect;
 	AdjustWindowRectEx(&rect, WindowStyle, FALSE, 0);
@@ -349,10 +374,10 @@ qboolean VID_SetFullDIBMode (int modenum)
 	PatBlt(hdc,0,0,WindowRect.right,WindowRect.bottom,BLACKNESS);
 	ReleaseDC(dibwindow, hdc);
 
-	if (vid.conheight > modelist[modenum].height)
-		vid.conheight = modelist[modenum].height;
-	if (vid.conwidth > modelist[modenum].width)
-		vid.conwidth = modelist[modenum].width;
+	if (vid.conheight > height)
+		vid.conheight = height;
+	if (vid.conwidth > width)
+		vid.conwidth = width;
 	vid.width = vid.conwidth;
 	vid.height = vid.conheight;
 
@@ -1578,6 +1603,8 @@ void	VID_Init (unsigned char *palette)
 	Cvar_Set_Description("gl_displayrefresh", "Refresh rate for fullscreen modes.  Set to 0 to disable.");
 	gl_conscale = Cvar_Get("gl_conscale", "1", CVAR_ARCHIVE);
 	Cvar_Set_Description("gl_conscale", "Set to 0 to make the console width and height equal to the current resolution.Set to 1 to control it with conwidth and conheight cmdline.Requires game restart.");
+	vid_fullscreen = Cvar_Get("vid_fullscreen", "1", CVAR_ARCHIVE);
+	r_mode_desktop = Cvar_Get("r_mode_desktop", "0", CVAR_ARCHIVE);
 
 	Cmd_AddCommand ("vid_nummodes", VID_NumModes_f);
 	Cmd_AddCommand ("vid_describecurrentmode", VID_DescribeCurrentMode_f);
@@ -1599,7 +1626,7 @@ void	VID_Init (unsigned char *palette)
 	width = 640;
 	height = 480;
 
-	if (COM_CheckParm("-window"))
+	if (COM_CheckParm("-window") || vid_fullscreen->intValue == 0)
 	{
 		hdc = GetDC (NULL);
 
