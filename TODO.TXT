@@ -11,7 +11,7 @@
 
 * Unify and update the docs.
 
-* The renderers and common.c can probably be merged, carefully,
+* The renderers can probably be merged, carefully,
   into /common to prevent more code duplication.
 
 * Asynchronous rendering support.
@@ -19,3 +19,7 @@
 * Dedicated server is broken.  Listen probably is too, but I never tested it.
 
 * ref_gl mtex is incredibly slow with mesa and sage.  Completely unusable.  Figure out why.
+
+* Add 'game' command to QW.
+
+* When changing 'game' dynamically we should reload the WADs for console backdrop, etc.
