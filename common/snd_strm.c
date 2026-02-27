@@ -51,7 +51,7 @@ stream_t stream_channels[MAX_STREAMS];
 static qboolean bMixed = false;
 
 void S_Stream_f (void);
-static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, int width, int channels, const strm_int16_t *data, qboolean music);
+static void S_StreamRawSamples (const stream_t *stream, int samples, unsigned int rate, int width, unsigned int channels, const strm_int16_t *data, qboolean music);
 
 void S_StreamInit (void)
 {
@@ -82,13 +82,9 @@ void S_StreamUpdate (void)
 	int		i;
 	int		numsamples, maxSamples;
 	int		read, maxRead, total;
-	unsigned int	channels, sampleRate;
 	float	scale;
 	strm_int16_t	data[SND_BUFFER_SIZE];
 	stream_t	*stream;
-	drmp3	*mp3_info;
-	drwav	*wav_info;
-	drflac	*flac_info;
 
 	/* FS: Save this stuff so we can mix in additional channels. */
 	int prev_rawend = s_rawend;
@@ -107,40 +103,8 @@ void S_StreamUpdate (void)
 		if (!stream->active || !stream->handle)
 			continue;
 
-		/* FS: FIXME: load these handles in S_Open_Stream and check the type. */
-		wav_info = stream->handle->drwav;
-		if (wav_info)
-		{
-			sampleRate = wav_info->sampleRate;
-			channels = wav_info->channels;
-			mp3_info = NULL;
-			flac_info = NULL;
-		}
-		else
-		{
-			flac_info = stream->handle->drflac;
-			if (flac_info)
-			{
-				sampleRate = flac_info->sampleRate;
-				channels = flac_info->channels;
-				mp3_info = NULL;
-				wav_info = NULL;
-			}
-			else
-			{
-				mp3_info = stream->handle->drmp3;
-				if (!mp3_info || !mp3_info->pData)
-					continue;
-
-				sampleRate = mp3_info->sampleRate;
-				channels = mp3_info->channels;
-				wav_info = NULL;
-				flac_info = NULL;
-			}
-		}
-
-		scale = (float)sampleRate / dma.speed;
-		maxSamples = sizeof(data) / channels / 2; /* FS: DRMP3 uses signed 16-bit so width is 2. */
+		scale = (float)stream->handle->sampleRate / dma.speed;
+		maxSamples = sizeof(data) / stream->handle->channels / 2; /* FS: DRMP3 uses signed 16-bit so width is 2. */
 
 		while (1)
 		{
@@ -156,12 +120,21 @@ void S_StreamUpdate (void)
 			total = 0;
 			while (total < maxRead)
 			{
-				if (wav_info)
-					read = drwav_read_pcm_frames_s16(wav_info, maxRead - total, data);
-				else if (flac_info)
-					read = drflac_read_pcm_frames_s16(flac_info, maxRead - total, data);
-				else
-					read = drmp3_read_pcm_frames_s16(mp3_info, maxRead - total, data);
+				switch (stream->handle->type)
+				{
+					case STREAM_WAV:
+						read = drwav_read_pcm_frames_s16(stream->handle->drwav, maxRead - total, data);
+						break;
+					case STREAM_FLAC:
+						read = drflac_read_pcm_frames_s16(stream->handle->drflac, maxRead - total, data);
+						break;
+					case STREAM_MP3:
+						read = drmp3_read_pcm_frames_s16(stream->handle->drmp3, maxRead - total, data);
+						break;
+					default:
+						Sys_Error("Unknown stream type!");
+						break;
+				}
 
 				if (!read)
 				{	// End of file
@@ -172,12 +145,21 @@ void S_StreamUpdate (void)
 					}
 					else
 					{
-						if (wav_info)
-							drwav_seek_to_pcm_frame(wav_info, 0);
-						else if (flac_info)
-							drflac_seek_to_pcm_frame(flac_info, 0);
-						else
-							drmp3_seek_to_pcm_frame(mp3_info, 0);
+						switch (stream->handle->type)
+						{
+							case STREAM_WAV:
+								drwav_seek_to_pcm_frame(stream->handle->drwav, 0);
+								break;
+							case STREAM_FLAC:
+								drflac_seek_to_pcm_frame(stream->handle->drflac, 0);
+								break;
+							case STREAM_MP3:
+								drmp3_seek_to_pcm_frame(stream->handle->drmp3, 0);
+								break;
+							default:
+								Sys_Error("Unknown stream type!");
+								break;
+						}
 					}
 				}
 
@@ -185,7 +167,7 @@ void S_StreamUpdate (void)
 			}
 
 			if (read)
-				S_StreamRawSamples (stream, numsamples, sampleRate, s_loadas8bit->intValue ? 1 : 2, channels, data, true);
+				S_StreamRawSamples (stream, numsamples, stream->handle->sampleRate, s_loadas8bit->intValue ? 1 : 2, stream->handle->channels, data,  true);
 			else
 				break;
 		}
@@ -201,7 +183,7 @@ void S_StreamUpdate (void)
 }
 
 /* FS: re-adapated from Q2E OGG streaming S_RawSamples function. */
-static void S_StreamRawSamples (const stream_t *stream, int samples, int rate, int width, int channels, const strm_int16_t *data, qboolean music)
+static void S_StreamRawSamples (const stream_t *stream, int samples, unsigned int rate, int width, unsigned int channels, const strm_int16_t *data, qboolean music)
 {
 	int i;
 	int src, dst;
@@ -388,7 +370,7 @@ hSTREAM *S_Open_Stream(const char *path)
 	if (!snd_initialized || !sound_started)
 		return NULL;
 
-	if (!path || path[0] == '\0')
+	if (Q_StrIsNullOrEmpty(path))
 		return NULL;
 
 	if (!stricmp(COM_FileExtension(path), "wav"))
@@ -397,6 +379,12 @@ hSTREAM *S_Open_Stream(const char *path)
 		drwav_uint64 pcmFrameCount = 0;
 
 		wav = calloc(1, sizeof(drwav));
+		if (!wav)
+		{
+			Sys_Error("S_Open_Stream: out of memory");
+			return NULL;
+		}
+
 		if (!drwav_init_file(wav, path, NULL))
 		{
 			drwav_uninit(wav);
@@ -409,6 +397,9 @@ hSTREAM *S_Open_Stream(const char *path)
 		ptr->totallen = pcmFrameCount;
 		ptr->datarate = wav->sampleRate;
 		ptr->drwav = wav;
+		ptr->channels = wav->channels;
+		ptr->sampleRate = wav->sampleRate;
+		ptr->type = STREAM_WAV;
 	}
 	else if (!stricmp(COM_FileExtension(path), "flac"))
 	{
@@ -425,6 +416,9 @@ hSTREAM *S_Open_Stream(const char *path)
 		ptr = Z_Malloc(sizeof(hSTREAM));
 		ptr->datarate = flac->sampleRate;
 		ptr->drflac = flac;
+		ptr->channels = flac->channels;
+		ptr->sampleRate = flac->sampleRate;
+		ptr->type = STREAM_FLAC;
 	}
 	else if (!stricmp(COM_FileExtension(path), "mp3"))
 	{
@@ -433,6 +427,11 @@ hSTREAM *S_Open_Stream(const char *path)
 		drmp3_uint64 pcmFrameCount = 0;
 
 		mp3 = calloc(1, sizeof(drmp3));
+		if (!mp3)
+		{
+			Sys_Error("S_Open_Stream: out of memory");
+			return NULL;
+		}
 		if (!drmp3_init_file(mp3, path, NULL))
 		{
 			drmp3_uninit(mp3);
@@ -445,6 +444,9 @@ hSTREAM *S_Open_Stream(const char *path)
 		ptr->totallen = pcmFrameCount;
 		ptr->datarate = mp3->sampleRate;
 		ptr->drmp3 = mp3;
+		ptr->channels = mp3->channels;
+		ptr->sampleRate = mp3->sampleRate;
+		ptr->type = STREAM_MP3;
 	}
 	else if (!stricmp(COM_FileExtension(path), "ogg"))
 	{

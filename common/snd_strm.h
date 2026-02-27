@@ -38,13 +38,23 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef signed short      strm_int16_t;
 
+typedef enum
+{
+	STREAM_MP3,
+	STREAM_WAV,
+	STREAM_FLAC
+} stream_type_t;
+
 typedef struct
 {
 	long totallen;
 	long datarate;
+	unsigned int sampleRate;
+	unsigned int channels;
 	void *drmp3;
 	void *drwav;
 	void *drflac;
+	stream_type_t type;
 } hSTREAM;
 
 typedef struct stream_s
