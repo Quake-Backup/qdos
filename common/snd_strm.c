@@ -58,6 +58,11 @@ void S_StreamInit (void)
 	if (!snd_initialized)
 		return;
 
+	Com_Printf("Stream engine initialized.  Available formats:\n");
+	Com_Printf(" * dr_flac v%s\n", drflac_version_string());
+	Com_Printf(" * dr_mp3 v%s\n", drmp3_version_string());
+	Com_Printf(" * dr_wav v%s\n", drwav_version_string());
+
 	Cmd_AddCommand("stream", S_Stream_f);
 }
 
@@ -448,11 +453,13 @@ hSTREAM *S_Open_Stream(const char *path)
 		ptr->sampleRate = mp3->sampleRate;
 		ptr->type = STREAM_MP3;
 	}
+#ifdef OGG_SUPPORT
 	else if (!stricmp(COM_FileExtension(path), "ogg"))
 	{
 		Com_Printf("Use the 'ogg play' command for OGG files\n");
 		return NULL;
 	}
+#endif
 	else
 	{
 		Com_Printf("S_Open_Stream: unsupported format '%s'\n", COM_FileExtension(path));

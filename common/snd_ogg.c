@@ -46,7 +46,6 @@ static qboolean	ogg_first_init = true;	// First initialization flag
 static qboolean	ogg_started = false;	// Initialization flag
 static bgm_status_t	trk_status;		// Status indicator
 
-static void S_OGG_LoadFileList (void);
 static void S_OGG_ParseCmd (void);
 
 static void S_OGGRawSamples (int samples, int rate, int width, int channels, byte *data, qboolean music);
@@ -318,6 +317,8 @@ void S_OGG_Init (void)
 	if (ogg_started)
 		return;
 
+	Com_Printf("OGG Vorbis Engine Initialized\n");
+
 	// Console commands
 	Cmd_AddCommand("ogg", S_OGG_ParseCmd);
 
@@ -340,8 +341,6 @@ Based on code by QuDos
 */
 void S_OGG_Shutdown (void)
 {
-	int		i;
-
 	if (!ogg_started)
 		return;
 
