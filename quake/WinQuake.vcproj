@@ -3054,7 +3054,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="gl_screen.c"
+					RelativePath="..\common\gl_screen.c"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -3062,17 +3062,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="GL Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -3081,17 +3070,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="GL Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
 				</File>

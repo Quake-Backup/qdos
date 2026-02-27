@@ -201,9 +201,6 @@
     <ClCompile Include="..\common\gl_rsurf.c">
       <Filter>Source Files\GL</Filter>
     </ClCompile>
-    <ClCompile Include="gl_screen.c">
-      <Filter>Source Files\GL</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\gl_test.c">
       <Filter>Source Files\GL</Filter>
     </ClCompile>
@@ -386,6 +383,9 @@
     </ClCompile>
     <ClCompile Include="..\common\common.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\gl_screen.c">
+      <Filter>Source Files\GL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

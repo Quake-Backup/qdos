@@ -90,12 +90,18 @@ cvar_t		*scr_showram;
 cvar_t		*scr_showturtle;
 cvar_t		*scr_showpause;
 cvar_t		*scr_printspeed;
+#ifdef QUAKEWORLD
+cvar_t		*scr_allowsnap;
+#endif
 cvar_t		*gl_triplebuffer;
 
 /* FS: New stuff */
 cvar_t		*show_fps; /* FS: show_fps from Qrack */
 cvar_t		*show_time;
 cvar_t		*show_uptime;
+#ifdef QUAKEWORLD
+cvar_t		*show_ping;
+#endif
 
 extern	cvar_t	*crosshair;
 
@@ -123,6 +129,9 @@ float		scr_disabled_time;
 qboolean	block_drawing;
 
 void SCR_ScreenShot_f (void);
+#ifdef QUAKEWORLD
+void SCR_RSShot_f (void);
+#endif
 
 /*
 ===============================================================================
@@ -312,7 +321,12 @@ static void SCR_CalcRefdef (void)
 	}
 	size /= 100;
 
-	h = vid.height - sb_lines;
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue && full)
+		h = vid.height;
+	else
+#endif
+		h = vid.height - sb_lines;
 
 	r_refdef.vrect.width = vid.width * size;
 	if (r_refdef.vrect.width < 96)
@@ -322,10 +336,20 @@ static void SCR_CalcRefdef (void)
 	}
 
 	r_refdef.vrect.height = vid.height * size;
-	if (r_refdef.vrect.height > vid.height - sb_lines)
-		r_refdef.vrect.height = vid.height - sb_lines;
+#ifdef QUAKEWORLD
+	if (cl_sbar->intValue || !full)
+	{
+#endif
+  		if (r_refdef.vrect.height > vid.height - sb_lines)
+  			r_refdef.vrect.height = vid.height - sb_lines;
+#ifdef QUAKEWORLD
+	}
+	else
+#endif
 	if (r_refdef.vrect.height > vid.height)
+	{
 			r_refdef.vrect.height = vid.height;
+	}
 	r_refdef.vrect.x = (vid.width - r_refdef.vrect.width)/2;
 	if (full)
 		r_refdef.vrect.y = 0;
@@ -383,6 +407,9 @@ void SCR_Init (void)
 	scr_showturtle = Cvar_Get("showturtle","0", 0);
 	scr_showpause = Cvar_Get("showpause","1", 0);
 	scr_printspeed = Cvar_Get("scr_printspeed","8", 0);
+#ifdef QUAKEWORLD
+	scr_allowsnap = Cvar_Get("scr_allowsnap", "0", 0);
+#endif
 	gl_triplebuffer = Cvar_Get("gl_triplebuffer", "1", CVAR_ARCHIVE);
 
 	/* FS: New stuff */
@@ -392,11 +419,17 @@ void SCR_Init (void)
 	Cvar_Set_Description("show_time", "Show current time in the HUD.  1 for military.  2 for AM/PM.");
 	show_uptime = Cvar_Get("show_uptime","0", CVAR_ARCHIVE);
 	Cvar_Set_Description("show_uptime", "Show uptime.");
+#ifdef QUAKEWORLD
+	show_ping = Cvar_Get("show_ping", "0", CVAR_ARCHIVE);
+#endif
 
 //
 // register our commands
 //
 	Cmd_AddCommand ("screenshot",SCR_ScreenShot_f);
+#ifdef QUAKEWORLD
+	Cmd_AddCommand ("snap",SCR_RSShot_f);
+#endif
 	Cmd_AddCommand ("sizeup",SCR_SizeUp_f);
 	Cmd_AddCommand ("sizedown",SCR_SizeDown_f);
 
@@ -457,8 +490,13 @@ SCR_DrawNet
 */
 void SCR_DrawNet (void)
 {
+#ifdef QUAKE1
 	if (realtime - cl.last_received_message < 0.3)
+#else
+	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged < UPDATE_BACKUP-1)
+#endif
 		return;
+
 	if (cls.demoplayback)
 		return;
 
@@ -493,7 +531,13 @@ void SCR_DrawFPS (void)
 	}
 
 	Com_sprintf(str, sizeof(str), "%3.1f FPS", lastfps);
-	x = vid.width - strlen(str) * 8 - 16;
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(str) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(str) * 8 - 16;
+
 	y = vid.height - sb_lines - 8;
 	Draw_String (x, y, str);
 }
@@ -523,7 +567,12 @@ void SCR_DrawUptime (void) /* FS: Connection time */
 	units = seconds - 10*tens;
 
 	Com_sprintf (str, sizeof(str), "%3i:%i%i", minutes, tens, units);
-	x = vid.width - strlen(str) * 8 - 16;
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(str) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(str) * 8 - 16;
 	y = vid.height - sb_lines - 24;
 	Draw_String(x, y, str);
 }
@@ -549,10 +598,56 @@ void SCR_DrawTime (void) /* FS: show_time */
 
 	strftime (st, sizeof (st), timefmt, local);
 
-	x = vid.width - strlen(st) * 8 - 16;
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(st) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(st) * 8 - 16;
 	y = vid.height - sb_lines - 16;
 	Draw_String(x, y, st);
 }
+
+#ifdef QUAKEWORLD
+/* FS: This is old, probably stupid code... I'm assuming I could just check my last message received to Sys_DoubleTime */
+void SCR_DrawPing (void)
+{
+	player_info_t	*player;
+	int x, y, ping = 999;
+	char st[6];
+
+	if (!show_ping->value || cls.state != ca_active)
+		return;
+
+	if (realtime - cl.last_ping_request > 2)
+	{
+		cl.last_ping_request = realtime;
+		MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
+		SZ_Print (&cls.netchan.message, "pings");
+	}
+
+	player = &cl.players[cl.playernum];
+	if(!player)
+		ping = 999;
+	else
+		ping = player->ping;
+
+	if (ping < 0 || ping > 999)
+		ping = 999;
+
+	Com_sprintf(st, sizeof(st), "%i", ping);
+     
+#ifdef QUAKEWORLD
+	if (!cl_sbar->intValue)
+		x = vid.width - strlen(st) * 8 - 44; /* FS: Has to be out of the way of the HUD... */
+	else
+#endif
+		x = vid.width - strlen(st) * 8 - 16;
+	y = vid.height - sb_lines - 32;
+	Draw_String(x, y, st);
+
+}
+#endif
 
 /*
 ==============
@@ -611,7 +706,11 @@ void SCR_SetUpToDrawConsole (void)
 		return;		// never a console with loading plaque
 		
 	// decide on the height of the console
+#ifdef QUAKE1
 	if (!cl.worldmodel || cls.signon != SIGNONS || cls.state != ca_active)
+#else
+	if (cls.state != ca_active)
+#endif
 	{
 		scr_conlines = vid.height;		// full screen
 		scr_con_current = scr_conlines;
@@ -748,7 +847,7 @@ void SCR_ScreenShot_f (void)
 
 //=============================================================================
 
-
+#ifdef QUAKE1
 /*
 ===============
 SCR_BeginLoadingPlaque
@@ -792,6 +891,269 @@ void SCR_EndLoadingPlaque (void)
 	scr_fullupdate = 0;
 	Con_ClearNotify ();
 }
+#endif
+
+#ifdef QUAKEWORLD
+/* 
+============== 
+WritePCXfile 
+============== 
+*/ 
+void WritePCXfile (char *filename, byte *data, int width, int height,
+	int rowbytes, byte *palette, qboolean upload) 
+{
+	int		i, j, length;
+	pcx_t	*pcx;
+	byte		*pack;
+	  
+	pcx = Z_Malloc (width*height*2+1000);
+	if (pcx == NULL)
+	{
+		Com_Printf("SCR_ScreenShot_f: not enough memory\n");
+		return;
+	} 
+ 
+	pcx->manufacturer = 0x0a;	// PCX id
+	pcx->version = 5;			// 256 color
+ 	pcx->encoding = 1;		// uncompressed
+	pcx->bits_per_pixel = 8;		// 256 color
+	pcx->xmin = 0;
+	pcx->ymin = 0;
+	pcx->xmax = LittleShort((short)(width-1));
+	pcx->ymax = LittleShort((short)(height-1));
+	pcx->hres = LittleShort((short)width);
+	pcx->vres = LittleShort((short)height);
+	memset (pcx->palette,0,sizeof(pcx->palette));
+	pcx->color_planes = 1;		// chunky image
+	pcx->bytes_per_line = LittleShort((short)width);
+	pcx->palette_type = LittleShort(2);		// not a grey scale
+	memset (pcx->filler,0,sizeof(pcx->filler));
+
+// pack the image
+	pack = &pcx->data;
+
+	data += rowbytes * (height - 1);
+
+	for (i=0 ; i<height ; i++)
+	{
+		for (j=0 ; j<width ; j++)
+		{
+			if ( (*data & 0xc0) != 0xc0)
+				*pack++ = *data++;
+			else
+			{
+				*pack++ = 0xc1;
+				*pack++ = *data++;
+			}
+		}
+
+		data += rowbytes - width;
+		data -= rowbytes * 2;
+	}
+			
+// write the palette
+	*pack++ = 0x0c;	// palette ID byte
+	for (i=0 ; i<768 ; i++)
+		*pack++ = *palette++;
+		
+// write output file 
+	length = pack - (byte *)pcx;
+
+	if (upload)
+		CL_StartUpload((void *)pcx, length);
+	else
+		COM_WriteFile (filename, pcx, length);
+
+	Z_Free(pcx);
+} 
+ 
+
+
+/*
+Find closest color in the palette for named color
+*/
+int MipColor(int r, int g, int b)
+{
+	int i;
+	float dist;
+	int best = 0;
+	float bestdist;
+	int r1, g1, b1;
+	static int lr = -1, lg = -1, lb = -1;
+	static int lastbest;
+
+	if (r == lr && g == lg && b == lb)
+		return lastbest;
+
+	bestdist = 256*256*3;
+
+	for (i = 0; i < 256; i++) {
+		r1 = host_basepal[i*3] - r;
+		g1 = host_basepal[i*3+1] - g;
+		b1 = host_basepal[i*3+2] - b;
+		dist = r1*r1 + g1*g1 + b1*b1;
+		if (dist < bestdist) {
+			bestdist = dist;
+			best = i;
+		}
+	}
+	lr = r; lg = g; lb = b;
+	lastbest = best;
+	return best;
+}
+
+// from gl_draw.c
+byte		*draw_chars;				// 8*8 graphic characters
+
+void SCR_DrawCharToSnap (int num, byte *dest, int width)
+{
+	int		row, col;
+	byte	*source;
+	int		drawline;
+	int		x;
+
+	row = num>>4;
+	col = num&15;
+	source = draw_chars + (row<<10) + (col<<3);
+
+	drawline = 8;
+
+	while (drawline--)
+	{
+		for (x=0 ; x<8 ; x++)
+			if (source[x])
+				dest[x] = source[x];
+			else
+				dest[x] = 98;
+		source += 128;
+		dest -= width;
+	}
+
+}
+
+void SCR_DrawStringToSnap (const char *s, byte *buf, int x, int y, int width)
+{
+	byte *dest;
+	const unsigned char *p;
+
+	dest = buf + ((y * width) + x);
+
+	p = (const unsigned char *)s;
+	while (*p) {
+		SCR_DrawCharToSnap(*p++, dest, width);
+		dest += 8;
+	}
+}
+
+
+/* 
+================== 
+SCR_RSShot_f
+================== 
+*/  
+void SCR_RSShot_f (void) 
+{ 
+	int     x, y;
+	unsigned char		*src, *dest;
+	char		pcxname[80]; 
+	unsigned char		*newbuf;
+	int w, h;
+	int dx, dy, dex, dey, nx;
+	int r, b, g;
+	int count;
+	float fracw, frach;
+	char st[80];
+	time_t now;
+
+	if (CL_IsUploading())
+		return; // already one pending
+
+	if (cls.state < ca_onserver)
+		return; // gotta be connected
+
+	Com_Printf("Remote screen shot requested.\n");
+
+// 
+// save the pcx file 
+// 
+	newbuf = malloc(glheight * glwidth * 3);
+	if (!newbuf)
+	{
+		Sys_Error("SCR_RSShot_f: out of memory");
+		return;
+	}
+
+	glReadPixels_fp (glx, gly, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, newbuf ); 
+
+	w = (vid.width < RSSHOT_WIDTH) ? glwidth : RSSHOT_WIDTH;
+	h = (vid.height < RSSHOT_HEIGHT) ? glheight : RSSHOT_HEIGHT;
+
+	fracw = (float)glwidth / (float)w;
+	frach = (float)glheight / (float)h;
+
+	for (y = 0; y < h; y++) {
+		dest = newbuf + (w*3 * y);
+
+		for (x = 0; x < w; x++) {
+			r = g = b = 0;
+
+			dx = x * fracw;
+			dex = (x + 1) * fracw;
+			if (dex == dx) dex++; // at least one
+			dy = y * frach;
+			dey = (y + 1) * frach;
+			if (dey == dy) dey++; // at least one
+
+			count = 0;
+			for (/* */; dy < dey; dy++) {
+				src = newbuf + (glwidth * 3 * dy) + dx * 3;
+				for (nx = dx; nx < dex; nx++) {
+					r += *src++;
+					g += *src++;
+					b += *src++;
+					count++;
+				}
+			}
+			r /= count;
+			g /= count;
+			b /= count;
+			*dest++ = r;
+			*dest++ = b;
+			*dest++ = g;
+		}
+	}
+
+	// convert to eight bit
+	for (y = 0; y < h; y++) {
+		src = newbuf + (w * 3 * y);
+		dest = newbuf + (w * y);
+
+		for (x = 0; x < w; x++) {
+			*dest++ = MipColor(src[0], src[1], src[2]);
+			src += 3;
+		}
+	}
+
+	time(&now);
+	Q_strlcpy(st, ctime(&now), sizeof(st));
+	st[strlen(st) - 1] = 0;
+	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 1, w);
+
+	strncpy(st, cls.servername, sizeof(st));
+	st[sizeof(st) - 1] = 0;
+	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 11, w);
+
+	strncpy(st, name->string, sizeof(st));
+	st[sizeof(st) - 1] = 0;
+	SCR_DrawStringToSnap (st, newbuf, w - strlen(st)*8, h - 21, w);
+
+	WritePCXfile (pcxname, newbuf, w, h, w, host_basepal, true);
+
+	free(newbuf);
+
+	Com_Printf ("Wrote %s\n", pcxname);
+} 
+#endif
 
 //=============================================================================
 
@@ -912,6 +1274,10 @@ void SCR_TileClear (void)
 	}
 }
 
+#ifdef QUAKEWORLD
+int oldsbar = 0;
+#endif
+
 /*
 ==================
 SCR_UpdateScreen
@@ -952,6 +1318,12 @@ void SCR_UpdateScreen (void)
 	if (!scr_initialized || !con_initialized)
 		return;				// not initialized yet
 
+#ifdef QUAKEWORLD
+	if (oldsbar != cl_sbar->intValue) {
+		oldsbar = cl_sbar->intValue;
+		vid.recalc_refdef = true;
+	}
+#endif
 
 	GL_BeginRendering (&glx, &gly, &glwidth, &glheight);
 	
@@ -964,11 +1336,13 @@ void SCR_UpdateScreen (void)
 		vid.recalc_refdef = true;
 	}
 
+#ifdef QUAKE1
 	if (oldscreensize != scr_viewsize->intValue)
 	{
 		oldscreensize = scr_viewsize->intValue;
 		vid.recalc_refdef = true;
 	}
+#endif
 
 	if (vid.recalc_refdef)
 		SCR_CalcRefdef ();
@@ -986,6 +1360,11 @@ void SCR_UpdateScreen (void)
 	// draw any areas not covered by the refresh
 	//
 	SCR_TileClear ();
+
+#ifdef QUAKEWORLD
+	if (r_netgraph->intValue)
+		R_NetGraph ();
+#endif
 
 	if (scr_drawdialog)
 	{
@@ -1023,6 +1402,9 @@ void SCR_UpdateScreen (void)
 			SCR_DrawUptime (); /* FS: show uptime */
 			SCR_DrawTime (); /* FS: show time */
 			SCR_DrawFPS (); /* FS: Show FPS */
+#ifdef QUAKEWORLD
+			SCR_DrawPing (); /* FS: show ping */
+#endif
 		}
 		Sbar_Draw ();
 		SCR_DrawConsole ();
