@@ -262,7 +262,9 @@ qboolean R_AliasCheckBBox (void);
 void R_DrawParticles (void);
 void R_InitParticles (void);
 void R_ClearParticles (void);
+#ifdef QUAKE1
 void R_ReadPointFile_f (void);
+#endif
 void R_SurfacePatch (void);
 
 extern int		r_amodels_drawn;

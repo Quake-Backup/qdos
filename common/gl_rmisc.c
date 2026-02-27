@@ -171,7 +171,9 @@ void R_Init (void)
 {	
 	Cmd_AddCommand ("timerefresh", R_TimeRefresh_f);	
 	Cmd_AddCommand ("envmap", R_Envmap_f);	
+#ifdef QUAKE1
 	Cmd_AddCommand ("pointfile", R_ReadPointFile_f);
+#endif
 
 	r_norefresh = Cvar_Get("r_norefresh", "0", 0);
 	r_lightmap = Cvar_Get("r_lightmap", "0", 0);

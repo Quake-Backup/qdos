@@ -37,6 +37,9 @@ int			r_numparticles;
 
 vec3_t			r_pright, r_pup, r_ppn;
 
+#ifdef QUAKE1
+extern	cvar_t	*sv_gravity; /* FS: FIXME:  Is this right relying on sv_gravity for a client? */
+#endif
 
 /*
 ===============
@@ -60,10 +63,10 @@ void R_InitParticles (void)
 		r_numparticles = MAX_PARTICLES;
 	}
 
-	particles = (particle_t *)
-			Z_Malloc(r_numparticles * sizeof(particle_t));
+	particles = Z_Malloc(r_numparticles * sizeof(particle_t));
 }
 
+#ifdef QUAKE1
 /*
 ===============
 R_EntityParticles
@@ -129,7 +132,7 @@ void R_EntityParticles (entity_t *ent)
 		p->org[2] = ent->origin[2] + r_avertexnormals[i][2]*dist + forward[2]*beamlength;			
 	}
 }
-
+#endif
 
 /*
 ===============
@@ -148,7 +151,7 @@ void R_ClearParticles (void)
 	particles[r_numparticles-1].next = NULL;
 }
 
-
+#ifdef QUAKE1
 void R_ReadPointFile_f (void)
 {
 	FILE	*f;
@@ -196,7 +199,9 @@ void R_ReadPointFile_f (void)
 	fclose (f);
 	Com_Printf ("%i points read\n", c);
 }
+#endif
 
+#ifdef QUAKE1
 /*
 ===============
 R_ParseParticleEffect
@@ -223,7 +228,8 @@ else
 	
 	R_RunParticleEffect (org, dir, color, count);
 }
-	
+#endif
+
 /*
 ===============
 R_ParticleExplosion
@@ -353,6 +359,7 @@ R_RunParticleEffect
 
 ===============
 */
+#ifdef QUAKE1
 void R_RunParticleEffect (vec3_t org, vec3_t dir, int color, int count)
 {
 	int			i, j;
@@ -404,7 +411,40 @@ void R_RunParticleEffect (vec3_t org, vec3_t dir, int color, int count)
 		}
 	}
 }
+#else
+void R_RunParticleEffect (vec3_t org, vec3_t dir, int color, int count)
+{
+	int			i, j;
+	particle_t	*p;
+	int			scale;
 
+	if (count > 130)
+		scale = 3;
+	else if (count > 20)
+		scale = 2;
+	else
+		scale = 1;
+
+	for (i=0 ; i<count ; i++)
+	{
+		if (!free_particles)
+			return;
+		p = free_particles;
+		free_particles = p->next;
+		p->next = active_particles;
+		active_particles = p;
+
+		p->die = cl.time + 0.1*(rand()%5);
+		p->color = (color&~7) + (rand()&7);
+		p->type = pt_grav;
+		for (j=0 ; j<3 ; j++)
+		{
+			p->org[j] = org[j] + scale*((rand()&15)-8);
+			p->vel[j] = dir[j]*15;// + (rand()%300)-150;
+		}
+	}
+}
+#endif
 
 /*
 ===============
@@ -412,6 +452,13 @@ R_LavaSplash
 
 ===============
 */
+
+#ifdef QUAKE1
+static ptype_t r_part_ptgrav = pt_slowgrav;
+#else
+static ptype_t r_part_ptgrav = pt_grav;
+#endif
+
 void R_LavaSplash (vec3_t org)
 {
 	int			i, j, k;
@@ -432,7 +479,7 @@ void R_LavaSplash (vec3_t org)
 		
 				p->die = cl.time + 2 + (rand()&31) * 0.02;
 				p->color = 224 + (rand()&7);
-				p->type = pt_slowgrav;
+				p->type = r_part_ptgrav;
 				
 				dir[0] = j*8 + (rand()&7);
 				dir[1] = i*8 + (rand()&7);
@@ -474,7 +521,7 @@ void R_TeleportSplash (vec3_t org)
 		
 				p->die = cl.time + 0.2 + (rand()&7) * 0.02;
 				p->color = 7 + (rand()&7);
-				p->type = pt_slowgrav;
+				p->type = r_part_ptgrav;
 				
 				dir[0] = j*8;
 				dir[1] = i*8;
@@ -501,13 +548,20 @@ void R_RocketTrail (vec3_t start, vec3_t end, int type)
 
 	VectorSubtract (end, start, vec);
 	len = VectorNormalize (vec);
+
+#ifdef QUAKE1
 	if (type < 128)
+	{
 		dec = 3;
+	}
 	else
 	{
 		dec = 1;
 		type -= 128;
 	}
+#else
+	dec = 3;
+#endif
 
 	while (len > 0)
 	{
@@ -542,7 +596,11 @@ void R_RocketTrail (vec3_t start, vec3_t end, int type)
 				break;
 
 			case 2:	// blood
+#ifdef QUAKE1
 				p->type = pt_grav;
+#else
+				p->type = pt_slowgrav;
+#endif
 				p->color = 67 + (rand()&3);
 				for (j=0 ; j<3 ; j++)
 					p->org[j] = start[j] + ((rand()%6)-3);
@@ -573,7 +631,11 @@ void R_RocketTrail (vec3_t start, vec3_t end, int type)
 				break;
 
 			case 4:	// slight blood
+#ifdef QUAKE1
 				p->type = pt_grav;
+#else
+				p->type = pt_slowgrav;
+#endif
 				p->color = 67 + (rand()&3);
 				for (j=0 ; j<3 ; j++)
 					p->org[j] = start[j] + ((rand()%6)-3);
@@ -600,7 +662,8 @@ void R_RocketTrail (vec3_t start, vec3_t end, int type)
 R_DrawParticles
 ===============
 */
-extern	cvar_t	*sv_gravity; /* FS: FIXME:  Is this right relying on sv_gravity for a client? */
+static float r_drawparticles_gravity;
+static double r_drawparticles_time;
 
 void R_DrawParticles (void)
 {
@@ -613,12 +676,25 @@ void R_DrawParticles (void)
 	float			frametime;
 
 #ifdef GLQUAKE
+#ifdef QUAKEWORLD
+	unsigned char	*at;
+	unsigned char	theAlpha;
+	qboolean		alphaTestEnabled;
+#endif
 	vec3_t			up, right;
 	float			scale;
+
 	GL_Bind(particletexture);
+#ifdef QUAKEWORLD
+	alphaTestEnabled = glIsEnabled_fp(GL_ALPHA_TEST);
+	
+	if (alphaTestEnabled)
+		glDisable_fp(GL_ALPHA_TEST);
+#endif
 	glEnable_fp (GL_BLEND);
 	glTexEnvf_fp(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glBegin_fp (GL_TRIANGLES);
+
 	VectorScale (vup, 1.5, up);
 	VectorScale (vright, 1.5, right);
 #else
@@ -629,11 +705,19 @@ void R_DrawParticles (void)
 	VectorCopy (vpn, r_ppn);
 #endif
 
-	frametime = cl.time - cl.oldtime;
+#ifdef QUAKE1
+	r_drawparticles_time = cl.time - cl.oldtime;
+	r_drawparticles_gravity = sv_gravity->value;
+#else
+	r_drawparticles_time = host_frametime;
+	r_drawparticles_gravity = 800.0;
+#endif
+
+	frametime = r_drawparticles_time;
 	time3 = frametime * 15;
 	time2 = frametime * 10; // 15;
 	time1 = frametime * 5;
-	grav = frametime * sv_gravity->value * 0.05;
+	grav = frametime * r_drawparticles_gravity * 0.05;
 	dvel = 4*frametime;
 	
 	for ( ;; ) 
@@ -665,13 +749,23 @@ void R_DrawParticles (void)
 		}
 
 #ifdef GLQUAKE
+		// QUAKEWORLD - hack a scale up to keep particles from disapearing
 		scale = (p->org[0] - r_origin[0])*vpn[0] + (p->org[1] - r_origin[1])*vpn[1]
 			+ (p->org[2] - r_origin[2])*vpn[2];
 		if (scale < 20)
 			scale = 1;
 		else
 			scale = 1 + scale * 0.004;
+#ifdef QUAKE1
 		glColor3ubv_fp ((byte *)&d_8to24table[(int)p->color]);
+#else
+		at = (byte *)&d_8to24table[(int)p->color];
+		if (p->type==pt_fire)
+			theAlpha = 255*(6-p->ramp)/6;
+		else
+			theAlpha = 255;
+		glColor4ub_fp (*at, *(at+1), *(at+2), theAlpha);
+#endif
 		glTexCoord2f_fp (0,0);
 		glVertex3fv_fp (p->org);
 		glTexCoord2f_fp (1,0);
@@ -681,6 +775,7 @@ void R_DrawParticles (void)
 #else
 		D_DrawParticle (p);
 #endif
+
 		p->org[0] += p->vel[0]*frametime;
 		p->org[1] += p->vel[1]*frametime;
 		p->org[2] += p->vel[2]*frametime;
@@ -742,6 +837,10 @@ void R_DrawParticles (void)
 #ifdef GLQUAKE
 	glEnd_fp ();
 	glDisable_fp (GL_BLEND);
+#ifdef QUAKEWORLD
+	if (alphaTestEnabled)
+		glEnable_fp(GL_ALPHA_TEST);
+#endif
 	glTexEnvf_fp(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 #else
 	D_EndParticles ();

@@ -197,7 +197,9 @@ void R_Init (void)
 	R_InitTurb ();
 	
 	Cmd_AddCommand ("timerefresh", R_TimeRefresh_f);
+#ifdef QUAKE1
 	Cmd_AddCommand ("pointfile", R_ReadPointFile_f);
+#endif
 
 	r_draworder = Cvar_Get("r_draworder","0", 0);
 	r_speeds = Cvar_Get("r_speeds","0", 0);

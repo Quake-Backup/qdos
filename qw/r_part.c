@@ -37,6 +37,9 @@ int			r_numparticles;
 
 vec3_t			r_pright, r_pup, r_ppn;
 
+#ifdef QUAKE1
+extern	cvar_t	*sv_gravity; /* FS: FIXME:  Is this right relying on sv_gravity for a client? */
+#endif
 
 /*
 ===============
@@ -60,10 +63,76 @@ void R_InitParticles (void)
 		r_numparticles = MAX_PARTICLES;
 	}
 
-	particles = (particle_t *)
-			Z_Malloc(r_numparticles * sizeof(particle_t));
+	particles = Z_Malloc(r_numparticles * sizeof(particle_t));
 }
 
+#ifdef QUAKE1
+/*
+===============
+R_EntityParticles
+===============
+*/
+
+#define NUMVERTEXNORMALS	162
+extern	float	r_avertexnormals[NUMVERTEXNORMALS][3];
+vec3_t	avelocities[NUMVERTEXNORMALS];
+float	beamlength = 16;
+vec3_t	avelocity = {23, 7, 3};
+float	partstep = 0.01;
+float	timescale = 0.01;
+
+void R_EntityParticles (entity_t *ent)
+{
+	int			i;
+	particle_t	*p;
+	float		angle;
+	float		sp, sy, cp, cy;
+	vec3_t		forward;
+	float		dist;
+	
+	dist = 64;
+
+	if (!avelocities[0][0])
+	{
+		for (i=0 ; i< NUMVERTEXNORMALS ; i++) /* FS: GCC warning fix from yamagi q2 */
+		{
+			avelocities[i][0] = (rand()&255) * 0.01f;
+			avelocities[i][1] = (rand()&255) * 0.01f;
+			avelocities[i][2] = (rand()&255) * 0.01f;
+		}
+	}
+
+	for (i=0 ; i<NUMVERTEXNORMALS ; i++)
+	{
+		angle = cl.time * avelocities[i][0];
+		sy = sin(angle);
+		cy = cos(angle);
+		angle = cl.time * avelocities[i][1];
+		sp = sin(angle);
+		cp = cos(angle);
+		angle = cl.time * avelocities[i][2];
+	
+		forward[0] = cp*cy;
+		forward[1] = cp*sy;
+		forward[2] = -sp;
+
+		if (!free_particles)
+			return;
+		p = free_particles;
+		free_particles = p->next;
+		p->next = active_particles;
+		active_particles = p;
+
+		p->die = cl.time + 0.01;
+		p->color = 0x6f;
+		p->type = pt_explode;
+		
+		p->org[0] = ent->origin[0] + r_avertexnormals[i][0]*dist + forward[0]*beamlength;			
+		p->org[1] = ent->origin[1] + r_avertexnormals[i][1]*dist + forward[1]*beamlength;			
+		p->org[2] = ent->origin[2] + r_avertexnormals[i][2]*dist + forward[2]*beamlength;			
+	}
+}
+#endif
 
 /*
 ===============
@@ -82,7 +151,7 @@ void R_ClearParticles (void)
 	particles[r_numparticles-1].next = NULL;
 }
 
-
+#ifdef QUAKE1
 void R_ReadPointFile_f (void)
 {
 	FILE	*f;
@@ -92,7 +161,7 @@ void R_ReadPointFile_f (void)
 	particle_t	*p;
 	char	name[MAX_OSPATH];
 	
-// FIXME	Com_sprintf (name, sizeof(name), "maps/%s.pts", sv.name);
+	Com_sprintf (name, sizeof(name), "maps/%s.pts", sv.name);
 
 	COM_FOpenFile (name, &f);
 	if (!f)
@@ -130,7 +199,37 @@ void R_ReadPointFile_f (void)
 	fclose (f);
 	Com_Printf ("%i points read\n", c);
 }
+#endif
+
+#ifdef QUAKE1
+/*
+===============
+R_ParseParticleEffect
+
+Parse an effect out of the server message
+===============
+*/
+void R_ParseParticleEffect (void)
+{
+	vec3_t		org, dir;
+	int			i, count, msgcount, color;
 	
+	for (i=0 ; i<3 ; i++)
+		org[i] = MSG_ReadCoord ();
+	for (i=0 ; i<3 ; i++)
+		dir[i] = MSG_ReadChar () * (1.0/16);
+	msgcount = MSG_ReadByte ();
+	color = MSG_ReadByte ();
+
+if (msgcount == 255)
+	count = 1024;
+else
+	count = msgcount;
+	
+	R_RunParticleEffect (org, dir, color, count);
+}
+#endif
+
 /*
 ===============
 R_ParticleExplosion
@@ -260,6 +359,59 @@ R_RunParticleEffect
 
 ===============
 */
+#ifdef QUAKE1
+void R_RunParticleEffect (vec3_t org, vec3_t dir, int color, int count)
+{
+	int			i, j;
+	particle_t	*p;
+	
+	for (i=0 ; i<count ; i++)
+	{
+		if (!free_particles)
+			return;
+		p = free_particles;
+		free_particles = p->next;
+		p->next = active_particles;
+		active_particles = p;
+
+		if (count == 1024)
+		{	// rocket explosion
+			p->die = cl.time + 5;
+			p->color = ramp1[0];
+			p->ramp = rand()&3;
+			if (i & 1)
+			{
+				p->type = pt_explode;
+				for (j=0 ; j<3 ; j++)
+				{
+					p->org[j] = org[j] + ((rand()%32)-16);
+					p->vel[j] = (rand()%512)-256;
+				}
+			}
+			else
+			{
+				p->type = pt_explode2;
+				for (j=0 ; j<3 ; j++)
+				{
+					p->org[j] = org[j] + ((rand()%32)-16);
+					p->vel[j] = (rand()%512)-256;
+				}
+			}
+		}
+		else
+		{
+			p->die = cl.time + 0.1*(rand()%5);
+			p->color = (color&~7) + (rand()&7);
+			p->type = pt_slowgrav;
+			for (j=0 ; j<3 ; j++)
+			{
+				p->org[j] = org[j] + ((rand()&15)-8);
+				p->vel[j] = dir[j]*15;// + (rand()%300)-150;
+			}
+		}
+	}
+}
+#else
 void R_RunParticleEffect (vec3_t org, vec3_t dir, int color, int count)
 {
 	int			i, j;
@@ -292,7 +444,7 @@ void R_RunParticleEffect (vec3_t org, vec3_t dir, int color, int count)
 		}
 	}
 }
-
+#endif
 
 /*
 ===============
@@ -300,6 +452,13 @@ R_LavaSplash
 
 ===============
 */
+
+#ifdef QUAKE1
+static ptype_t r_part_ptgrav = pt_slowgrav;
+#else
+static ptype_t r_part_ptgrav = pt_grav;
+#endif
+
 void R_LavaSplash (vec3_t org)
 {
 	int			i, j, k;
@@ -320,7 +479,7 @@ void R_LavaSplash (vec3_t org)
 		
 				p->die = cl.time + 2 + (rand()&31) * 0.02;
 				p->color = 224 + (rand()&7);
-				p->type = pt_grav;
+				p->type = r_part_ptgrav;
 				
 				dir[0] = j*8 + (rand()&7);
 				dir[1] = i*8 + (rand()&7);
@@ -362,7 +521,7 @@ void R_TeleportSplash (vec3_t org)
 		
 				p->die = cl.time + 0.2 + (rand()&7) * 0.02;
 				p->color = 7 + (rand()&7);
-				p->type = pt_grav;
+				p->type = r_part_ptgrav;
 				
 				dir[0] = j*8;
 				dir[1] = i*8;
@@ -384,12 +543,29 @@ void R_RocketTrail (vec3_t start, vec3_t end, int type)
 	float		len;
 	int			j;
 	particle_t	*p;
+	int			dec;
+	static int	tracercount;
 
 	VectorSubtract (end, start, vec);
 	len = VectorNormalize (vec);
+
+#ifdef QUAKE1
+	if (type < 128)
+	{
+		dec = 3;
+	}
+	else
+	{
+		dec = 1;
+		type -= 128;
+	}
+#else
+	dec = 3;
+#endif
+
 	while (len > 0)
 	{
-		len -= 3;
+		len -= dec;
 
 		if (!free_particles)
 			return;
@@ -401,70 +577,78 @@ void R_RocketTrail (vec3_t start, vec3_t end, int type)
 		VectorCopy (vec3_origin, p->vel);
 		p->die = cl.time + 2;
 
-		if (type == 4)
-		{	// slight blood
-			p->type = pt_slowgrav;
-			p->color = 67 + (rand()&3);
-			for (j=0 ; j<3 ; j++)
-				p->org[j] = start[j] + ((rand()%6)-3);
-			len -= 3;
-		}
-		else if (type == 2)
-		{	// blood
-			p->type = pt_slowgrav;
-			p->color = 67 + (rand()&3);
-			for (j=0 ; j<3 ; j++)
-				p->org[j] = start[j] + ((rand()%6)-3);
-		}
-		else if (type == 6)
-		{	// voor trail
-			p->color = 9*16 + 8 + (rand()&3);
-			p->type = pt_static;
-			p->die = cl.time + 0.3;
-			for (j=0 ; j<3 ; j++)
-				p->org[j] = start[j] + ((rand()&15)-8);
-		}
-		else if (type == 1)
-		{	// smoke smoke
-			p->ramp = (rand()&3) + 2;
-			p->color = ramp3[(int)p->ramp];
-			p->type = pt_fire;
-			for (j=0 ; j<3 ; j++)
-				p->org[j] = start[j] + ((rand()%6)-3);
-		}
-		else if (type == 0)
-		{	// rocket trail
-			p->ramp = (rand()&3);
-			p->color = ramp3[(int)p->ramp];
-			p->type = pt_fire;
-			for (j=0 ; j<3 ; j++)
-				p->org[j] = start[j] + ((rand()%6)-3);
-		}
-		else if (type == 3 || type == 5)
-		{	// tracer
-			static int tracercount;
+		switch (type)
+		{
+			case 0:	// rocket trail
+				p->ramp = (rand()&3);
+				p->color = ramp3[(int)p->ramp];
+				p->type = pt_fire;
+				for (j=0 ; j<3 ; j++)
+					p->org[j] = start[j] + ((rand()%6)-3);
+				break;
 
-			p->die = cl.time + 0.5;
-			p->type = pt_static;
-			if (type == 3)
-				p->color = 52 + ((tracercount&4)<<1);
-			else
-				p->color = 230 + ((tracercount&4)<<1);
-			
-			tracercount++;
+			case 1:	// smoke smoke
+				p->ramp = (rand()&3) + 2;
+				p->color = ramp3[(int)p->ramp];
+				p->type = pt_fire;
+				for (j=0 ; j<3 ; j++)
+					p->org[j] = start[j] + ((rand()%6)-3);
+				break;
 
-			VectorCopy (start, p->org);
-			if (tracercount & 1)
-			{
-				p->vel[0] = 30*vec[1];
-				p->vel[1] = 30*-vec[0];
-			}
-			else
-			{
-				p->vel[0] = 30*-vec[1];
-				p->vel[1] = 30*vec[0];
-			}
+			case 2:	// blood
+#ifdef QUAKE1
+				p->type = pt_grav;
+#else
+				p->type = pt_slowgrav;
+#endif
+				p->color = 67 + (rand()&3);
+				for (j=0 ; j<3 ; j++)
+					p->org[j] = start[j] + ((rand()%6)-3);
+				break;
+
+			case 3:
+			case 5:	// tracer
+				p->die = cl.time + 0.5;
+				p->type = pt_static;
+				if (type == 3)
+					p->color = 52 + ((tracercount&4)<<1);
+				else
+					p->color = 230 + ((tracercount&4)<<1);
 			
+				tracercount++;
+
+				VectorCopy (start, p->org);
+				if (tracercount & 1)
+				{
+					p->vel[0] = 30*vec[1];
+					p->vel[1] = 30*-vec[0];
+				}
+				else
+				{
+					p->vel[0] = 30*-vec[1];
+					p->vel[1] = 30*vec[0];
+				}
+				break;
+
+			case 4:	// slight blood
+#ifdef QUAKE1
+				p->type = pt_grav;
+#else
+				p->type = pt_slowgrav;
+#endif
+				p->color = 67 + (rand()&3);
+				for (j=0 ; j<3 ; j++)
+					p->org[j] = start[j] + ((rand()%6)-3);
+				len -= 3;
+				break;
+
+			case 6:	// voor trail
+				p->color = 9*16 + 8 + (rand()&3);
+				p->type = pt_static;
+				p->die = cl.time + 0.3;
+				for (j=0 ; j<3 ; j++)
+					p->org[j] = start[j] + ((rand()&15)-8);
+				break;
 		}
 		
 
@@ -478,6 +662,9 @@ void R_RocketTrail (vec3_t start, vec3_t end, int type)
 R_DrawParticles
 ===============
 */
+static float r_drawparticles_gravity;
+static double r_drawparticles_time;
+
 void R_DrawParticles (void)
 {
 	particle_t		*p, *kill;
@@ -489,17 +676,21 @@ void R_DrawParticles (void)
 	float			frametime;
 
 #ifdef GLQUAKE
+#ifdef QUAKEWORLD
 	unsigned char	*at;
 	unsigned char	theAlpha;
+	qboolean		alphaTestEnabled;
+#endif
 	vec3_t			up, right;
 	float			scale;
-	qboolean		alphaTestEnabled;
-    
+
 	GL_Bind(particletexture);
+#ifdef QUAKEWORLD
 	alphaTestEnabled = glIsEnabled_fp(GL_ALPHA_TEST);
 	
 	if (alphaTestEnabled)
 		glDisable_fp(GL_ALPHA_TEST);
+#endif
 	glEnable_fp (GL_BLEND);
 	glTexEnvf_fp(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glBegin_fp (GL_TRIANGLES);
@@ -514,11 +705,19 @@ void R_DrawParticles (void)
 	VectorCopy (vpn, r_ppn);
 #endif
 
-	frametime = host_frametime;
+#ifdef QUAKE1
+	r_drawparticles_time = cl.time - cl.oldtime;
+	r_drawparticles_gravity = sv_gravity->value;
+#else
+	r_drawparticles_time = host_frametime;
+	r_drawparticles_gravity = 800.0;
+#endif
+
+	frametime = r_drawparticles_time;
 	time3 = frametime * 15;
 	time2 = frametime * 10; // 15;
 	time1 = frametime * 5;
-	grav = frametime * 800 * 0.05;
+	grav = frametime * r_drawparticles_gravity * 0.05;
 	dvel = 4*frametime;
 	
 	for ( ;; ) 
@@ -550,31 +749,29 @@ void R_DrawParticles (void)
 		}
 
 #ifdef GLQUAKE
-		// hack a scale up to keep particles from disapearing
+		// QUAKEWORLD - hack a scale up to keep particles from disapearing
 		scale = (p->org[0] - r_origin[0])*vpn[0] + (p->org[1] - r_origin[1])*vpn[1]
 			+ (p->org[2] - r_origin[2])*vpn[2];
 		if (scale < 20)
 			scale = 1;
 		else
 			scale = 1 + scale * 0.004;
+#ifdef QUAKE1
+		glColor3ubv_fp ((byte *)&d_8to24table[(int)p->color]);
+#else
 		at = (byte *)&d_8to24table[(int)p->color];
 		if (p->type==pt_fire)
 			theAlpha = 255*(6-p->ramp)/6;
-//			theAlpha = 192;
-//		else if (p->type==pt_explode || p->type==pt_explode2)
-//			theAlpha = 255*(8-p->ramp)/8;
 		else
 			theAlpha = 255;
 		glColor4ub_fp (*at, *(at+1), *(at+2), theAlpha);
-//		glColor3ubv_fp (at);
-//		glColor3ubv_fp ((byte *)&d_8to24table[(int)p->color]);
+#endif
 		glTexCoord2f_fp (0,0);
 		glVertex3fv_fp (p->org);
 		glTexCoord2f_fp (1,0);
 		glVertex3f_fp (p->org[0] + up[0]*scale, p->org[1] + up[1]*scale, p->org[2] + up[2]*scale);
 		glTexCoord2f_fp (0,1);
 		glVertex3f_fp (p->org[0] + right[0]*scale, p->org[1] + right[1]*scale, p->org[2] + right[2]*scale);
-
 #else
 		D_DrawParticle (p);
 #endif
@@ -640,8 +837,10 @@ void R_DrawParticles (void)
 #ifdef GLQUAKE
 	glEnd_fp ();
 	glDisable_fp (GL_BLEND);
+#ifdef QUAKEWORLD
 	if (alphaTestEnabled)
 		glEnable_fp(GL_ALPHA_TEST);
+#endif
 	glTexEnvf_fp(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 #else
 	D_EndParticles ();
