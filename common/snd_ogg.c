@@ -46,10 +46,6 @@ static qboolean	ogg_first_init = true;	// First initialization flag
 static qboolean	ogg_started = false;	// Initialization flag
 static bgm_status_t	trk_status;		// Status indicator
 
-#define MAX_OGGLIST 512
-static char		**ogg_filelist;		// List of Ogg Vorbis files
-static int		ogg_numfiles;		// Number of Ogg Vorbis files
-
 static void S_OGG_LoadFileList (void);
 static void S_OGG_ParseCmd (void);
 
@@ -325,12 +321,6 @@ void S_OGG_Init (void)
 	// Console commands
 	Cmd_AddCommand("ogg", S_OGG_ParseCmd);
 
-	// Build list of files
-	Com_Printf("Searching for Ogg Vorbis files...\n");
-	ogg_numfiles = 0;
-	S_OGG_LoadFileList ();
-	Com_Printf("%d Ogg Vorbis files found.\n", ogg_numfiles);
-
 	// Initialize variables
 	if (ogg_first_init) {
 		trk_status = BGM_STOP;
@@ -359,12 +349,6 @@ void S_OGG_Shutdown (void)
 
 	S_StopBackgroundTrack ();
 
-	// Free the list of files
-	for (i = 0; i < ogg_numfiles; i++)
-		free(ogg_filelist[i]);
-	if (ogg_numfiles > 0)
-		free(ogg_filelist);
-
 	ogg_started = false;
 }
 
@@ -380,63 +364,6 @@ void S_OGG_Restart (void)
 {
 	S_OGG_Shutdown ();
 	S_OGG_Init ();
-}
-
-/*
-==========
-S_OGG_LoadFileList
-
-Load list of Ogg Vorbis files in music/
-Based on code by QuDos
-==========
-*/
-static void S_OGG_LoadFileList (void)
-{
-	char	*p, *path = NULL;
-	char	**list;			// List of .ogg files
-	char	findname[MAX_OSPATH];
-	char	lastPath[MAX_OSPATH];	// Knightmare added
-	int		i, numfiles = 0;
-
-	ogg_filelist = malloc(sizeof(char *) * MAX_OGGLIST);
-	memset( ogg_filelist, 0, sizeof( char * ) * MAX_OGGLIST );
-	lastPath[0] = 0;	// Knightmare added
-
-	// Set search path
-	path = COM_NextPath(path);
-	while (path) 
-	{
-		// Knightmare- catch repeated paths
-		if ( strlen(lastPath) > 0 && !strcmp (path, lastPath) ) {
-			path = COM_NextPath( path );
-			continue;
-		}
-
-		// Get file list
-		Com_sprintf( findname, sizeof(findname), "%s/music/*.ogg", path );
-		list = COM_ListFiles(findname, &numfiles, 0, SFF_SUBDIR | SFF_HIDDEN | SFF_SYSTEM);
-
-		// Add valid Ogg Vorbis file to the list
-		for (i=0; i<numfiles && ogg_numfiles<MAX_OGGLIST; i++)
-		{
-			if (!list || !list[i])
-				continue;
-			p = list[i];
-
-			if (!strstr(p, ".ogg"))
-				continue;
-			if (!COM_ItemInList(p, ogg_numfiles, ogg_filelist)) // check if already in list
-			{
-				ogg_filelist[ogg_numfiles] = strdup (p);
-				ogg_numfiles++;
-			}
-		}
-		if (numfiles) // Free the file list
-			COM_FreeFileList(list, numfiles);
-
-		Q_strlcpy (lastPath, path, sizeof(lastPath));	// Knightmare- copy to lastPath
-		path = COM_NextPath( path );
-	}
 }
 
 // =====================================================================
@@ -497,29 +424,6 @@ static void S_OGG_StatusCmd (void)
 }
 
 /*
-==========
-S_OGG_ListCmd
-
-List Ogg Vorbis files
-Based on code by QuDos
-==========
-*/
-static void S_OGG_ListCmd (void)
-{
-	int i;
-
-	if (ogg_numfiles <= 0) {
-		Com_Printf("No Ogg Vorbis files to list.\n");
-		return;
-	}
-
-	for (i = 0; i < ogg_numfiles; i++)
-		Com_Printf("%d %s\n", i+1, ogg_filelist[i]);
-
-	Com_Printf("%d Ogg Vorbis files.\n", ogg_numfiles);
-}
-
-/*
 =================
 S_OGG_ParseCmd
 
@@ -565,12 +469,7 @@ static void S_OGG_ParseCmd (void)
 		return;
 	}
 
-	if (Q_strcasecmp(command, "list") == 0) {
-		S_OGG_ListCmd ();
-		return;
-	}
-
-	Com_Printf("Usage: ogg {play | pause | resume | stop | status | list}\n");
+	Com_Printf("Usage: ogg {play | pause | resume | stop | status}\n");
 }
 
 void S_PauseOGGBackgroundTrack (void)
