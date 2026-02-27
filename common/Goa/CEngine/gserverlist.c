@@ -193,7 +193,7 @@ static GError CreateServerListSocket(GServerList serverlist)
 	struct   sockaddr_in saddr;
 	struct hostent *hent;
 
-	if (cl_master_server_ip->string[0] == '\0')
+	if (Q_StrIsNullOrEmpty(cl_master_server_ip->string))
 	{
 		Com_Printf("Error: cl_master_server_ip is blank!  Setting to default: %s\n", CL_MASTER_ADDR);
 		Cvar_Set("cl_master_server_ip", CL_MASTER_ADDR);

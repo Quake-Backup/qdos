@@ -916,7 +916,7 @@ void CL_LinkPlayers (void)
 		if(!stricmp(cl.players[j].name, Info_ValueForKey(cls.userinfo,"name")) && !stricmp(Info_ValueForKey(cl.players[j].userinfo, "ip"), Info_ValueForKey(cls.userinfo, "ip")) && bFlashlight) 
 			CL_NewDlight (j, state->origin[0], state->origin[1], state->origin[2] + 16, 400 + (rand()&31), 0.1, 0);
 
-		if (net_showchatgfx->value) /* FS: EZQ Chat */
+		if (net_showchatgfx->intValue) /* FS: EZQ Chat */
 		{
 			switch (cl.players[j].chatglow)
 			{
@@ -970,7 +970,7 @@ void CL_LinkPlayers (void)
 
 		/* only predict half the move to minimize overruns */
 		msec = 500*(playertime - state->state_time);
-		if (msec <= 0 || (!cl_predict_players->value && !cl_predict_players2->value))
+		if (msec <= 0 || !cl_predict->intValue)
 		{
 			VectorCopy (state->origin, ent->origin);
 		}
@@ -993,7 +993,7 @@ void CL_LinkPlayers (void)
 		else if (state->effects & EF_FLAG2)
 			CL_AddFlagModels (ent, 1);
 
-		if (net_showchatgfx->value)
+		if (net_showchatgfx->intValue)
 		{
 			if (cl.players[j].chatglow > 0) /* FS: EZQ Chat */
 			{
@@ -1120,7 +1120,7 @@ void CL_SetUpPlayerPrediction(qboolean dopred)
          // only predict half the move to minimize overruns
          msec = 500*(playertime - state->state_time);
          if (msec <= 0 ||
-            (!cl_predict_players->value && !cl_predict_players2->value) ||
+            !cl_predict->intValue ||
             !dopred)
          {
             VectorCopy (state->origin, pplayer->origin);
@@ -1158,9 +1158,6 @@ void CL_SetSolidPlayers (int playernum)
    extern   vec3_t   player_maxs;
    struct predicted_player *pplayer;
    physent_t *pent;
-
-   if (!cl_solid_players->value)
-      return;
 
    pent = pmove.physents + pmove.numphysent;
 

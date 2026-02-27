@@ -114,7 +114,7 @@ void Cvar_Toggle_f (void) /* FS */
 		const char *cvar_name = Cmd_Argv(1);
 		int cur_value;
 
-		if (cvar_name == NULL || cvar_name[0] == '\0' || Cvar_FindVar(cvar_name) == NULL)
+		if (Q_StrIsNullOrEmpty(cvar_name) || Cvar_FindVar(cvar_name) == NULL)
 		{
 			Com_Printf("%s not found!\n", Cmd_Argv(1));
 			return;
@@ -152,7 +152,7 @@ void Cvar_Force_f (void) /* FS */
 		const char *cvar_value = Cmd_Argv(2);
 		cvar_t *var;
 
-		if (cvar_name == NULL || cvar_name[0] == '\0' || Cvar_FindVar(cvar_name) == NULL)
+		if (Q_StrIsNullOrEmpty(cvar_name) || Cvar_FindVar(cvar_name) == NULL)
 		{
 			Com_Printf("%s not found!\n", Cmd_Argv(1));
 			return;

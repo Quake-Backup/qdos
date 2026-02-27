@@ -391,9 +391,7 @@ extern cvar_t	*rate;
 extern cvar_t	*baseskin;
 extern cvar_t	*allow_download_skins; /* FS: Was noskins */
 
-extern cvar_t	*cl_predict_players;
-extern cvar_t	*cl_predict_players2;
-extern cvar_t	*cl_solid_players;
+extern cvar_t	*cl_predict;
 
 /* FS: New stuff */
 extern cvar_t	*show_time;

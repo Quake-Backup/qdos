@@ -423,7 +423,7 @@ void Sbar_SortTeams (void)
 
 		// find his team in the list
 		Q_strlcpy(t, Info_ValueForKey(s->userinfo, "team"), sizeof(t));
-		if (t[0] == 0)
+		if (Q_StrIsNullOrEmpty(t))
 			continue; // not on team
 		for (j = 0; j < scoreboardteams; j++)
 			if (!strcmp(teams[j].team, t)) {

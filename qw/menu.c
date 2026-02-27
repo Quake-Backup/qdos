@@ -1541,7 +1541,7 @@ void M_Extended_Key(int k)
 			Cvar_SetValue ("net_showchat", !net_showchat->value);
 			break;
 		case 2:
-			Cvar_SetValue ("net_showchatgfx", !net_showchatgfx->value);
+			Cvar_SetValue ("net_showchatgfx", !net_showchatgfx->intValue);
 			break;
 		case 3:
 			Cvar_SetValue ("v_contentblend", !v_contentblend->value);
