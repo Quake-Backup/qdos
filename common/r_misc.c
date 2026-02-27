@@ -107,9 +107,40 @@ void R_TimeRefresh_f (void)
 ================
 R_LineGraph
 
-Only called by R_DisplayTime
+Only called by R_TimeGraph and R_ZGraph
 ================
 */
+#ifdef QUAKE1
+void R_LineGraph (int x, int y, int h)
+{
+	int		i;
+	byte	*dest;
+	int		s;
+
+// FIXME: should be disabled on no-buffer adapters, or should be in the driver
+	
+	x += r_refdef.vrect.x;
+	y += r_refdef.vrect.y;
+	
+	dest = vid.buffer + vid.rowbytes*y + x;
+	
+	s = r_graphheight->value;
+	
+	if (h>s)
+		h = s;
+		
+	for (i=0 ; i<h ; i++, dest -= vid.rowbytes*2)
+	{
+		dest[0] = 0xff;
+		*(dest-vid.rowbytes) = 0x30;
+	}
+	for ( ; i<s ; i++, dest -= vid.rowbytes*2)
+	{
+		dest[0] = 0x30;
+		*(dest-vid.rowbytes) = 0x30;
+	}
+}
+#else
 void R_LineGraph (int x, int y, int h)
 {
 	int		i;
@@ -144,6 +175,7 @@ void R_LineGraph (int x, int y, int h)
 //		*(dest-vid.rowbytes) = 0x30;
 	}
 }
+#endif
 
 /*
 ==============
@@ -154,7 +186,9 @@ Performance monitoring tool
 */
 #define	MAX_TIMINGS		100
 extern float mouse_x, mouse_y;
+#ifdef QUAKEWORLD
 int		graphval;
+#endif
 void R_TimeGraph (void)
 {
 	static	int		timex;
@@ -166,7 +200,9 @@ void R_TimeGraph (void)
 	r_time2 = Sys_DoubleTime();
 
 	a = (r_time2-r_time1)/0.01;
-a = graphval;
+#ifdef QUAKEWORLD
+	a = graphval;
+#endif
 
 	r_timings[timex] = a;
 	a = timex;
@@ -190,6 +226,7 @@ a = graphval;
 	timex = (timex+1)%MAX_TIMINGS;
 }
 
+#ifdef QUAKEWORLD
 /*
 ==============
 R_NetGraph
@@ -223,6 +260,7 @@ void R_NetGraph (void)
 	Com_sprintf(st, sizeof(st), "%3i%% packet loss", lost);
 	Draw_String(8, y2, st);
 }
+#endif
 
 /*
 ==============
@@ -434,10 +472,15 @@ void R_SetupFrame (void)
 	float			w, h;
 
 // don't allow cheats in multiplayer
-r_draworder->value = 0;
-r_fullbright->value = 0;
-r_ambient->value = 0;
-r_drawflat->value = 0;
+#ifdef QUAKE1
+	if (cl.maxclients > 1)
+#endif
+	{
+		Cvar_Set ("r_draworder", "0");
+		r_fullbright->value = 0; /* FS: Don't use Cvar_Set here, it's just going to keep trigger the changed function */
+		r_ambient->value = 0;
+		Cvar_Set ("r_drawflat", "0");
+	}
 
 	if (r_numsurfs->value)
 	{
@@ -464,7 +507,9 @@ r_drawflat->value = 0;
 	if (r_refdef.ambientlight < 0)
 		r_refdef.ambientlight = 0;
 
-//	if (!sv.active)
+#ifdef QUAKE1
+	if (!sv.active)
+#endif
 		r_draworder->value = 0;	// don't let cheaters look behind walls
 		
 	R_CheckVariables ();
@@ -488,7 +533,11 @@ r_drawflat->value = 0;
 	r_dowarpold = r_dowarp;
 	r_dowarp = r_waterwarp->value && (r_viewleaf->contents <= CONTENTS_WATER);
 
+#ifdef QUAKE1
+	if ((r_dowarp != r_dowarpold) || r_viewchanged || lcd_x->value)
+#else
 	if ((r_dowarp != r_dowarpold) || r_viewchanged)
+#endif
 	{
 		if (r_dowarp)
 		{
