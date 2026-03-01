@@ -1219,6 +1219,7 @@ int SCR_ModalMessage (char *text)
 	{
 		key_count = -1;		// wait for a key down and up
 		Sys_SendKeyEvents ();
+		Sys_Sleep(1); /* FS: Don't suck up 100% CPU while waiting for a response. */
 	} while (key_lastpress != 'y' && key_lastpress != 'n' && key_lastpress != K_ESCAPE);
 
 	scr_fullupdate = 0;
