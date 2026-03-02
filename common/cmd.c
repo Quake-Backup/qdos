@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -25,7 +25,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 cvar_t	*cl_warncmd;
 
+#ifdef QUAKEWORLD
+void Cmd_ForwardToServer_f (void);
+#endif
 void Cmd_ForwardToServer (void);
+
+#define CMDLINE_LENGTH 256 //johnfitz -- mirrored in common.c
 
 cmdalias_t	*cmd_alias;
 
@@ -56,7 +61,7 @@ void Cmd_Wait_f (void)
 */
 
 sizebuf_t	cmd_text;
-byte		cmd_text_buf[8192];
+byte		cmd_text_buf[16384]; /* FS: Was 8192.  Needed for a larger config. */
 
 /*
 ============
@@ -79,7 +84,7 @@ Adds command text at the end of the buffer
 void Cbuf_AddText (char *text)
 {
 	int		l;
-	
+
 	l = Q_strlen (text);
 
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
@@ -115,7 +120,7 @@ void Cbuf_InsertText (char *text)
 	}
 	else
 		temp = NULL;	// shut up compiler
-		
+
 // add the entire text of the file
 	Cbuf_AddText (text);
 	SZ_Write (&cmd_text, "\n", 1);
@@ -138,7 +143,7 @@ void Cbuf_Execute (void)
 	char	*text;
 	char	line[1024];
 	int		quotes;
-	
+
 	while (cmd_text.cursize)
 	{
 // find a \n or ; line break
@@ -179,8 +184,7 @@ void Cbuf_Execute (void)
 		}
 
 // execute the command line
-		Cmd_ExecuteString (line);
-		
+		Cmd_ExecuteString (line, src_command);
 		if (cmd_wait)
 		{	// skip out while text still remains in buffer, leaving it
 			// for next frame
@@ -210,11 +214,40 @@ quake -nosound +cmd amlev1
 */
 void Cmd_StuffCmds_f (void)
 {
+#ifdef QUAKE1
+// johnfitz -- rewritten to read the "cmdline" cvar, for use with dynamic mod loading
+	extern	cvar_t	*cmdline;
+	char	cmds[CMDLINE_LENGTH];
+	int		i, j, plus;
+
+	plus = true;
+	j = 0;
+	for (i=0; cmdline->string[i]; i++)
+	{
+		if (cmdline->string[i] == '+')
+		{
+			plus = true;
+			if (j > 0)
+			{
+				cmds[j-1] = ';';
+				cmds[j++] = ' ';
+			}
+		}
+		else if (cmdline->string[i] == '-' &&
+			(i==0 || cmdline->string[i-1] == ' ')) //johnfitz -- allow hypenated map names with +map
+				plus = false;
+		else if (plus)
+			cmds[j++] = cmdline->string[i];
+	}
+	cmds[j] = 0;
+
+	Cbuf_InsertText (cmds);
+#else
 	int		i, j;
 	int		s;
 	char	*text, *build, c;
 	size_t	len;
-		
+
 // build the combined string to parse from
 	s = 0;
 	for (i=1 ; i<com_argc ; i++)
@@ -225,7 +258,7 @@ void Cmd_StuffCmds_f (void)
 	}
 	if (!s)
 		return;
-		
+
 	len = s + 1;
 
 	text = Z_Malloc (len);
@@ -238,11 +271,11 @@ void Cmd_StuffCmds_f (void)
 		if (i != com_argc-1)
 			Q_strlcat (text, " ", len);
 	}
-	
+
 // pull out the commands
 	build = Z_Malloc (len);
 	build[0] = 0;
-	
+
 	for (i=0 ; i<s-1 ; i++)
 	{
 		if (text[i] == '+')
@@ -254,19 +287,20 @@ void Cmd_StuffCmds_f (void)
 
 			c = text[j];
 			text[j] = 0;
-			
+
 			Q_strlcat (build, text+i, len);
 			Q_strlcat (build, "\n", len);
 			text[j] = c;
 			i = j-1;
 		}
 	}
-	
+
 	if (build[0])
 		Cbuf_InsertText (build);
-	
+
 	Z_Free (text);
 	Z_Free (build);
+#endif
 }
 
 
@@ -288,15 +322,19 @@ void Cmd_Exec_f (void)
 
 	s = Cmd_Argv(1);
 
-	if(!strncmp(s,"default.cfg",11)) /* FS: unbindall protection hack */
+	if (!strncmp(s,"default.cfg",11) || quakerc_init) /* FS: unbindall protection hack */
 	{
 		Com_DPrintf (DEVELOPER_MSG_VERBOSE, "default.cfg unbindall protection hack\n");
 		Cvar_SetValue("cl_unbindall_protection", 0); /* FS: disable the warning if it's default.cfg */
 	}
 
-	if(quakerc_init)
-		if(!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
+	if (quakerc_init)
+	{
+		if (!strncmp(s, "config.cfg", 10)) /* FS: Intercept config.cfg from quake.rc */
+		{
 			s = "qdos.cfg";
+		}
+	}
 
 	f = (char *)COM_LoadFile(s);
 	if (!f)
@@ -307,7 +345,7 @@ void Cmd_Exec_f (void)
 
 	if (!Cvar_Command () && (cl_warncmd->value || developer->value))
 		Com_Printf ("execing %s\n",s);
-	
+
 	Cbuf_InsertText (f);
 	Z_Free(f);
 }
@@ -323,7 +361,7 @@ Just prints the rest of the line to the console
 void Cmd_Echo_f (void)
 {
 	int		i;
-	
+
 	for (i=1 ; i<Cmd_Argc() ; i++)
 		Com_Printf ("%s ",Cmd_Argv(i));
 	Com_Printf ("\n");
@@ -476,9 +514,36 @@ static	char		*cmd_argv[MAX_ARGS];
 static	char		*cmd_null_string = "";
 static	char		*cmd_args = NULL;
 
-
-
+cmd_source_t	cmd_source;
 cmd_function_t	*cmd_functions;		// possible commands to execute
+
+/*
+============
+Cmd_Init
+============
+*/
+void Cmd_Init (void)
+{
+	cl_warncmd = Cvar_Get("cl_warncmd", "0", 0);
+	Cvar_Set_Description("cl_warncmd", "Warn about unknown commands.");
+
+//
+// register our commands
+//
+	Cmd_AddCommand ("stuffcmds",Cmd_StuffCmds_f);
+	Cmd_AddCommand ("exec",Cmd_Exec_f);
+	Cmd_AddCommand ("echo",Cmd_Echo_f);
+	Cmd_AddCommand ("alias",Cmd_Alias_f);
+	Cmd_AddCommand ("wait", Cmd_Wait_f);
+#ifdef QUAKE1
+	Cmd_AddCommand ("cmd", Cmd_ForwardToServer);
+#else
+	Cmd_AddCommand ("cmd", Cmd_ForwardToServer_f);
+#endif
+	Cmd_AddCommand ("cmdlist", Cmd_List_f);
+	Cmd_AddCommand ("unalias", Cmd_Unalias_f); //johnfitz
+	Cmd_AddCommand ("unaliasall", Cmd_Unaliasall_f); //johnfitz
+}
 
 /*
 ============
@@ -499,7 +564,7 @@ char	*Cmd_Argv (int arg)
 {
 	if ( arg >= cmd_argc )
 		return cmd_null_string;
-	return cmd_argv[arg];	
+	return cmd_argv[arg];
 }
 
 /*
@@ -527,16 +592,16 @@ Parses the given string into command line tokens.
 void Cmd_TokenizeString (char *text)
 {
 	int		i;
-	
+
 // clear the args from the last string
 	for (i = 0; i < cmd_argc; i++)
 	{
 		free (cmd_argv[i]);
 	}
-		
+
 	cmd_argc = 0;
 	cmd_args = NULL;
-	
+
 	while (1)
 	{
 // skip whitespace up to a /n
@@ -544,7 +609,7 @@ void Cmd_TokenizeString (char *text)
 		{
 			text++;
 		}
-		
+
 		if (*text == '\n')
 		{	// a newline seperates commands in the buffer
 			text++;
@@ -553,10 +618,10 @@ void Cmd_TokenizeString (char *text)
 
 		if (!*text)
 			return;
-	
+
 		if (cmd_argc == 1)
 			 cmd_args = text;
-			
+
 		text = COM_Parse (text);
 		if (!text)
 			return;
@@ -574,7 +639,7 @@ void Cmd_TokenizeString (char *text)
 			cmd_argc++;
 		}
 	}
-	
+
 }
 
 
@@ -593,7 +658,7 @@ void    Cmd_AddCommand (char *cmd_name, xcommand_t function)
 		Com_Printf ("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
 	}
-	
+
 // fail if the command already exists
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 	{
@@ -679,12 +744,12 @@ char *Cmd_CompleteCommand (char *partial)
 	cmd_function_t	*cmd;
 	int				len;
 	cmdalias_t		*a;
-	
+
 	len = Q_strlen(partial);
-	
+
 	if (!len)
 		return NULL;
-		
+
 // check for exact match
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 		if (!strcmp (partial,cmd->name))
@@ -704,7 +769,39 @@ char *Cmd_CompleteCommand (char *partial)
 	return NULL;
 }
 
-#ifndef SERVERONLY		// FIXME
+#ifdef QUAKE1
+/*
+===================
+Cmd_ForwardToServer
+
+Sends the entire command line over to the server
+===================
+*/
+void Cmd_ForwardToServer (void)
+{
+	if (cls.state != ca_connected)
+	{
+		Com_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
+		return;
+	}
+
+	if (cls.demoplayback)
+		return;		// not really connected
+
+	MSG_WriteByte (&cls.message, clc_stringcmd);
+	if (Q_strcasecmp(Cmd_Argv(0), "cmd") != 0)
+	{
+		SZ_Print (&cls.message, Cmd_Argv(0));
+		SZ_Print (&cls.message, " ");
+	}
+	if (Cmd_Argc() > 1)
+		SZ_Print (&cls.message, Cmd_Args());
+	else
+		SZ_Print (&cls.message, "\n");
+}
+
+#else
+
 /*
 ===================
 Cmd_ForwardToServer
@@ -721,7 +818,7 @@ void Cmd_ForwardToServer (void)
 		Com_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
 		return;
 	}
-	
+
 	if (cls.demoplayback)
 		return;		// not really connected
 
@@ -747,7 +844,7 @@ void Cmd_ForwardToServer_f (void)
 		Cbuf_InsertText ("snap\n");
 		return;
 	}
-	
+
 	if (cls.demoplayback)
 		return;		// not really connected
 
@@ -756,10 +853,6 @@ void Cmd_ForwardToServer_f (void)
 		MSG_WriteByte (&cls.netchan.message, clc_stringcmd);
 		SZ_Print (&cls.netchan.message, Cmd_Args());
 	}
-}
-#else
-void Cmd_ForwardToServer (void)
-{
 }
 #endif
 
@@ -771,13 +864,14 @@ A complete command line has been parsed, so try to execute it
 FIXME: lookupnoadd the token to speed search?
 ============
 */
-void	Cmd_ExecuteString (char *text)
-{	
+void	Cmd_ExecuteString (char *text, cmd_source_t src)
+{
 	cmd_function_t	*cmd;
 	cmdalias_t		*a;
 
+	cmd_source = src; /* QUAKE 1 */
 	Cmd_TokenizeString (text);
-			
+
 // execute the command line
 	if (!Cmd_Argc())
 		return;		// no tokens
@@ -787,9 +881,11 @@ void	Cmd_ExecuteString (char *text)
 	{
 		if (!Q_strcasecmp (cmd_argv[0],cmd->name))
 		{
+#ifdef QUAKEWORLD
 			if (!cmd->function)
 				Cmd_ForwardToServer ();
 			else
+#endif
 				cmd->function ();
 			return;
 		}
@@ -804,12 +900,17 @@ void	Cmd_ExecuteString (char *text)
 			return;
 		}
 	}
-	
+
 // check cvars
-	if (!Cvar_Command () && (cl_warncmd->value || developer->value))
-		Com_Printf ("Unknown command \"%s\"\n", Cmd_Argv(0));
-	
+	if (!Cvar_Command () && (cl_warncmd->intValue || developer->intValue))
+	{
+		if(!strncmp(Cmd_Argv(0), "init", 4))
+			Com_DPrintf(DEVELOPER_MSG_VERBOSE, "Unknown Command init hack for some servers\n");
+		else
+			Com_Printf ("Unknown command \"%s\"\n", Cmd_Argv(0));
+	}
 }
+
 
 
 
@@ -824,14 +925,14 @@ where the given parameter apears, or 0 if not present
 int Cmd_CheckParm (char *parm)
 {
 	int i;
-	
+
 	if (!parm)
 		Sys_Error ("Cmd_CheckParm: NULL");
 
 	for (i = 1; i < Cmd_Argc (); i++)
 		if (! Q_strcasecmp (parm, Cmd_Argv (i)))
 			return i;
-			
+
 	return 0;
 }
 
@@ -864,33 +965,6 @@ void Cmd_ChatInfo (int val)
 	}
 #endif
 }
-
-/*
-============
-Cmd_Init
-============
-*/
-void Cmd_Init (void)
-{
-	cl_warncmd = Cvar_Get("cl_warncmd", "0", 0);
-	Cvar_Set_Description("cl_warncmd", "Warn about unknown commands.");
-
-//
-// register our commands
-//
-	Cmd_AddCommand ("stuffcmds",Cmd_StuffCmds_f);
-	Cmd_AddCommand ("exec",Cmd_Exec_f);
-	Cmd_AddCommand ("echo",Cmd_Echo_f);
-	Cmd_AddCommand ("alias",Cmd_Alias_f);
-	Cmd_AddCommand ("wait", Cmd_Wait_f);
-#ifndef SERVERONLY
-	Cmd_AddCommand ("cmd", Cmd_ForwardToServer_f);
-#endif
-	Cmd_AddCommand ("cmdlist", Cmd_List_f); //johnfitz
-	Cmd_AddCommand ("unalias", Cmd_Unalias_f); //johnfitz
-	Cmd_AddCommand ("unaliasall", Cmd_Unaliasall_f); //johnfitz
-}
-
 
 /*
 ===============

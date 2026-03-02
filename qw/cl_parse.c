@@ -1829,7 +1829,7 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case svc_sellscreen:
-			Cmd_ExecuteString ("help");
+			Cmd_ExecuteString ("help", src_client);
 			break;
 
 		case svc_smallkick:

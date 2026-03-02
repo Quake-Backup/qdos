@@ -11,9 +11,6 @@
 
 * Unify and update the docs.
 
-* The renderers can probably be merged, carefully,
-  into /common to prevent more code duplication.
-
 * Asynchronous rendering support.
 
 * Dedicated server is broken.  Listen probably is too, but I never tested it.

@@ -45,9 +45,6 @@
     <ClCompile Include="..\common\cl_tent.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cmd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\cmd_auto.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -385,6 +382,9 @@
       <Filter>Source Files\Software</Filter>
     </ClCompile>
     <ClCompile Include="..\common\r_part.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\cmd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

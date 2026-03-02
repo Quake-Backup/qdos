@@ -629,6 +629,7 @@
     <ClCompile Include="..\common\cd_win.c" />
     <ClCompile Include="..\common\cl_input.c" />
     <ClCompile Include="..\common\cl_tent.c" />
+    <ClCompile Include="..\common\cmd.c" />
     <ClCompile Include="..\common\cmd_auto.c" />
     <ClCompile Include="..\common\common.c" />
     <ClCompile Include="..\common\console.c" />
@@ -1125,7 +1126,6 @@
     <ClCompile Include="cl_demo.c" />
     <ClCompile Include="cl_main.c" />
     <ClCompile Include="cl_parse.c" />
-    <ClCompile Include="cmd.c" />
     <ClCompile Include="conproc.c" />
     <ClCompile Include="host.c" />
     <ClCompile Include="host_cmd.c" />
