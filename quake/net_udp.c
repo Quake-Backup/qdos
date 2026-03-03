@@ -104,7 +104,7 @@ int UDP_Init (void)
 
 	if (err != 0)
 	{
-		Com_SafePrintf("WATTCP initialization failed (%s)", sock_init_err(err));
+		Com_SafePrintf("WATTCP initialization failed (%s)\n", sock_init_err(err));
 		return -1;
 	}
 
@@ -170,7 +170,7 @@ int UDP_OpenSocket (int port)
 
 	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET)
 	{
-		Com_Printf ("ERROR: UDP_OpenSocket: socket: %s", NET_ErrorString());
+		Com_Printf ("ERROR: UDP_OpenSocket: socket: %s\n", NET_ErrorString());
 		return -1;
 	}
 

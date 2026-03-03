@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "dos_sock.h"
 #include "net_ipx.h"
 
+#define MAX_IPXDATASIZE	(1024+NET_HEADERSIZE)
+
 #undef	EIO	/* don't clash with djgpp's errno.h. */
 #define	EIO		 		5	/* I/O error */
 
@@ -112,7 +114,7 @@ typedef struct
 	ECB			ecb;
 	IPXheader	header;
 	int			sequence;
-	char		data[NET_DATAGRAMSIZE];
+	char		data[MAX_IPXDATASIZE];
 } ipx_lowmem_buffer_t;
 
 #define LOWMEMSIZE		(100 * 1024)
@@ -287,7 +289,7 @@ int IPX_Init(void)
 			lma->socketbuffer[s][n].ecb.fragCount = 1;
 			lma->socketbuffer[s][n].ecb.fragOff = ptr2real(&lma->socketbuffer[s][n].header) & 0xf;
 			lma->socketbuffer[s][n].ecb.fragSeg = ptr2real(&lma->socketbuffer[s][n].header) >> 4;
-			lma->socketbuffer[s][n].ecb.fragSize = sizeof(IPXheader) + sizeof(int) + NET_DATAGRAMSIZE;
+			lma->socketbuffer[s][n].ecb.fragSize = sizeof(IPXheader) + sizeof(int) + MAX_IPXDATASIZE;
 		}
 	}
 
@@ -461,6 +463,12 @@ int IPX_Read (int handle, byte *buf, int len, struct qsockaddr *addr)
 	ipx_lowmem_buffer_t *rcvbuf;
 	int		copylen;
 
+	if (len >= MAX_IPXDATASIZE)
+	{
+		Sys_Error("IPX_Read: len >= MAX_IPXDATASIZE (%d vs %zd)\n", len, MAX_IPXDATASIZE);
+		return 0;
+	}
+
 	ProcessReadyList(handle);
 tryagain:
 	if (readlist[handle] == NULL)
@@ -471,7 +479,7 @@ tryagain:
 	if (ecb->completionCode != 0)
 	{
 		Com_Printf("Warning: IPX_Read error %02x\n", ecb->completionCode);	
-		ecb->fragSize = sizeof(IPXheader) + sizeof(int) + NET_DATAGRAMSIZE;
+		ecb->fragSize = sizeof(IPXheader) + sizeof(int) + MAX_IPXDATASIZE;
 		IPX_ListenForPacket(ecb);
 		goto tryagain;
 	}
@@ -481,7 +489,10 @@ tryagain:
 	// copy the data up to the buffer
 	copylen = ntohs(rcvbuf->header.length) - (sizeof(int) + sizeof(IPXheader));
 	if (len < copylen)
+	{
 		Sys_Error("IPX_Read: buffer too small (%d vs %d)\n", len, copylen);
+		return 0;
+	}
 	memcpy(buf, rcvbuf->data, copylen);
 
 	// fill in the addr if they want it
@@ -497,7 +508,7 @@ tryagain:
 	memcpy(lma->socketbuffer[handle][0].ecb.immediateAddress, rcvbuf->ecb.immediateAddress, 6);
 
 	// get this ecb listening again
-	rcvbuf->ecb.fragSize = sizeof(IPXheader) + sizeof(int) + NET_DATAGRAMSIZE;
+	rcvbuf->ecb.fragSize = sizeof(IPXheader) + sizeof(int) + MAX_IPXDATASIZE;
 	IPX_ListenForPacket(&rcvbuf->ecb);
 	return copylen;
 }
@@ -521,6 +532,12 @@ int IPX_Broadcast (int handle, byte *buf, int len)
 
 int IPX_Write (int handle, byte *buf, int len, struct qsockaddr *addr)
 {
+	if (len >= MAX_IPXDATASIZE)
+	{
+		Sys_Error("IPX_Write: len >= MAX_IPXDATASIZE (%d vs %zd)\n", len, MAX_IPXDATASIZE);
+		return 0;
+	}
+
 	// has the previous send completed?
 	while (lma->socketbuffer[handle][0].ecb.inUse != 0)
 		IPX_RelinquishControl();
