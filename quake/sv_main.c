@@ -1368,6 +1368,11 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 
 	if (svs.maxclients > 1)
 	{
+		if (extended_mod)
+		{
+			Host_Error("Extended mods are for single player only.\n");
+			return;
+		}
 		sv.protocol = PROTOCOL_NETQUAKE;
 	}
 	else
