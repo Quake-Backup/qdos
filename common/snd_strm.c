@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DR_MP3_IMPLEMENTATION
 #include "dr_mp3.h"
 
-#define DR_FLAC_IMPLEMENTATION
+//#define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_CRC
 #include "dr_flac.h"
 
@@ -59,7 +59,7 @@ void S_StreamInit (void)
 		return;
 
 	Com_Printf("Stream engine initialized.  Available formats:\n");
-	Com_Printf(" * dr_flac v%s\n", drflac_version_string());
+	//Com_Printf(" * dr_flac v%s\n", drflac_version_string());
 	Com_Printf(" * dr_mp3 v%s\n", drmp3_version_string());
 	Com_Printf(" * dr_wav v%s\n", drwav_version_string());
 
@@ -131,7 +131,7 @@ void S_StreamUpdate (void)
 						read = drwav_read_pcm_frames_s16(stream->handle->drwav, maxRead - total, data);
 						break;
 					case STREAM_FLAC:
-						read = drflac_read_pcm_frames_s16(stream->handle->drflac, maxRead - total, data);
+						//read = drflac_read_pcm_frames_s16(stream->handle->drflac, maxRead - total, data);
 						break;
 					case STREAM_MP3:
 						read = drmp3_read_pcm_frames_s16(stream->handle->drmp3, maxRead - total, data);
@@ -156,7 +156,7 @@ void S_StreamUpdate (void)
 								drwav_seek_to_pcm_frame(stream->handle->drwav, 0);
 								break;
 							case STREAM_FLAC:
-								drflac_seek_to_pcm_frame(stream->handle->drflac, 0);
+								//drflac_seek_to_pcm_frame(stream->handle->drflac, 0);
 								break;
 							case STREAM_MP3:
 								drmp3_seek_to_pcm_frame(stream->handle->drmp3, 0);
@@ -408,12 +408,12 @@ hSTREAM *S_Open_Stream(const char *path)
 	}
 	else if (!stricmp(COM_FileExtension(path), "flac"))
 	{
-		drflac *flac;
+		drflac *flac = NULL;
 
-		flac = drflac_open_file(path, NULL);
+		//flac = drflac_open_file(path, NULL);
 		if (!flac)
 		{
-			drflac_close(flac);
+			//drflac_close(flac);
 			return NULL;
 			// Failed to open file
 		}
@@ -495,7 +495,7 @@ void S_Destroy_Stream (stream_t *stream)
 
 		if (stream->handle->drflac)
 		{
-			drflac_close(stream->handle->drflac);
+			//drflac_close(stream->handle->drflac);
 		}
 		stream->handle->drflac = NULL;
 

@@ -185,14 +185,14 @@ int Datagram_SendMessage (qsocket_t *sock, sizebuf_t *data)
 	memcpy(sock->sendMessage, data->data, data->cursize);
 	sock->sendMessageLength = data->cursize;
 
-	if (data->cursize <= MAX_DATAGRAM)
+	if (data->cursize <= max_datagram)
 	{
 		dataLen = data->cursize;
 		eom = NETFLAG_EOM;
 	}
 	else
 	{
-		dataLen = MAX_DATAGRAM;
+		dataLen = max_datagram;
 		eom = 0;
 	}
 	packetLen = NET_HEADERSIZE + dataLen;
@@ -218,14 +218,14 @@ int SendMessageNext (qsocket_t *sock)
 	unsigned int	dataLen;
 	unsigned int	eom;
 
-	if (sock->sendMessageLength <= MAX_DATAGRAM)
+	if (sock->sendMessageLength <= max_datagram)
 	{
 		dataLen = sock->sendMessageLength;
 		eom = NETFLAG_EOM;
 	}
 	else
 	{
-		dataLen = MAX_DATAGRAM;
+		dataLen = max_datagram;
 		eom = 0;
 	}
 	packetLen = NET_HEADERSIZE + dataLen;
@@ -251,14 +251,14 @@ int ReSendMessage (qsocket_t *sock)
 	unsigned int	dataLen;
 	unsigned int	eom;
 
-	if (sock->sendMessageLength <= MAX_DATAGRAM)
+	if (sock->sendMessageLength <= max_datagram)
 	{
 		dataLen = sock->sendMessageLength;
 		eom = NETFLAG_EOM;
 	}
 	else
 	{
-		dataLen = MAX_DATAGRAM;
+		dataLen = max_datagram;
 		eom = 0;
 	}
 	packetLen = NET_HEADERSIZE + dataLen;
@@ -301,7 +301,7 @@ int Datagram_SendUnreliableMessage (qsocket_t *sock, sizebuf_t *data)
 	if (data->cursize == 0)
 		Sys_Error("Datagram_SendUnreliableMessage: zero length message\n");
 
-	if (data->cursize > MAX_DATAGRAM)
+	if (data->cursize > max_datagram)
 		Sys_Error("Datagram_SendUnreliableMessage: message too big %u\n", data->cursize);
 #endif
 
@@ -334,7 +334,7 @@ int	Datagram_GetMessage (qsocket_t *sock)
 
 	while(1)
 	{	
-		length = sfunc.Read (sock->socket, (byte *)&packetBuffer, NET_DATAGRAMSIZE, &readaddr);
+		length = sfunc.Read (sock->socket, (byte *)&packetBuffer, net_datagramsize, &readaddr);
 
 //	if ((rand() & 255) > 220)
 //		continue;
@@ -417,10 +417,10 @@ int	Datagram_GetMessage (qsocket_t *sock)
 				Com_DPrintf(DEVELOPER_MSG_NET, "Duplicate ACK received\n");
 				continue;
 			}
-			sock->sendMessageLength -= MAX_DATAGRAM;
+			sock->sendMessageLength -= max_datagram;
 			if (sock->sendMessageLength > 0)
 			{
-				memmove (sock->sendMessage, sock->sendMessage + MAX_DATAGRAM, sock->sendMessageLength);
+				memmove (sock->sendMessage, sock->sendMessage + max_datagram, sock->sendMessageLength);
 				sock->sendNext = true;
 			}
 			else

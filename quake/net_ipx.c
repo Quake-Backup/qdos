@@ -463,12 +463,6 @@ int IPX_Read (int handle, byte *buf, int len, struct qsockaddr *addr)
 	ipx_lowmem_buffer_t *rcvbuf;
 	int		copylen;
 
-	if (len >= MAX_IPXDATASIZE)
-	{
-		Sys_Error("IPX_Read: len >= MAX_IPXDATASIZE (%d vs %zd)\n", len, MAX_IPXDATASIZE);
-		return 0;
-	}
-
 	ProcessReadyList(handle);
 tryagain:
 	if (readlist[handle] == NULL)
@@ -493,6 +487,13 @@ tryagain:
 		Sys_Error("IPX_Read: buffer too small (%d vs %d)\n", len, copylen);
 		return 0;
 	}
+
+	if (copylen > MAX_IPXDATASIZE)
+	{
+		Sys_Error("IPX_Read: copylen > MAX_IPXDATASIZE (%d vs %zd)\n", len, MAX_IPXDATASIZE);
+		return 0;
+	}
+
 	memcpy(buf, rcvbuf->data, copylen);
 
 	// fill in the addr if they want it
@@ -532,9 +533,9 @@ int IPX_Broadcast (int handle, byte *buf, int len)
 
 int IPX_Write (int handle, byte *buf, int len, struct qsockaddr *addr)
 {
-	if (len >= MAX_IPXDATASIZE)
+	if (len >= NET_MAXMESSAGE_OLD)
 	{
-		Sys_Error("IPX_Write: len >= MAX_IPXDATASIZE (%d vs %zd)\n", len, MAX_IPXDATASIZE);
+		Sys_Error("IPX_Write: len >= NET_MAXMESSAGE_OLD (%d vs %d)\n", len, NET_MAXMESSAGE_OLD);
 		return 0;
 	}
 

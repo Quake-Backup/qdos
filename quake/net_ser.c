@@ -293,7 +293,7 @@ static int ProcessInQueue(SerialLine *p)
 					p->currState = STATE_ABORT;
 					Com_DPrintf(DEVELOPER_MSG_NET, "Serial: bad reliable message length %u\n", p->lengthStated);
 				}
-				else if (p->mtype == MTYPE_UNRELIABLE && p->lengthStated > MAX_DATAGRAM)
+				else if (p->mtype == MTYPE_UNRELIABLE && p->lengthStated > max_datagram)
 				{
 					p->currState = STATE_ABORT;
 					Com_DPrintf(DEVELOPER_MSG_NET, "Serial: bad unreliable message length %u\n", p->lengthStated);

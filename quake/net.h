@@ -33,9 +33,11 @@ struct qsockaddr
 #define NET_NAMELEN             64 
 
 #define NET_MAXMESSAGE          65536 /* FS: Was 8192 (Spoike) */
+#define NET_MAXMESSAGE_OLD		8192
 #define NET_HEADERSIZE		(2 * sizeof(unsigned int))
 #define NET_DATAGRAMSIZE	(MAX_DATAGRAM + NET_HEADERSIZE)
-	
+#define NET_DATAGRAMSIZE_OLD	(MAX_DATAGRAM_OLD + NET_HEADERSIZE)
+
 // NetHeader flags
 #define NETFLAG_LENGTH_MASK	0x0000ffff
 #define NETFLAG_DATA		0x00010000

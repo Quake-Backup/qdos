@@ -50,6 +50,10 @@ cvar_t	*public_server;
 
 extern qboolean		pr_alpha_supported; //johnfitz
 
+int max_datagram = MAX_DATAGRAM;
+int	net_datagramsize = NET_DATAGRAMSIZE;
+int max_msglen = MAX_MSGLEN;
+
 //============================================================================
 
 /*
@@ -169,7 +173,7 @@ void SV_StartParticle (vec3_t org, vec3_t dir, int color, int count)
 {
 	int i, v;
 
-	if (sv.datagram.cursize > MAX_DATAGRAM-16)
+	if (sv.datagram.cursize > max_datagram-16)
 		return;
 
 	MSG_WriteByte (&sv.datagram, svc_particle);
@@ -222,7 +226,7 @@ void SV_StartSound (edict_t *entity, int channel, char *sample, int volume, floa
 	if (channel < 0 || channel > 7)
 		Sys_Error ("SV_StartSound: channel = %i", channel);
 
-	if (sv.datagram.cursize > MAX_DATAGRAM-16)
+	if (sv.datagram.cursize > max_datagram-16)
 		return;  
 
 	// find precache number for sound
@@ -568,7 +572,7 @@ void SV_WriteEntitiesToClient (edict_t *clent, sizebuf_t *msg)
 				continue;
 
 			//johnfitz -- don't send model>255 entities if protocol is 15
-			if (sv_protocol == PROTOCOL_NETQUAKE && (int)ent->v.modelindex & 0xFF00)
+			if (sv.protocol == PROTOCOL_NETQUAKE && (int)ent->v.modelindex & 0xFF00)
 				continue;
 
 			// ignore if not touching a PV leaf
@@ -949,7 +953,7 @@ qboolean SV_SendClientDatagram (client_t *client)
 
 	//johnfitz -- if client is nonlocal, use smaller max size so packets aren't fragmented
 	if (Q_strcmp (client->netconnection->address, "LOCAL") != 0)
-		msg.maxsize = DATAGRAM_MTU;
+		msg.maxsize = max_datagram;
 
 	MSG_WriteByte (&msg, svc_time);
 	MSG_WriteFloat (&msg, sv.time);
@@ -1362,7 +1366,29 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 
 	Q_strlcpy (sv.name, server, sizeof(sv.name));
 
-	sv.protocol = sv_protocol; // johnfitz
+	if (svs.maxclients > 1)
+	{
+		sv.protocol = PROTOCOL_NETQUAKE;
+	}
+	else
+	{
+		sv.protocol = sv_protocol; // johnfitz
+	}
+
+	if (sv.protocol == PROTOCOL_FITZQUAKE)
+	{
+		max_datagram = MAX_DATAGRAM;
+		max_msglen = MAX_MSGLEN;
+		net_datagramsize = NET_DATAGRAMSIZE;
+	}
+	else
+	{
+		max_datagram = MAX_DATAGRAM_OLD;
+		max_msglen = MAX_MSGLEN_OLD;
+		net_datagramsize = NET_DATAGRAMSIZE_OLD;
+	}
+
+	Com_DPrintf(DEVELOPER_MSG_NET, "MD: %d, MML: %d, NDGS: %d\n", max_datagram, max_msglen, net_datagramsize);
 
 	// load progs to get entity field count
 	PR_LoadProgs ();
@@ -1371,17 +1397,19 @@ void SV_SpawnServer (char *server, qboolean loadgame)
 	sv.max_edicts = CLAMP (MIN_EDICTS, max_edicts->intValue, MAX_EDICTS); //johnfitz -- max_edicts cvar
 	sv.edicts = Z_TagMalloc(sv.max_edicts * pr_edict_size, TAG_LEVEL);
 
-	sv.datagram.maxsize = sizeof(sv.datagram_buf);
+	sv.datagram.maxsize = max_datagram;//sizeof(sv.datagram_buf);
 	sv.datagram.cursize = 0;
 	sv.datagram.data = sv.datagram_buf;
 
-	sv.reliable_datagram.maxsize = sizeof(sv.reliable_datagram_buf);
+	sv.reliable_datagram.maxsize = max_datagram;//sizeof(sv.reliable_datagram_buf);
 	sv.reliable_datagram.cursize = 0;
 	sv.reliable_datagram.data = sv.reliable_datagram_buf;
 
-	sv.signon.maxsize = sizeof(sv.signon_buf);
+	sv.signon.maxsize = max_msglen-2;//sizeof(sv.signon_buf);
 	sv.signon.cursize = 0;
 	sv.signon.data = sv.signon_buf;
+
+	Com_DPrintf(DEVELOPER_MSG_NET, "DGM: %d, DGRM: %d, SOM: %d\n", sv.datagram.maxsize, sv.reliable_datagram.maxsize, sv.signon.maxsize);
 
 	// leave slots at start for clients only
 	sv.num_edicts = svs.maxclients+1;

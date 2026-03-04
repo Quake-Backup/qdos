@@ -106,8 +106,10 @@ void    VID_UnlockBuffer (void);
 #define ON_EPSILON              0.1                     // point on plane side epsilon
 
 #define	MAX_MSGLEN			64000	// max length of a reliable message //johnfitz -- was 8000
+#define MAX_MSGLEN_OLD		8000
 /* FS: FIXME THIS BREAKS IPX */
 #define MAX_DATAGRAM            32000 // max length of unreliable message //johnfitz -- was 1024
+#define MAX_DATAGRAM_OLD		1024
 
 #define DATAGRAM_MTU		1400	// johnfitz -- actual limit for unreliable messages to nonlocal clients
 
@@ -387,5 +389,10 @@ void Sys_FindClose (void);
 #define TAG_TEMP	767
 
 #define		MAXPRINTMSG	8192	// Knightmare 3/12/15- was 4096
+
+/* FS */
+extern int	max_datagram;
+extern int	net_datagramsize;
+extern int	max_msglen;
 
 #endif // __QUAKEDEF_H

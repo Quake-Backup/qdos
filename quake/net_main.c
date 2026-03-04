@@ -178,6 +178,7 @@ static void NET_Listen_f (void)
 	{
 		if (net_drivers[net_driverlevel].initialized == false)
 			continue;
+
 		dfunc.Listen (listening);
 	}
 }
