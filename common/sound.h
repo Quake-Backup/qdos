@@ -49,7 +49,6 @@ typedef struct
 } portable_samplepair_t;
 
 extern portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];
-extern int s_paintbuffer_size;
 
 // !!! if this is changed, it much be changed in asm_i386.h too !!!
 typedef struct

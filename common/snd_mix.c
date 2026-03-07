@@ -28,7 +28,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 portable_samplepair_t paintbuffer[PAINTBUFFER_SIZE];
-int	s_paintbuffer_size;
 
 int		snd_scaletable[32][256];
 int 	*snd_p, snd_linear_count, snd_vol;

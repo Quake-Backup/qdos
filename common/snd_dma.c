@@ -92,7 +92,6 @@ cvar_t	*s_primary;
 cvar_t	*s_khz;
 cvar_t	*s_musicvolume;
 cvar_t	*s_mastervolume;
-cvar_t	*s_paintbuffer_size_cvar;
 cvar_t	*s_rawsamples_size_cvar;
 
 byte *s_streamDataPtr;
@@ -170,7 +169,6 @@ void S_Init (void)
 	s_musicvolume = Cvar_Get("s_musicvolume", "1.0", CVAR_ARCHIVE);
 	Cvar_Set_Description("s_musicvolume", "Music volume for wav and ogg streaming.");
 	s_mastervolume = Cvar_Get("s_mastervolume", "1.0", CVAR_ARCHIVE);
-	s_paintbuffer_size_cvar = Cvar_Get("s_paintbuffer_size", va("%d", PAINTBUFFER_SIZE), 0);
 	s_rawsamples_size_cvar = Cvar_Get("s_rawsamples_size", va("%d", MAX_RAW_SAMPLES), 0);
 
 	if (COM_CheckParm("-nosound"))
@@ -224,19 +222,10 @@ void S_Init (void)
 	soundtime = 0;
 	paintedtime = 0;
 
-	s_paintbuffer_size = bound(128, s_paintbuffer_size_cvar->intValue, SND_BUFFER_SIZE);
-	//paintbuffer = (portable_samplepair_t *)calloc(1, s_paintbuffer_size * sizeof(portable_samplepair_t));
-	//if (!paintbuffer)
-	//{
-	//	dma.buffer = NULL;
-	//	return;
-	//}
-
 	s_rawsamples_size = bound(128, s_rawsamples_size_cvar->intValue, SND_BUFFER_SIZE);
 	s_rawsamples = (portable_samplepair_t *)calloc(1, s_rawsamples_size * sizeof(portable_samplepair_t));
 	if (!s_rawsamples)
 	{
-		//free(paintbuffer);
 		dma.buffer = NULL;
 		return;
 	}
@@ -246,12 +235,11 @@ void S_Init (void)
 	{
 		free(s_rawsamples);
 		s_rawsamples = NULL;
-		//free(paintbuffer);
 		dma.buffer = NULL;
 		return;
 	}
 
-	Com_Printf("Channels: %d, Bits: %d, Rate: %d\nPaint Buffer Size: %d\nRaw Samples Buffer Size: %d\n", dma.channels, dma.samplebits, dma.speed, (int)s_paintbuffer_size, (int)s_rawsamples_size);
+	Com_Printf("Channels: %d, Bits: %d, Rate: %d\nRaw Samples Buffer Size: %d\n", dma.channels, dma.samplebits, dma.speed, (int)s_rawsamples_size);
 
 //	if (dma.buffer)
 //		dma.buffer[4] = dma.buffer[5] = 0x7f; // force a pop for debugging
