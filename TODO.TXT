@@ -13,10 +13,10 @@
 
 * Asynchronous rendering support.
 
-* Dedicated server is broken.  Listen probably is too, but I never tested it.
-
 * ref_gl mtex is incredibly slow with mesa and sage.  Completely unusable.  Figure out why.
 
 * Add 'game' command to QW.
 
 * When changing 'game' dynamically we should reload the WADs for console backdrop, etc.
+
+* Fix Win32 requiring to set -ip if you have multiple adapters.

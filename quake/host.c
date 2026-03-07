@@ -930,9 +930,8 @@ void Host_Init (quakeparms_t *parms)
 	dedicated = Cvar_Get ("dedicated", "1", CVAR_NOSET|CVAR_PROTECTED);
 #else
 	dedicated = Cvar_Get ("dedicated", "0", CVAR_NOSET|CVAR_PROTECTED);
-	Cvar_ForceSet("dedicated", "0"); /* FS: FIXME: dedicated has been broken for a long time. */
-	//if (COM_CheckParm("-dedicated"))
-	//	Cvar_ForceSet("dedicated", "1");
+	if (COM_CheckParm("-dedicated"))
+		Cvar_ForceSet("dedicated", "1");
 #endif
 
 	COM_Init();
