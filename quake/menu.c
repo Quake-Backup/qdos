@@ -3560,7 +3560,7 @@ void M_Extended_Draw (void)
 		M_Print (220, y, "off");
 	else if (show_uptime->intValue == 1)
 		M_Print (220, y, "Server");
-	else if (show_uptime->intValue >= 2)
+	else
 		M_Print (220, y, "Total");
 
 	M_Print (16, y = y + Y_SPACE, "             Show Time");
@@ -3568,7 +3568,7 @@ void M_Extended_Draw (void)
 		M_Print (220, y, "off");
 	else if (show_time->intValue == 1)
 		M_Print (220, y, "Military");
-	else if (show_time->intValue >= 2)
+	else
 		M_Print (220, y, "AM/PM");
 
 	M_Print (16, y = y + Y_SPACE, "        Show Framerate");
@@ -3782,7 +3782,7 @@ void M_Extended_Set_Vsync(int dir)
 {
 #ifdef GLQUAKE
 	return;
-#endif
+#else
 	if (dir > 0)
 	{
 		Cvar_SetValue("_vid_wait_override", 1.0f);
@@ -3793,6 +3793,7 @@ void M_Extended_Set_Vsync(int dir)
 		Cvar_SetValue("_vid_wait_override", 0.0f);
 		Cvar_SetValue("vid_wait", 0.0f);
 	}
+#endif
 }
 
 void M_Extended_Set_Sound_KHz (int dir, int khz)
@@ -4164,18 +4165,16 @@ static int Get_Vidscale(void)
 	/* FS: Special function for some what scaling of the server browser depending on video resolution height. */
 	if (vid.height <= 240)
 		return 18;
-	if (vid.height <= 300)
+	else if (vid.height <= 300)
 		return 21;
-	if (vid.height <= 400)
+	else if (vid.height <= 400)
 		return 25;
-	if (vid.height <= 480)
+	else if (vid.height <= 480)
 		return 30;
-	if (vid.height <= 800)
+	else if (vid.height <= 800)
 		return 36;
-	if (vid.height > 800)
-		return 38;
-	/* FS: We must have some weirdo mode, so 20 should be OK. */
-	return 18;
+
+	return 38;
 }
 
 static void JoinGamespyServer_NextPageFunc (void)

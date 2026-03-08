@@ -1143,8 +1143,8 @@ void R_InitTurb (void)
 	
 	for (i=0 ; i<(SIN_BUFFER_SIZE) ; i++)
 	{
-		sintable[i] = AMP + sin(i*3.14159*2/CYCLE)*AMP;
-		intsintable[i] = AMP2 + sin(i*3.14159*2/CYCLE)*AMP2;	// AMP2, not 20
+		sintable[i] = AMP + sin(i*M_PI*2/CYCLE)*AMP;
+		intsintable[i] = AMP2 + sin(i*M_PI*2/CYCLE)*AMP2;	// AMP2, not 20
 	}
 }
 

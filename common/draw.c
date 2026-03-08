@@ -653,6 +653,7 @@ void Draw_ConsoleBackground (int lines)
 	int				f, fstep;
 	qpic_t			*conback;
 	char			ver[100];
+	size_t			verLen;
 #ifdef QUAKEWORLD
 	static			char saveback[320*8];
 #endif
@@ -686,9 +687,11 @@ void Draw_ConsoleBackground (int lines)
 
 	memcpy(saveback, conback->data + 320*186, 320*8);
 #endif // QUAKE1
-	for (x=0 ; x<strlen(ver) ; x++)
+
+	verLen = strlen(ver);
+	for (x = 0; x < verLen; x++)
 		Draw_CharToConback (ver[x], dest+(x<<3));
-	
+
 // draw the pic
 	if (r_pixbytes == 1)
 	{

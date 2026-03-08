@@ -724,6 +724,7 @@ void Con_DrawConsole (int lines)
 #if defined(QUAKEWORLD) || defined(GAMESPY)
 	int				j, n;
 	char			dlbar[1024];
+	size_t			dlbarLen;
 #endif
 
 	if (lines <= 0)
@@ -877,7 +878,8 @@ void Con_DrawConsole (int lines)
 
 		// draw it
 		y = con_vislines-22 + 8;
-		for (i = 0; i < strlen(dlbar); i++)
+		dlbarLen = strlen(dlbar);
+		for (i = 0; i < dlbarLen; i++)
 			Draw_Character ( (i+1)<<3, y, dlbar[i]);
 	}
 #endif
