@@ -160,18 +160,15 @@ to start a download from the server.
 */
 qboolean	CL_CheckOrDownloadFile (char *filename, qboolean queue)
 {
-	FILE	*f;
-
 	if (strstr (filename, ".."))
 	{
 		Com_Printf ("Refusing to download a path with ..\n");
 		return true;
 	}
 
-	COM_FOpenFile (filename, &f);
-	if (f)
-	{	// it exists, no need to download
-		fclose (f);
+	if (COM_FileExists(filename))
+	{
+		// it exists, no need to download
 		return true;
 	}
 
@@ -184,12 +181,8 @@ qboolean	CL_CheckOrDownloadFile (char *filename, qboolean queue)
 	if (cls.demoplayback)
 		return true;
 
-	if(queue) /* FS: Are we just queuing it for later or grab it now? */
-	{
-		if (f)
-			fclose(f);
+	if (queue) /* FS: Are we just queuing it for later or grab it now? */
 		return false;
-	}
 	else
 		cls.download_queue++;
 
@@ -244,7 +237,7 @@ void Model_NextDownload (qboolean queue)
 		}
 		else
 		{
-			if(!CL_CheckOrDownloadFile(s, false)) /* FS: Start a download */
+			if (!CL_CheckOrDownloadFile(s, false)) /* FS: Start a download */
 				return;
 		}
 	}
@@ -1949,7 +1942,6 @@ void CL_PlayBackgroundTrack (int track)
 {
 	char	name[MAX_QPATH], *p;
 	int	have_extmusic;
-	FILE	*fakeHandle;
 
 	Com_DPrintf(DEVELOPER_MSG_CD, "CL_PlayBackgroundTrack\n");
 
@@ -1968,31 +1960,27 @@ void CL_PlayBackgroundTrack (int track)
 	p = name + strlen(name);
 
 	Q_strlcpy (p, "wav", sizeof(name));
-	if (COM_FOpenFile(name, &fakeHandle) != -1)
+	if (COM_FileExists(name))
 	{
-		fclose(fakeHandle);
 		have_extmusic |= BGMUSIC_WAV;
 	}
 
 	Q_strlcpy (p, "flac", sizeof(name));
-	if (COM_FOpenFile(name, &fakeHandle) != -1)
+	if (COM_FileExists(name))
 	{
-		fclose(fakeHandle);
 		have_extmusic |= BGMUSIC_FLAC;
 	}
 
 	Q_strlcpy (p, "mp3", sizeof(name));
-	if (COM_FOpenFile(name, &fakeHandle) != -1)
+	if (COM_FileExists(name))
 	{
-		fclose(fakeHandle);
 		have_extmusic |= BGMUSIC_MP3;
 	}
 
 #ifdef OGG_SUPPORT
 	Q_strlcpy (p, "ogg", sizeof(name));
-	if (COM_FOpenFile(name, &fakeHandle) != -1)
+	if (COM_FileExists(name))
 	{
-		fclose(fakeHandle);
 		have_extmusic |= BGMUSIC_OGG;
 	}
 #endif

@@ -255,6 +255,7 @@ extern	char	com_gamedir[MAX_OSPATH];
 
 void COM_WriteFile (const char *filename, void *data, int len);
 int COM_FOpenFile (const char *filename, FILE **file);
+int COM_FileExists (const char *filename); /* FS */
 
 void COM_FreeFile (void *buffer);
 byte *COM_LoadFile (const char *path);

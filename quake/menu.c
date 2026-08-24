@@ -442,8 +442,6 @@ void M_Main_Draw (void)
 
 void M_Main_Key (int key)
 {
-	FILE *f; /* FS: For Nehahra */
-
 	switch (key)
 	{
 	case K_ESCAPE:
@@ -496,17 +494,15 @@ void M_Main_Key (int key)
 			switch(m_main_cursor)
 			{
 			case 0:
-				if (COM_FOpenFile ("maps/neh1m3.bsp", &f) == -1)
+				if (!COM_FileExists("maps/neh1m3.bsp"))
 					break;
-				fclose(f);
 
 				M_Menu_SinglePlayer_f ();
 				break;
 
 			case 1:
-				if (COM_FOpenFile ("hearing.dem", &f) == -1)
+				if (!COM_FileExists("hearing.dem"))
 					break;
-				fclose(f);
 
 				M_Menu_Demos_f ();
 				break;
@@ -520,9 +516,8 @@ void M_Main_Key (int key)
 				break;
 
 			case 4:
-				if (COM_FOpenFile ("endcred.dem", &f) == -1)
+				if (!COM_FileExists("endcred.dem"))
 					break;
-				fclose(f);
 
 				key_dest = key_game;
 				if (sv.active)

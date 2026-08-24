@@ -272,7 +272,7 @@ void Skin_NextDownload (qboolean queue)
 		Com_Printf ("Checking skins...\n");
 		cls.download_queue = cls.download_queue_total = 0;
 
-		queued_skins = (skinqueue_t *)calloc(MAX_CACHED_SKINS, sizeof(skinqueue_t)); /* FS: FIXME: Should this be MAX_CLIENTS? */
+		queued_skins = (skinqueue_t *)calloc(MAX_CACHED_SKINS, sizeof(skinqueue_t));
 		if(!queued_skins)
 			Sys_Error("Failed to crated skin queue buffer!");
 	}

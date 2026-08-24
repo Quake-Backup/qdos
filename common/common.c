@@ -1734,6 +1734,55 @@ int COM_FOpenFile (const char *filename, FILE **file)
 	return -1;
 }
 
+int COM_FileExists (const char *filename) /* FS */
+{
+	searchpath_t	*search;
+	char	netpath[MAX_OSPATH];
+	pack_t		*pak;
+	int			i;
+	int			findtime;
+
+	file_from_pak = 0;
+
+//
+// search through the path, one element at a time
+//
+	for (search = com_searchpaths ; search ; search = search->next)
+	{
+	// is the element a pak file?
+		if (search->pack)
+		{
+		// look through all the pak file elements
+			pak = search->pack;
+			for (i=0 ; i<pak->numfiles ; i++)
+				if (!strcmp (pak->files[i].name, filename))
+				{	// found it!
+					return 1;
+				}
+		}
+		else
+		{
+	// check a file in the directory tree
+			if (!static_registered)
+			{	// if not a registered version, don't ever go beyond base
+				if ( strchr (filename, '/') || strchr (filename,'\\'))
+					continue;
+			}
+
+			Com_sprintf (netpath, sizeof(netpath), "%s/%s",search->filename, filename);
+
+			findtime = Sys_FileTime (netpath);
+			if (findtime == -1)
+				continue;
+
+			return 1;
+		}
+	}
+
+	Sys_Printf ("FindFile: can't find %s\n", filename);
+	return 0;
+}
+
 #define	MAX_READ	0x10000		// read in blocks of 64k
 
 /*
