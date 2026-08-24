@@ -1467,7 +1467,9 @@ int com_filesize;
 typedef struct
 {
 	char	name[MAX_QPATH];
+	long	hash;		// Knightmare added- To speed up searching
 	int		filepos, filelen;
+	qboolean		ignore;		// Knightmare added- whether this file should be ignored
 } packfile_t;
 
 typedef struct pack_s
@@ -1476,6 +1478,7 @@ typedef struct pack_s
 	FILE	*handle;
 	int		numfiles;
 	packfile_t	*files;
+	unsigned int	contentFlags;	// Knightmare added- to skip cetain paks
 } pack_t;
 
 //
@@ -1508,6 +1511,129 @@ typedef struct searchpath_s
 
 searchpath_t	*com_searchpaths;
 searchpath_t	*com_base_searchpaths;	// without gamedirs
+
+// Knightmare added
+static const char *type_extensions[] =
+{
+	"bsp",
+	"mdl",
+	"lmp",
+	"dat",
+	"rc",
+	"spr",
+	"wav",
+	"mp3",
+	"flac",
+	"ogg",
+	"pcx",
+	"wal",
+	"tga",
+	"cfg",
+	"txt",
+	"ent",
+	NULL
+};
+
+extern const char *COM_FileExtension (const char *in);
+
+/*
+=================
+FS_TypeFlagForPakItem
+Returns bit flag based on pak item's extension.
+=================
+*/
+static unsigned int FS_TypeFlagForPakItem (const char *itemName)
+{
+	int		i;
+	const char *tmp;
+
+	tmp = COM_FileExtension (itemName);
+	for (i = 0; type_extensions[i]; i++)
+	{
+		if (!stricmp(tmp, type_extensions[i]))
+			return (1 << i);
+	}
+	return 0;
+}
+// end Knightmare
+
+// Knightmare added
+/*
+=============
+Com_HashFileName
+=============
+*/
+long Com_HashFileName (const char *fname, int hashSize, qboolean sized)
+{
+	int		i = 0;
+	long	hash = 0;
+	char	letter;
+
+	if (fname[0] == '/' || fname[0] == '\\') i++;	// skip leading slash
+	while (fname[i] != '\0')
+	{
+		letter = tolower(fname[i]);
+		//	if (letter == '.') break;
+		if (letter == '\\') letter = '/';	// fix filepaths
+		hash += (long)(letter) * (i + 119);
+		i++;
+	}
+	hash = (hash ^ (hash >> 10) ^ (hash >> 20));
+	if (sized)
+	{
+		hash &= (hashSize - 1);
+	}
+	return hash;
+}
+
+//performs a binary search through the pack file entries looking for the given file name.
+static int FindFileInPack (pack_t *pak, const char *filename, long itemHash)
+{
+	int top, bottom, middle, compare; //the boundaries of our search.
+
+	//set the initial top and bottom.
+	top = 0;
+	bottom = pak->numfiles - 1; /* FS: Out-of-bounds unreachable address found by Dr. Memory */
+
+	//search until top and bottom get close.
+	while (bottom - top > 5)
+	{
+		middle = (top + bottom) / 2;
+
+		compare = itemHash - pak->files[middle].hash;
+
+		if (compare == 0)
+		{
+			break;
+		}
+		else if (compare < 0) //check if it is above the middle.
+		{
+			//the file is above this one.
+			bottom = middle - 1;
+			continue;
+		}
+		else //check if it is below the middle.
+		{
+			//the file is below this one.
+			top = middle + 1;
+			continue;
+		}
+	}
+
+	//linear search through the remaining indices.
+	for (; top <= bottom; top++)
+	{
+		if (pak->files[top].hash == itemHash && !pak->files[top].ignore && !stricmp(filename, pak->files[top].name))
+		{
+			//found it.
+//			Com_DPrintf(DEVELOPER_MSG_IO, "File: %s found in %d searches\n", filename, count );
+			return top;
+		}
+	}
+
+	//could not find the file
+	return -1;
+}
 
 /*
 ================
@@ -1669,45 +1795,56 @@ Finds the file in the search path.
 Sets com_filesize and one of handle or file
 ===========
 */
-int file_from_pak; // global indicating file came from pack file ZOID
 
 int COM_FOpenFile (const char *filename, FILE **file)
 {
 	searchpath_t	*search;
 	char	netpath[MAX_OSPATH];
 	pack_t		*pak;
-	int			i;
+	int			index;
 	int			findtime;
+	// Knightmare added
+	long			hash;
+	unsigned int	typeFlag;
 
-	file_from_pak = 0;
-		
+	// Knightmare added
+	hash = Com_HashFileName(filename, 0, false);
+	typeFlag = FS_TypeFlagForPakItem(filename);
+
 //
 // search through the path, one element at a time
 //
 	for (search = com_searchpaths ; search ; search = search->next)
 	{
-	// is the element a pak file?
+		// is the element a pak file?
 		if (search->pack)
 		{
-		// look through all the pak file elements
+			// look through all the pak file elements
 			pak = search->pack;
-			for (i=0 ; i<pak->numfiles ; i++)
-				if (!strcmp (pak->files[i].name, filename))
-				{	// found it!
-					Sys_Printf ("PackFile: %s : %s\n",pak->filename, filename);
+
+			// Knightmare- skip if pack doesn't contain this type of file
+			if (typeFlag != 0 && !(pak->contentFlags & typeFlag))
+				continue;
+
+			//get the index that the file is stored at
+			index = FindFileInPack (pak, filename, hash);
+			if (index != -1)
+			{	// found it!
+				Sys_Printf ("PackFile: %s : %s\n",pak->filename, filename);
 				// open a new file on the pakfile
-					*file = fopen (pak->filename, "rb");
-					if (!*file)
-						Sys_Error ("Couldn't reopen %s", pak->filename);	
-					fseek (*file, pak->files[i].filepos, SEEK_SET);
-					com_filesize = pak->files[i].filelen;
-					file_from_pak = 1;
-					return com_filesize;
+				*file = fopen (pak->filename, "rb");
+				if (!*file)
+				{
+					Sys_Error ("Couldn't reopen %s", pak->filename);
+					return -1;
 				}
+				fseek (*file, pak->files[index].filepos, SEEK_SET);
+				return pak->files[index].filelen;
+			}
 		}
 		else
 		{		
-	// check a file in the directory tree
+			// check a file in the directory tree
 			if (!static_registered)
 			{	// if not a registered version, don't ever go beyond base
 				if ( strchr (filename, '/') || strchr (filename,'\\'))
@@ -1739,30 +1876,41 @@ int COM_FileExists (const char *filename) /* FS */
 	searchpath_t	*search;
 	char	netpath[MAX_OSPATH];
 	pack_t		*pak;
-	int			i;
+	int			index;
 	int			findtime;
+	// Knightmare added
+	long			hash;
+	unsigned int	typeFlag;
 
-	file_from_pak = 0;
+	// Knightmare added
+	hash = Com_HashFileName(filename, 0, false);
+	typeFlag = FS_TypeFlagForPakItem(filename);
 
 //
 // search through the path, one element at a time
 //
 	for (search = com_searchpaths ; search ; search = search->next)
 	{
-	// is the element a pak file?
+		// is the element a pak file?
 		if (search->pack)
 		{
-		// look through all the pak file elements
+			// look through all the pak file elements
 			pak = search->pack;
-			for (i=0 ; i<pak->numfiles ; i++)
-				if (!strcmp (pak->files[i].name, filename))
-				{	// found it!
-					return 1;
-				}
+
+			// Knightmare- skip if pack doesn't contain this type of file
+			if (typeFlag != 0 && !(pak->contentFlags & typeFlag))
+				continue;
+
+			//get the index that the file is stored at
+			index = FindFileInPack (pak, filename, hash);
+			if (index != -1)
+			{	// found it!
+				return 1;
+			}
 		}
 		else
 		{
-	// check a file in the directory tree
+			// check a file in the directory tree
 			if (!static_registered)
 			{	// if not a registered version, don't ever go beyond base
 				if ( strchr (filename, '/') || strchr (filename,'\\'))
@@ -1888,6 +2036,18 @@ Loads the header and directory, adding the files at the beginning
 of the list so they override previous pack files.
 =================
 */
+
+//compare function used to sort the pack file entries based on their names.
+static long *name_hashes = NULL;
+
+static int pack_file_compare_hash (const void *e1, const void *e2)
+{
+	if (!name_hashes)
+		return 1;
+
+	return (name_hashes[*((int *)(e1))] - name_hashes[*((int *)(e2))]);
+}
+
 pack_t *COM_LoadPackFile (char *packfile)
 {
 	dpackheader_t	header;
@@ -1898,13 +2058,19 @@ pack_t *COM_LoadPackFile (char *packfile)
 	FILE			*packhandle;
 	dpackfile_t		info[MAX_FILES_IN_PACK];
 	unsigned short	crc;
+	int			 *sort_table;
+	long		*sort_hashes;
+	unsigned int	contentFlags = 0;
 
 	if (COM_FileOpenRead (packfile, &packhandle) == -1)
 		return NULL;
 
 	fread (&header, 1, sizeof(header), packhandle);
 	if (header.id[0] != 'P' || header.id[1] != 'A' || header.id[2] != 'C' || header.id[3] != 'K')
+	{
 		Sys_Error ("%s is not a packfile", packfile);
+		return NULL;
+	}
 
 	header.dirofs = LittleLong (header.dirofs);
 	header.dirlen = LittleLong (header.dirlen);
@@ -1915,15 +2081,21 @@ pack_t *COM_LoadPackFile (char *packfile)
 	{
 		Sys_Error ("Invalid packfile %s (dirlen: %i, dirofs: %i)",
 					packfile, header.dirlen, header.dirofs);
+		return NULL;
 	}
+
 	if (!numpackfiles)
 	{
 		Com_Printf ("WARNING: %s has no files, ignored\n", packfile);
 		fclose (packhandle);
 		return NULL;
 	}
+
 	if (numpackfiles > MAX_FILES_IN_PACK)
+	{
 		Sys_Error ("%s has %i files", packfile, numpackfiles);
+		return NULL;
+	}
 
 	if (numpackfiles != PAK0_COUNT)
 		com_modified = true;    // not the original file
@@ -1945,12 +2117,37 @@ pack_t *COM_LoadPackFile (char *packfile)
 	if (crc != PAK0_CRC)
 		com_modified = true;
 #endif // QUAKE1
+
+	//alloc our array of file descriptors.
+	newfiles = Z_Malloc (numpackfiles * sizeof(packfile_t));
+	sort_table = Z_Malloc(numpackfiles * sizeof(int));
+	sort_hashes = Z_Malloc(numpackfiles * sizeof(long));
+
+	//initialize our sort table.
+	for (i = 0; i < numpackfiles; i++)
+	{
+		sort_table[i] = i;
+		sort_hashes[i] = Com_HashFileName(info[i].name, 0, false);
+	}
+
+	//give our compare function the name hashes array.
+	name_hashes = &sort_hashes[0];
+
+	//sort our table of indexes.
+	qsort(&sort_table[0], numpackfiles, sizeof(int), pack_file_compare_hash);
+
+	name_hashes = NULL;
+
 	// parse the directory
 	for (i = 0; i < numpackfiles ; i++)
 	{
-		Q_strlcpy (newfiles[i].name, info[i].name, sizeof(newfiles[i].name));
-		newfiles[i].filepos = LittleLong(info[i].filepos);
-		newfiles[i].filelen = LittleLong(info[i].filelen);
+		Q_strlcpy (newfiles[i].name, info[sort_table[i]].name, sizeof(newfiles[i].name));
+		newfiles[i].hash = sort_hashes[sort_table[i]];
+
+		newfiles[i].filepos = LittleLong(info[sort_table[i]].filepos);
+		newfiles[i].filelen = LittleLong(info[sort_table[i]].filelen);
+
+		contentFlags |= FS_TypeFlagForPakItem(newfiles[i].name);
 	}
 
 	pack = Z_Malloc (sizeof (pack_t));
@@ -1958,8 +2155,13 @@ pack_t *COM_LoadPackFile (char *packfile)
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
+	pack->contentFlags = contentFlags;	// Knightmare added
 	
 	Com_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
+
+	Z_Free(sort_table);
+	Z_Free(sort_hashes);
+
 	return pack;
 }
 

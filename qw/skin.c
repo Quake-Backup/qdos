@@ -263,7 +263,7 @@ void Skin_CheckQueue (char *name) /* FS: Check if we already queued this for dow
 Skin_NextDownload
 =================
 */
-void Skin_NextDownload (qboolean queue)
+void Skin_NextDownload (qboolean queue) /* FS: FIXME: This is broken if the file doesn't exist on the HTTP server! */
 {
 	player_info_t	*sc;
 
