@@ -143,5 +143,45 @@ Additional code from sezero, taniwha, spoike, LordHavoc,
    (Thanks Spoike)
 * Sys_FloatTime->Sys_DoubleTime -- Fixes many errors related to timing.
    640x400 and above now playable! (Thanks LordHavoc)
+
+[February 22, 2026 Build]
+
 * Switched memory manager to Quake 2.  This means you no longer have to
   mess with -zone and -mem parameters.
+* Better cmdlist function backported from Daikatana 1.3.
+* Max OpenGL texture size is set correctly if you have a V4/V5/VSA-100
+  (or any card) instead of defaulting to 256x256.
+* snd_restart and friends work properly now.
+* Fixed crash if you repeatedly slam keys during startup in Windows.
+* Removed stack overflow check in ref_soft since we already boomed
+  it significantly for the OpenGL port anyways.
+* Converted a lot of string functions such as strcpy, strcat, sprintf
+  to more "safe" versions that were used in Q2 and other projects.
+
+[February 24, 2026 Build]
+
+* Save off cl_unbindall_protection CVAR value and set it back after quakerc_init.
+* Don't show AM/PM when Military time option is set for show_time CVAR.
+* Fix uninit'd variable in gl_vidnt.c when used with -window.
+* Get rid of snd_wavstream.c and switch to dr_flac, dr_mp3 and dr_wav.
+  File load priority for music is WAV, FLAC, MP3, OGG, CD.
+* Fix status bar and gl_clear.
+* Update the CVAR engine with some code from Q2DOS and DK with BSD licensing.
+* Set destcolor and percent to 0 when palette blends are disabled.
+* Move Con_Init() earlier so we can see the IP initialization and some other
+  Com_Printf's that are pretty relevant.
+
+[March 5, 2026 Build]
+
+* Check in_joystick CVAR on startup.
+* Chunked reads for COM_FOpenFile.
+* Remove unused ogg_loopcount, ogg_ambient_track, and snd_noextraupdate CVARs.
+
+[August 24, 2026 Build]
+
+* Add binary tree with hashing for speeding up file I/O when searching PAK
+  files.  From Knightmare's Quake 2 v3.24.
+* Add COM_FileExists(). Greatly improves file I/O when checking for files
+  to download.
+* Remove s_paintbuffer_size CVAR as it was causing issues
+  and didn't give any real improvement.

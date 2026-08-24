@@ -19,7 +19,7 @@ Table of Contents
 1. - Introduction
 ---------------------------------------------------------
 
-Why code for DOS in 2015 you ask?  Pretty much the same reason anybody
+Why code for DOS in 2026 you ask?  Pretty much the same reason anybody
    is coding Quake ports these days... for fun and to learn some programming.
    This is my first serious project as far as programming goes and I have
    learned a lot.  As each day goes by, QDOS and QWDOS grow more and more in
@@ -121,9 +121,6 @@ Serial/Modem drivers are still supported.
 
 Do not send bug reports on any bugs that only occur on Windows 9x.  They
 will be ignored!
-
-NOTE: QDOS tries to allocate 32MB by default so you may need to use -MEM 16 if
-you're on an older machine and trying to play stock Quake.
 
 To summarize:
 

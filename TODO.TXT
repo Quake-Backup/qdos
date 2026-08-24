@@ -13,10 +13,14 @@
 
 * Asynchronous rendering support.
 
-* ref_gl mtex is incredibly slow with mesa and sage.  Completely unusable.  Figure out why.
+* ref_gl mtex is incredibly slow with mesa and sage.  Completely unusable.
+  Figure out why.
 
 * Add 'game' command to QW.
 
-* When changing 'game' dynamically we should reload the WADs for console backdrop, etc.
+* When changing 'game' dynamically we should reload the WADs for
+  console backdrop, etc.
 
 * Fix Win32 requiring to set -ip if you have multiple adapters.
+
+* Skin downloading is broken if it doesn't exist on the HTTP server.
