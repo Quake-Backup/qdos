@@ -27,10 +27,12 @@ CFLAGS += -fomit-frame-pointer
 LIBS    =
 EXE     = qdos.exe
 
+CPU ?= pentium
+
 ifeq ($(USE_SSE),1)
 CFLAGS += -march=pentium3 -DSSE_AWARE
 else
-CFLAGS += -mtune=pentium
+CFLAGS += -mtune=$(CPU)
 endif
 
 ifeq ($(GLQUAKE),1)
